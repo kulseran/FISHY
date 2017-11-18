@@ -1,0 +1,8 @@
+language: cpp
+compiler:
+  - clang
+
+script:
+  - pre_build.sh
+  - build.sh
+  - test.sh
