@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.6)
-project (Tutorial)
+project (Fishy)
 
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -31,9 +31,6 @@ configure_file (
 # add the binary tree to the search path for include files
 # so that we will find TutorialConfig.h
 # include_directories("${PROJECT_BINARY_DIR}")
- 
-# add the executable
-# add_executable(Tutorial hello_world.cpp)
 
-# add the install targets
-# install (TARGETS Tutorial DESTINATION bin)
+add_subdirectory(CORE)
+
