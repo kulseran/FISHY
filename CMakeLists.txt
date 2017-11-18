@@ -27,10 +27,10 @@ configure_file (
   "${PROJECT_SOURCE_DIR}/version.h.in"
 	"${PROJECT_SOURCE_DIR}/.generated/version.h"
 )
- 
+
 # add the binary tree to the search path for include files
 # so that we will find TutorialConfig.h
 # include_directories("${PROJECT_BINARY_DIR}")
 
 add_subdirectory(CORE)
-
+add_subdirectory(TESTS)
