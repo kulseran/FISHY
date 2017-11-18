@@ -2,6 +2,8 @@ cmake_minimum_required (VERSION 2.6)
 project (Fishy)
 
 file(GLOB core_src
+	"types.h"
+	"types.cpp"
 	"*/*.h"
 	"*/*.inl"
 	"*/*.cpp"
