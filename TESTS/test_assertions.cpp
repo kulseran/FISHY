@@ -5,6 +5,8 @@
  */
 #include "test_assertions.h"
 
+#include <cstring>
+
 namespace testing {
 
 void assertTrue(bool expr) {
