@@ -50,10 +50,9 @@ void assertTestNotExist(const std::string &name, const std::set<std::string> &na
   if (nameSet.find(name) == nameSet.end()) {
     return;
   }
-  static char errMsg[2048];
-  errMsg[0] = 0;
-  strcat_s(errMsg, "Test case registered twice: ");
-  strcat_s(errMsg, name.c_str());
+  static char errMsg[2048] = { 0 };
+  strncat(errMsg, "Test case registered twice: ", 2047);
+  strncat(errMsg, name.c_str(), 2047 - strlen(errMsg));
   throw TestAssertionException(errMsg);
 }
 

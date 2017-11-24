@@ -57,9 +57,9 @@ inline void assertEquals(const tTypeT &t, const tTypeU &u, bool(*pred)(const tTy
     caster << u;
     caster >> ustr;
   }
-  char msg[2048];
-  snprintf(msg, 2048, "Objects not equal. lhs: %s, rhs: %s", tstr.c_str(),  ustr.c_str());
-  fail(msg);
+  std::stringstream msg;
+  msg << "Objects not equal. lhs: [" << tstr << "] rhs: [" << ustr << "]";
+  fail(msg.str().c_str());
 }
 
 inline bool floatCompare(const float &t, const float &u) {
