@@ -1,15 +1,17 @@
 language: cpp
 compiler:
   - gcc
+
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
     packages:
       - g++-7
-env:
-  - CC=gcc-7
-  - CXX=g++-7
+
+before_install:
+  env:
+    - CC=gcc-7 && CXX=g++-7
 
 script:
   - ./pre_build.sh
