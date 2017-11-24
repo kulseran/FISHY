@@ -1,6 +1,5 @@
 language: cpp
-compiler:
-  - gcc
+compiler: g++
 
 addons:
   apt:
@@ -9,9 +8,8 @@ addons:
     packages:
       - g++-7
 
-before_install:
-  env:
-    - CC=gcc-7 && CXX=g++-7
+install:
+- export CXX=g++-7
 
 script:
   - ./pre_build.sh
