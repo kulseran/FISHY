@@ -11,3 +11,5 @@ file(GLOB core_src
 
 add_library(core STATIC ${core_src})
 set_target_properties(core PROPERTIES LINKER_LANGUAGE CXX)
+
+assign_source_group(${core_src})
