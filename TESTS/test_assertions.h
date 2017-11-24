@@ -62,11 +62,11 @@ inline void assertEquals(const tTypeT &t, const tTypeU &u, bool(*pred)(const tTy
 }
 
 inline bool floatCompare(const float &t, const float &u) {
-  return fabs(t - u) < std::numeric_limits<float>().epsilon();
+  return std::fabs(t - u) < std::numeric_limits<float>().epsilon();
 }
 
 inline bool doubleCompare(const double &t, const double &u) {
-  return fabs(t - u) < std::numeric_limits<float>().epsilon();
+  return std::fabs(t - u) < std::numeric_limits<float>().epsilon();
 }
 
 inline void assertEquals(const float &t, const float &u) {
