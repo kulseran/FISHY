@@ -5,6 +5,7 @@
 #include "testcase.h"
 #include "test_assertions.h"
 
+#include <cstring>
 #include <iostream>
 #include <iterator>
 #include <set>
@@ -51,8 +52,8 @@ void assertTestNotExist(const std::string &name, const std::set<std::string> &na
     return;
   }
   static char errMsg[2048] = { 0 };
-  strncat(errMsg, "Test case registered twice: ", 2047);
-  strncat(errMsg, name.c_str(), 2047 - strlen(errMsg));
+  std::strncat(errMsg, "Test case registered twice: ", 2047);
+  std::strncat(errMsg, name.c_str(), 2047 - std::strlen(errMsg));
   throw TestAssertionException(errMsg);
 }
 
