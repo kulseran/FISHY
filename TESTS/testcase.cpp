@@ -21,10 +21,7 @@ namespace testing {
  */
 struct TestInfo {
   TestInfo(const char *file, const char *name, tTestFunc &func)
-    : m_file(file),
-      m_name(name),
-      m_func(func) {
-  }
+      : m_file(file), m_name(name), m_func(func) {}
 
   std::string m_file;
   std::string m_name;
@@ -49,11 +46,12 @@ void registerTestCase(const char *file, const char *name, tTestFunc func) {
 /**
  * Checks that the test wasn't registered twice
  */
-void assertTestNotExist(const std::string &name, const std::set<std::string> &nameSet) {
+void assertTestNotExist(
+    const std::string &name, const std::set< std::string > &nameSet) {
   if (nameSet.find(name) == nameSet.end()) {
     return;
   }
-  static char errMsg[2048] = { 0 };
+  static char errMsg[2048] = {0};
   std::strncat(errMsg, "Test case registered twice: ", 2047);
   std::strncat(errMsg, name.c_str(), 2047 - std::strlen(errMsg));
   throw TestAssertionException(errMsg);
@@ -65,8 +63,9 @@ void assertTestNotExist(const std::string &name, const std::set<std::string> &na
 void checkTests() {
   const std::vector< TestInfo > &registry = getTestRegistry();
 
-  std::set<std::string> nameSet;
-  for (std::vector< TestInfo >::const_iterator itr = registry.begin(); itr != registry.end(); ++itr) {
+  std::set< std::string > nameSet;
+  for (std::vector< TestInfo >::const_iterator itr = registry.begin();
+       itr != registry.end(); ++itr) {
     TEST(assertTestNotExist(itr->m_name, nameSet))
     nameSet.insert(itr->m_name);
   }
@@ -81,16 +80,17 @@ int runRegisteredTests() {
   const std::vector< TestInfo > &registry = getTestRegistry();
   const int sz = registry.size();
   std::cout << "1.." << sz << std::endl;
-  for (std::vector< TestInfo >::const_iterator itr = registry.begin(); itr != registry.end(); ++itr) {
+  for (std::vector< TestInfo >::const_iterator itr = registry.begin();
+       itr != registry.end(); ++itr) {
     const int currentId = std::distance(registry.begin(), itr) + 1;
     const float percent = 100.0f * ((float) currentId / (float) sz);
     try {
       itr->m_func();
-      std::cout << "ok " << currentId << " (" << percent << "% done)" << std::endl;
+      std::cout << "ok " << currentId << " (" << percent << "% done)"
+                << std::endl;
     } catch (testing::TestAssertionException e) {
       std::cout << "not ok " << currentId << " Test failure at [" << e.file()
-                << ":" << e.line() << " @ "
-                << e.func() << "] > "
+                << ":" << e.line() << " @ " << e.func() << "] > "
                 << core::util::escape(e.what()) << std::endl;
       errorCount++;
     }
