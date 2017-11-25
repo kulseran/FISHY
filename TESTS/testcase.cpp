@@ -5,6 +5,8 @@
 #include "testcase.h"
 #include "test_assertions.h"
 
+#include <CORE/UTIL/string_util.h>
+
 #include <cstring>
 #include <iostream>
 #include <iterator>
@@ -71,52 +73,6 @@ void checkTests() {
 }
 
 /**
- * Escape text.
- */
-std::string escape(const std::string &str) {
-  std::string rVal;
-  rVal.reserve(str.size());
-  std::string::const_iterator itr = str.begin();
-  while (itr != str.end()) {
-    switch (*itr) {
-      case '\n':
-        rVal.push_back('\\');
-        rVal.push_back('n');
-        break;
-      case '\r':
-        rVal.push_back('\\');
-        rVal.push_back('r');
-        break;
-      case '\t':
-        rVal.push_back('\\');
-        rVal.push_back('t');
-        break;
-      case '\"':
-        rVal.push_back('\\');
-        rVal.push_back('\"');
-        break;
-      case '\\':
-        rVal.push_back('\\');
-        rVal.push_back('\\');
-        break;
-      default:
-        if (isprint(*itr)) {
-          rVal.push_back(*itr);
-        } else {
-          rVal.push_back('\\');
-          char buf[4] = {};
-          const unsigned int v = static_cast<unsigned char>(*itr);
-          snprintf(buf, 4, "%03d", v);
-          rVal.append(buf);
-        }
-        break;
-    }
-    ++itr;
-  }
-  return rVal;
-}
-
-/**
  * Run all registered test cases.
  */
 int runRegisteredTests() {
@@ -135,7 +91,7 @@ int runRegisteredTests() {
       std::cout << "not ok " << currentId << " Test failure at [" << e.file()
                 << ":" << e.line() << " @ "
                 << e.func() << "] > "
-                << escape(e.what()) << std::endl;
+                << core::util::escape(e.what()) << std::endl;
       errorCount++;
     }
   }
