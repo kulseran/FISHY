@@ -6,8 +6,8 @@
 
 #include <CORE/BASE/asserts.h>
 
+#include <CORE/TYPES/array_types.h>
 #include <CORE/TYPES/pod_types.h>
 #include <CORE/TYPES/varint_type.h>
-#include <CORE/TYPES/array_types.h>
 
 #endif
