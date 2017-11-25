@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <cmath>
 #include <memory>
-#include <sstream>
 #include <string>
 
 namespace testing {
@@ -48,21 +47,7 @@ inline void assertEquals(
   } else if (t == u) {
     return;
   }
-  std::string tstr;
-  std::string ustr;
-  {
-    std::stringstream caster;
-    caster << t;
-    caster >> tstr;
-  }
-  {
-    std::stringstream caster;
-    caster << u;
-    caster >> ustr;
-  }
-  std::stringstream msg;
-  msg << "Objects not equal. lhs: [" << tstr << "] rhs: [" << ustr << "]";
-  fail(msg.str().c_str());
+  fail("Objects not equal.");
 }
 
 inline bool floatCompare(const float &t, const float &u) {

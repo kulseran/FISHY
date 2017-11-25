@@ -5,7 +5,7 @@
 #include "testcase.h"
 #include "test_assertions.h"
 
-#include <CORE/UTIL/string_util.h>
+#include <CORE/UTIL/stringutil.h>
 
 #include <cstring>
 #include <iostream>
@@ -66,7 +66,7 @@ void checkTests() {
   std::set< std::string > nameSet;
   for (std::vector< TestInfo >::const_iterator itr = registry.begin();
        itr != registry.end(); ++itr) {
-    TEST(assertTestNotExist(itr->m_name, nameSet))
+    TEST(assertTestNotExist(itr->m_file + itr->m_name, nameSet))
     nameSet.insert(itr->m_name);
   }
 }

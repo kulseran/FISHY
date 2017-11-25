@@ -47,10 +47,10 @@ int runRegisteredTests();
 #    define MAKE_NAME2(line, counter) cta_failurecond_##line##counter
 #  endif
 
-#  define REGISTER_TEST_CASE(f_test_name)                     \
-    void f_test_name(void);                                   \
-    static testing::StaticRegister UNIQUE_MACRO_NAME(         \
-        __FILE__, __FILE__##":"## #f_test_name, f_test_name); \
+#  define REGISTER_TEST_CASE(f_test_name)             \
+    void f_test_name(void);                           \
+    static testing::StaticRegister UNIQUE_MACRO_NAME( \
+        __FILE__, #f_test_name, f_test_name);         \
     void f_test_name(void)
 
 #endif

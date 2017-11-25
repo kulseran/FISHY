@@ -1,6 +1,4 @@
 /**
- * assert.h
- *
  * Macros to wrap up the standard "assert" call for all platforms.
  *   ASSERT(expression)
  * Macros for compile-time asserting values.
@@ -14,8 +12,8 @@
 #include <CORE/ARCH/platform.h>
 
 #if defined(PLAT_WIN32)
-#  include <crtdbg.h>
 #  include <assert.h>
+#  include <crtdbg.h>
 #elif defined(PLAT_LINUX)
 #  include <assert.h>
 #endif
@@ -33,19 +31,20 @@
 #endif
 
 /**
- * COMPILE_TIME_ASSERT(expression); will cause a compile-time error if expression does not
- *     evaluate to true.
+ * COMPILE_TIME_ASSERT(expression); will cause a compile-time error if
+ * expression does not evaluate to true.
  */
 #if COMPILE_ASSERTS_ENABLED
 #  if __cpp_static_assert
-#    define COMPILE_TIME_ASSERT(expr)    static_assert(expr, "bad assert")
+#    define COMPILE_TIME_ASSERT(expr) static_assert(expr, "bad assert")
 #  else
-#    define COMPILE_TIME_ASSERT(expr)    typedef char UNIQUE_MACRO_NAME[(expr) != 0 ? 1 : -1]
-#ifndef MAKE_NAME2
-#    define UNIQUE_MACRO_NAME            MAKE_NAME(__LINE__, __COUNTER__)
-#    define MAKE_NAME(line,counter)              MAKE_NAME2(line,counter)
-#    define MAKE_NAME2(line,counter)             cta_failurecond_ ## line ## counter
-#endif
+#    define COMPILE_TIME_ASSERT(expr) \
+      typedef char UNIQUE_MACRO_NAME[(expr) != 0 ? 1 : -1]
+#    ifndef MAKE_NAME2
+#      define UNIQUE_MACRO_NAME MAKE_NAME(__LINE__, __COUNTER__)
+#      define MAKE_NAME(line, counter) MAKE_NAME2(line, counter)
+#      define MAKE_NAME2(line, counter) cta_failurecond_##line##counter
+#    endif
 #  endif
 #else
 #  define COMPILE_TIME_ASSERT(expr)
@@ -54,7 +53,7 @@
 #if defined(PLAT_WIN32) || defined(_WIN32)
 #  define ASSERT_BASE(expr) _ASSERT(expr)
 #elif defined(PLAT_LINUX) || defined(linux)
-#  define ASSERT_BASE(expr) { assert(expr); }
+#  define ASSERT_BASE(expr) assert(expr)
 #else
 #  error unsupported platform
 #endif
@@ -63,11 +62,10 @@
  * ASSERT_ALWAYS(); Will force the program to crash, even in release.
  */
 #ifdef PLAT_WIN32
-#  if defined(DEBUG) || defined(_DEBUG)
-#    define ASSERT_ALWAYS() do { abort(); } while(0)
-#  else
-#    define ASSERT_ALWAYS() do { abort(); } while(0)
-#  endif
+#  define ASSERT_ALWAYS() \
+    do {                  \
+      abort();            \
+    } while (0)
 #else
 #  error unsupported platform
 #endif

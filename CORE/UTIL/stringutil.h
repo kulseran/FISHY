@@ -8,8 +8,8 @@
 #ifndef FISHY_STRINGUTIL_H
 #define FISHY_STRINGUTIL_H
 
-#include <CORE/types.h>
 #include <CORE/UTIL/lexical_cast.h>
+#include <CORE/types.h>
 
 #include <limits>
 #include <string>
@@ -26,33 +26,40 @@ namespace util {
  */
 class Splitter {
   public:
-    Splitter() : m_ch(' '), m_trim(false) { }
+  Splitter() : m_ch(' '), m_trim(false) {}
 
-    /**
-     * Set the split delimiter, defaults to ' '.
-     */
-    Splitter &on(const char ch) { m_ch = ch; return *this; }
+  /**
+   * Set the split delimiter, defaults to ' '.
+   */
+  Splitter &on(const char ch) {
+    m_ch = ch;
+    return *this;
+  }
 
-    /**
-     * Set whitespace trimming, defaults to false.
-     */
-    Splitter &trimWhitespace() { m_trim = true; return *this; }
+  /**
+   * Set whitespace trimming, defaults to false.
+   */
+  Splitter &trimWhitespace() {
+    m_trim = true;
+    return *this;
+  }
 
-    /**
-     * @return a list of split elements
-     */
-    std::vector< std::string > split(const std::string &in) {
-      return split(in, std::numeric_limits<unsigned>::max());
-    }
+  /**
+   * @return a list of split elements
+   */
+  std::vector< std::string > split(const std::string &in) {
+    return split(in, std::numeric_limits< unsigned >::max());
+  }
 
-    /**
-     * @return a list of split elements of maxLen length
-     */
-    std::vector< std::string > split(const std::string &in, const unsigned maxLen);
+  /**
+   * @return a list of split elements of maxLen length
+   */
+  std::vector< std::string >
+  split(const std::string &in, const unsigned maxLen);
 
   private:
-    char m_ch;
-    bool m_trim;
+  char m_ch;
+  bool m_trim;
 };
 
 /**
@@ -65,39 +72,42 @@ class Splitter {
  */
 class Joiner {
   public:
-    Joiner() : m_sep(", ") { }
+  Joiner() : m_sep(", ") {}
 
-    /**
-     * Set the join characters, defaults to ', '.
-     */
-    Joiner &on(const std::string sep) { m_sep = sep; return *this; }
+  /**
+   * Set the join characters, defaults to ', '.
+   */
+  Joiner &on(const std::string sep) {
+    m_sep = sep;
+    return *this;
+  }
 
-    /**
-     * @return a string consisting of the join of all elements by the supplied sep
-     */
-    template< typename tIterator >
-    std::string join(const tIterator &begin, const tIterator &end) {
-      if (begin == end) {
-        return "";
-      }
-
-      std::string rVal;
-      tIterator itr = begin;
-      core::util::lexical_cast(*itr, rVal);
-      ++itr;
-      while (itr != end) {
-        std::string str;
-        core::util::lexical_cast(*itr, str);
-
-        rVal.append(m_sep);
-        rVal.append(str);
-        ++itr;
-      }
-      return rVal;
+  /**
+   * @return a string consisting of the join of all elements by the supplied sep
+   */
+  template < typename tIterator >
+  std::string join(const tIterator &begin, const tIterator &end) {
+    if (begin == end) {
+      return "";
     }
 
+    std::string rVal;
+    tIterator itr = begin;
+    core::util::lexical_cast(*itr, rVal);
+    ++itr;
+    while (itr != end) {
+      std::string str;
+      core::util::lexical_cast(*itr, str);
+
+      rVal.append(m_sep);
+      rVal.append(str);
+      ++itr;
+    }
+    return rVal;
+  }
+
   private:
-    std::string m_sep;
+  std::string m_sep;
 };
 
 /**
@@ -123,7 +133,9 @@ std::string escape(const std::string &);
 /**
  * Replaces all occurances of a substring
  */
-std::string replaceStr(const std::string &input, const std::string &match, const std::string &replacement);
+std::string replaceStr(
+    const std::string &input, const std::string &match,
+    const std::string &replacement);
 
 /**
  * Replaces non-word characters with '_' to make input viable as an identifier.
@@ -138,7 +150,9 @@ std::string prettySize(const u64 input);
 /**
  * Counts the number of newlines in the string segment.
  */
-u32 countLines(const std::string::const_iterator &begin, const std::string::const_iterator &end);
+u32 countLines(
+    const std::string::const_iterator &begin,
+    const std::string::const_iterator &end);
 
 } // namespace util
 } // namespace core

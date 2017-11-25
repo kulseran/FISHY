@@ -11,7 +11,8 @@ namespace util {
 /**
  *
  */
-std::vector< std::string > Splitter::split(const std::string &item, const unsigned maxLen) {
+std::vector< std::string >
+Splitter::split(const std::string &item, const unsigned maxLen) {
   std::vector< std::string > rVal;
   std::string::size_type offset = 0;
   std::string::size_type itr;
@@ -24,7 +25,8 @@ std::vector< std::string > Splitter::split(const std::string &item, const unsign
     }
 
     if (m_trim) {
-      rVal.push_back(core::util::trimWhitespace(item.substr(offset, itr - offset)));
+      rVal.push_back(
+          core::util::trimWhitespace(item.substr(offset, itr - offset)));
     } else {
       rVal.push_back(item.substr(offset, itr - offset));
     }
@@ -44,8 +46,12 @@ std::string trimWhitespace(const std::string &v) {
 
   std::string::size_type beg = 0;
   std::string::size_type end = v.length();
-  while ((v.at(beg) == ' ' || v.at(beg) == '\t') && beg < end) { beg++; }
-  while (v.at(end - 1) == ' ' && end >= beg) { end--; }
+  while ((v.at(beg) == ' ' || v.at(beg) == '\t') && beg < end) {
+    beg++;
+  }
+  while (v.at(end - 1) == ' ' && end >= beg) {
+    end--;
+  }
   if (end > beg) {
     return v.substr(beg, end - beg);
   }
@@ -165,7 +171,7 @@ std::string escape(const std::string &str) {
         } else {
           rVal.push_back('\\');
           char buf[4] = {};
-          const unsigned int v = static_cast<unsigned char>(*itr);
+          const unsigned int v = static_cast< unsigned char >(*itr);
           sprintf(buf, "%03d", v);
           rVal.append(buf);
         }
@@ -179,7 +185,9 @@ std::string escape(const std::string &str) {
 /**
  *
  */
-std::string replaceStr(const std::string &input, const std::string &match, const std::string &replacement) {
+std::string replaceStr(
+    const std::string &input, const std::string &match,
+    const std::string &replacement) {
   std::string rVal;
 
   // reserve the correct space
@@ -228,7 +236,8 @@ std::string identifierSafe(const std::string &input) {
   }
 
   for (; itr != input.end(); ++itr) {
-    if (!(*itr >= 'a' && *itr <= 'z') && !(*itr >= 'A' && *itr <= 'Z') && !(*itr >= '0' && *itr <= '9')) {
+    if (!(*itr >= 'a' && *itr <= 'z') && !(*itr >= 'A' && *itr <= 'Z')
+        && !(*itr >= '0' && *itr <= '9')) {
       rVal.push_back('_');
     } else {
       rVal.push_back(*itr);
@@ -237,18 +246,8 @@ std::string identifierSafe(const std::string &input) {
   return rVal;
 }
 
-static const char *g_sizePostfix[] = {
-  " B",
-  " KiB",
-  " MiB",
-  " GiB",
-  " TiB",
-  " PiB",
-  " EiB",
-  " ZiB",
-  " YiB",
-  " ERROR"
-};
+static const char *g_sizePostfix[] = {" B",   " KiB", " MiB", " GiB", " TiB",
+                                      " PiB", " EiB", " ZiB", " YiB", " ERROR"};
 
 /**
  *
@@ -269,9 +268,11 @@ std::string prettySize(const u64 v) {
 /**
  *
  */
-u32 countLines(const std::string::const_iterator &begin, const std::string::const_iterator &end) {
+u32 countLines(
+    const std::string::const_iterator &begin,
+    const std::string::const_iterator &end) {
   return std::count(begin, end, '\n');
 }
 
-} //namespace util
+} // namespace util
 } // namespace core
