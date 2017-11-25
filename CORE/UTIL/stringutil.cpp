@@ -5,6 +5,8 @@
 
 #include <CORE/BASE/checks.h>
 
+#include <algorithm>
+
 namespace core {
 namespace util {
 

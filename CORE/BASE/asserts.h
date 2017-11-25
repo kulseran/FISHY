@@ -61,14 +61,10 @@
 /**
  * ASSERT_ALWAYS(); Will force the program to crash, even in release.
  */
-#ifdef PLAT_WIN32
-#  define ASSERT_ALWAYS() \
-    do {                  \
-      abort();            \
-    } while (0)
-#else
-#  error unsupported platform
-#endif
+#define ASSERT_ALWAYS() \
+  do {                  \
+    abort();            \
+  } while (0)
 
 /**
  * ASSERT(expr); Will force the program to stop in the debugger

@@ -96,7 +96,7 @@ class Status {
   /**
    * Retrieve the status return as a boolean pass/fail.
    */
-  inline operator bool() {
+  inline operator bool() const {
     consume();
     return m_status == OK;
   }
@@ -162,10 +162,10 @@ class StatusOr {
   tType m_returnValue;
 };
 
-/**
- * RET_S(expression, status); Will 'return status' from a function if the
- * expression does no evaluate to true
- */
+  /**
+   * RET_S(expression, status); Will 'return status' from a function if the
+   * expression does no evaluate to true
+   */
 #  define RET_S(expr, status) \
     do {                      \
       if (!(expr)) {          \
@@ -173,10 +173,10 @@ class StatusOr {
       }                       \
     } while (0)
 
-/**
- * RET_S(expression, status); Will 'return status' from a function if the
- * expression does no evaluate to true, and log the error message
- */
+  /**
+   * RET_S(expression, status); Will 'return status' from a function if the
+   * expression does no evaluate to true, and log the error message
+   */
 #  define RET_SM(expr, status, msg)                                   \
     do {                                                              \
       if (!(expr)) {                                                  \
