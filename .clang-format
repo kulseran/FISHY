@@ -5,6 +5,10 @@ BasedOnStyle: LLVM
 ---
 Language: Cpp
 
+
+AllowAllParametersOfDeclarationOnNextLine: true
+BinPackParameters: false
+BinPackArguments: false
 AccessModifierOffset: 0
 AlignAfterOpenBracket: AlwaysBreak
 AlignEscapedNewlines: Left
