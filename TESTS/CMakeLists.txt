@@ -2,7 +2,6 @@ cmake_minimum_required (VERSION 2.6)
 project (Fishy)
 
 file(GLOB_RECURSE tests_src
-	"main.cpp"
 	"*.h"
 	"*.inl"
 	"*.cpp"
