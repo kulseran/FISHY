@@ -73,7 +73,10 @@ class Status {
     m_status = other.m_status;
     IF_ASSERTS(m_consumed = other.m_consumed);
     other.consume();
+    return *this;
   }
+
+  inline Status clone() { return Status(m_status, m_msg); }
 
   /**
    * Static {@code OK} status.
