@@ -31,8 +31,15 @@ configure_file (
 # add the binary tree to the search path for include files
 # so that we will find TutorialConfig.h
 include_directories("${PROJECT_SOURCE_DIR}")
+# add the generated folder, so that files mirroring the main
+# repo structure within generated can be included without a
+# prefix
+include_directories("${PROJECT_SOURCE_DIR}/.generated/")
+
+# Squelch visual studio warnings
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
+# Add per-directory filters to a list of source files
 function(assign_source_group)
     foreach(_source IN ITEMS ${ARGN})
         if (IS_ABSOLUTE "${_source}")
