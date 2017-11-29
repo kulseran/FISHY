@@ -8,12 +8,21 @@
 
 namespace core {
 namespace logging {
-class LoggingStdioSink : public LogSink {
+
+/**
+ * {@code iLogSink} that write out to stderr and stdout depending on the log
+ * level.
+ */
+class LoggingStdioSink : public iLogSink {
   public:
+  /**
+   * Formatting options for the sink.
+   */
   struct Options {
     Options();
     enum eFormat { FORMAT_TINY, FORMAT_SHORT, FORMAT_VERBOSE };
     eFormat m_format;
+    bool m_syncstdio;
   };
 
   LoggingStdioSink(
@@ -30,6 +39,7 @@ class LoggingStdioSink : public LogSink {
       std::ostream &channel, const LogMessage &info, const std::string &msg);
   Options m_options;
 };
+
 } // namespace logging
 } // namespace core
 

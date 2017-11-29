@@ -1,5 +1,9 @@
 #include "logging_default_sinks.h"
 
+#include <CORE/UTIL/lexical_cast.h>
+
+using std::chrono::system_clock;
+
 namespace core {
 namespace logging {
 
@@ -7,9 +11,10 @@ LoggingStdioSink::LoggingStdioSink(
     LogManager &manager,
     const core::types::BitSet< LL > &levels,
     const Options &options)
-    : LogSink(manager, levels) {
+    : iLogSink(manager, levels) {
   std::clog << "Logging to stdio. \n";
   m_options = options;
+  std::ios::sync_with_stdio(m_options.m_syncstdio);
 }
 
 /**
@@ -30,26 +35,27 @@ static std::string CleanupMessage(const std::string &msgIn) {
   return (msgIn + '\n');
 }
 
-static const char *LogLevelToString(const LL::type level) {
-  switch (level) {
-    case LL::Fine:
-      return "F ";
-    case LL::Info:
-      return "I ";
-    case LL::Warning:
-      return "W ";
-    case LL::Error:
-      return "E ";
+static const char *g_logLevelStr[LL::COUNT] = {"F: ", "I: ", "W: ", "E: "};
+
+static std::string formatTime(const system_clock::time_point &timestamp) {
+  std::string rVal;
+  const std::chrono::seconds secs =
+      std::chrono::duration_cast< std::chrono::seconds >(
+          timestamp.time_since_epoch());
+  if (core::util::lexical_cast(secs.count(), rVal)) {
+    return rVal + "s";
   }
-  CHECK_UNREACHABLE();
+  return "???";
 }
 
 void LoggingStdioSink::writeToStream(
     std::ostream &channel, const LogMessage &info, const std::string &msg) {
+
   switch (m_options.m_format) {
     case Options::FORMAT_VERBOSE:
     case Options::FORMAT_SHORT:
-      channel << LogLevelToString(info.m_logLevel);
+      channel << formatTime(info.m_trace.m_timestamp) << " | "
+              << g_logLevelStr[info.m_logLevel];
     case Options::FORMAT_TINY:
       channel << msg;
   }
@@ -65,7 +71,9 @@ Status LoggingStdioSink::write(const LogMessage &message) {
   return Status::ok();
 }
 
-LoggingStdioSink::Options::Options() : m_format(FORMAT_SHORT) {
+LoggingStdioSink::Options::Options()
+    : m_format(FORMAT_SHORT), m_syncstdio(false) {
 }
+
 } // namespace logging
 } // namespace core
