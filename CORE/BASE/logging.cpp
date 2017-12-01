@@ -12,11 +12,34 @@ namespace logging {
 static const size_t MAX_LOG_BUFFER = 1024 * 16;
 
 /**
+ * Collection of log sinks to be written to.
+ */
+class LogManager : core::util::noncopyable {
+  public:
+  LogManager();
+  ~LogManager();
+
+  Status write(const LogMessage &);
+  Status registerSink(std::shared_ptr< iLogSink >);
+
+  private:
+  std::vector< std::shared_ptr< iLogSink > > m_sinks;
+  core::types::ConcurrentQueue< LogMessage > m_messages;
+  std::thread m_loggerThread;
+
+  static void logFn(LogManager *);
+};
+
+/**
  * Creates a global log manager.
  */
 LogManager &GetDefaultLogger() {
   static LogManager s_manager;
   return s_manager;
+}
+
+Status RegisterSink(std::shared_ptr< iLogSink > pSink) {
+  return GetDefaultLogger().registerSink(pSink);
 }
 
 /**
@@ -55,6 +78,13 @@ Status LogManager::registerSink(std::shared_ptr< iLogSink > pSink) {
 /**
  *
  */
+Status Write(const LogMessage &message) {
+  return GetDefaultLogger().write(message);
+}
+
+/**
+ *
+ */
 Status LogManager::write(const LogMessage &message) {
   m_messages.push(message);
   return Status::ok();
@@ -87,8 +117,7 @@ void LogManager::logFn(LogManager *pManager) {
 /**
  *
  */
-iLogSink::iLogSink(LogManager &manager, const core::types::BitSet< LL > &levels)
-    : m_manager(manager), m_levels(levels) {
+iLogSink::iLogSink(const core::types::BitSet< LL > &levels) : m_levels(levels) {
 }
 
 /**

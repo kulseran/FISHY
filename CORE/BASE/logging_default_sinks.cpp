@@ -8,10 +8,8 @@ namespace core {
 namespace logging {
 
 LoggingStdioSink::LoggingStdioSink(
-    LogManager &manager,
-    const core::types::BitSet< LL > &levels,
-    const Options &options)
-    : iLogSink(manager, levels) {
+    const core::types::BitSet< LL > &levels, const Options &options)
+    : iLogSink(levels) {
   std::clog << "Logging to stdio. \n";
   m_options = options;
   std::ios::sync_with_stdio(m_options.m_syncstdio);

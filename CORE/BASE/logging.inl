@@ -12,7 +12,7 @@ inline TraceInfo::TraceInfo()
     : m_file(nullptr), m_function(nullptr), m_line(-1) {
 }
 
-inline LogMessage::LogMessage() : m_logLevel(LL::Fine), m_msgLen(0) {
+inline LogMessage::LogMessage() : m_logLevel(LL::Trace), m_msgLen(0) {
   m_msg[0] = 0;
 }
 
@@ -22,12 +22,13 @@ inline LogMessage::LogMessage(const LL::type level, const TraceInfo &trace)
 }
 
 inline LogMessageBuilder::LogMessageBuilder(
-    LogManager &manager, const LL::type level, const TraceInfo &trace)
-    : m_manager(manager), m_message(level, trace) {
+    const LL::type level, const TraceInfo &trace)
+    : m_message(level, trace) {
 }
 
 inline LogMessageBuilder::~LogMessageBuilder() {
-  Status ret = m_manager.write(m_message);
+  extern Status Write(const LogMessage &);
+  Status ret = Write(m_message);
   if (!ret) {
     std::cerr << "Log message not logged to all sinks." << std::endl;
   }
@@ -85,6 +86,22 @@ inline LogMessageBuilder &LogMessageBuilder::operator<<(const T (&obj)[N]) {
     }
   }
   return *this;
+}
+
+/**
+ *
+ */
+inline ScopedLogger::ScopedLogger(const TraceInfo &trace) : m_trace(trace) {
+  core::logging::LogMessageBuilder(LL::Trace, m_trace)
+      << "Enter " << m_trace.m_function;
+}
+
+/**
+ *
+ */
+inline ScopedLogger::~ScopedLogger() {
+  core::logging::LogMessageBuilder(LL::Trace, m_trace)
+      << "Exit " << m_trace.m_function;
 }
 
 } // namespace logging

@@ -26,7 +26,6 @@ class LoggingStdioSink : public iLogSink {
   };
 
   LoggingStdioSink(
-      LogManager &manage,
       const core::types::BitSet< LL > &levels,
       const Options &options = Options());
 

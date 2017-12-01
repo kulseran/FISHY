@@ -36,7 +36,7 @@ static const unsigned MAX_LOG_LEN = 1024;
  */
 struct LL {
   enum type {
-    Fine,    // Detailed logging
+    Trace,   // Detailed logging
     Info,    // Info logging
     Warning, // Warnings
     Error,   // Errors
@@ -73,15 +73,13 @@ struct LogMessage {
   char m_msg[MAX_LOG_LEN];
 };
 
-class LogManager;
-
 /**
  * Helper class to build a log message and submit it to the {@link LogManager}.
  * Uses stream style {@code operator <<} to write out a message.
  */
 class LogMessageBuilder : core::util::noncopyable {
   public:
-  LogMessageBuilder(LogManager &, const LL::type, const TraceInfo &);
+  LogMessageBuilder(const LL::type, const TraceInfo &);
   ~LogMessageBuilder();
 
   template < typename T >
@@ -90,8 +88,19 @@ class LogMessageBuilder : core::util::noncopyable {
   LogMessageBuilder &operator<<(const T (&obj)[N]);
 
   private:
-  LogManager &m_manager;
   LogMessage m_message;
+};
+
+/**
+ * A class that triggers an "Entering"/"Exiting" message for a given scope.
+ */
+class ScopedLogger : core::util::noncopyable {
+  public:
+  ScopedLogger(const TraceInfo &trace);
+  ~ScopedLogger();
+
+  private:
+  TraceInfo m_trace;
 };
 
 /**
@@ -105,7 +114,7 @@ class iLogSink : core::util::noncopyable {
    * @param manager The log manager to register with.
    * @param levels The log levels to allow writing of.
    */
-  iLogSink(LogManager &manager, const core::types::BitSet< LL > &levels);
+  iLogSink(const core::types::BitSet< LL > &levels);
 
   /**
    *
@@ -136,62 +145,38 @@ class iLogSink : core::util::noncopyable {
 
   private:
   core::types::BitSet< LL > m_levels;
-  LogManager &m_manager;
 };
 
 /**
- * Collection of log sinks to be written to.
+ * Register a sink. This is called automatically by
+ * the {@link iLogSink} constructor.
  */
-class LogManager : core::util::noncopyable {
-  public:
-  LogManager();
-  ~LogManager();
-
-  /**
-   * Write a log message to all registered sinks.
-   *
-   * @return Status::ok(), or a failure code reported from the last regestered
-   *     failing {@link iLogSink}.
-   */
-  Status write(const LogMessage &);
-
-  /**
-   * Register a sink. This is called automatically by
-   * the {@link iLogSink} constructor.
-   */
-  Status registerSink(std::shared_ptr< iLogSink >);
-
-  private:
-  std::vector< std::shared_ptr< iLogSink > > m_sinks;
-  core::types::ConcurrentQueue< LogMessage > m_messages;
-  std::thread m_loggerThread;
-
-  static void logFn(LogManager *);
-};
-
-/**
- * Retrieve the default singleton log manager instance.
- */
-LogManager &GetDefaultLogger();
+Status RegisterSink(std::shared_ptr< iLogSink >);
 
 } // namespace logging
 } // namespace core
 
 using core::logging::LL;
 
-/**
- * Log a message at the given log level.
- * Usage:
- *     Log(LL::Info) << "my Message"
- */
+  /**
+   * Log a message at the given log level.
+   * Usage:
+   *     Log(LL::Info) << "my Message"
+   */
 #  define Log(ll)                     \
     core::logging::LogMessageBuilder( \
         core::logging::GetDefaultLogger(), ll, LOG_TRACE_INFO())
 
 /**
- * Create a logger {@link core::logging::TraceInfo} for the current calling
- * context.
+ * Log a message now, and a message at the end of the scope containing the
+ * trace.
  */
+#  define Trace() core::logging::ScopedLogger scope_logger(LOG_TRACE_INFO())
+
+  /**
+   * Create a logger {@link core::logging::TraceInfo} for the current calling
+   * context.
+   */
 #  define LOG_TRACE_INFO() \
     core::logging::TraceInfo(__FILE__, __FUNCTION__, __LINE__)
 
