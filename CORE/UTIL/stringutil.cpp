@@ -7,6 +7,20 @@
 
 #include <algorithm>
 
+/**
+ * Identifiers for {@link core::util::prettySize}
+ */
+static const char *g_sizePostfix[] = {" B",
+                                      " KiB",
+                                      " MiB",
+                                      " GiB",
+                                      " TiB",
+                                      " PiB",
+                                      " EiB",
+                                      " ZiB",
+                                      " YiB",
+                                      " ERROR"};
+
 namespace core {
 namespace util {
 
@@ -188,7 +202,8 @@ std::string escape(const std::string &str) {
  *
  */
 std::string replaceStr(
-    const std::string &input, const std::string &match,
+    const std::string &input,
+    const std::string &match,
     const std::string &replacement) {
   std::string rVal;
 
@@ -247,9 +262,6 @@ std::string identifierSafe(const std::string &input) {
   }
   return rVal;
 }
-
-static const char *g_sizePostfix[] = {" B",   " KiB", " MiB", " GiB", " TiB",
-                                      " PiB", " EiB", " ZiB", " YiB", " ERROR"};
 
 /**
  *
