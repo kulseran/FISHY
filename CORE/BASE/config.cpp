@@ -143,7 +143,7 @@ Status ParseFlags(const int argc, const char **argv) {
     const char *arg = argv[i];
     if ((arg[0] != '-') || (argv[0] != '\0' && arg[1] != '-')) {
       Log(LL::Error) << "Unknown commandline input #" << i << ": " << arg;
-      return false;
+      return Status::BAD_ARGUMENT;
     }
 
     std::vector< std::string > argstr =
@@ -176,7 +176,7 @@ Status ParseFlags(const int argc, const char **argv) {
       // Error on case where we have [flag] alone.  Booleans must be specified
       // as [flag][=][true]
       Log(LL::Error) << "Found flag with no value: " << argstr[0];
-      return false;
+      return Status::BAD_ARGUMENT;
     }
   }
 

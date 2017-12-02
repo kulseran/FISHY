@@ -75,8 +75,11 @@ Status LogManager::registerSink(std::shared_ptr< iLogSink > pSink) {
 /**
  *
  */
-Status Write(const LogMessage &message) {
-  return GetDefaultLogger().write(message);
+LogMessageBuilder::~LogMessageBuilder() {
+  Status ret = GetDefaultLogger().write(m_message);
+  if (!ret) {
+    std::cerr << "Log message not logged to all sinks." << std::endl;
+  }
 }
 
 /**

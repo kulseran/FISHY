@@ -41,17 +41,6 @@ inline LogMessageBuilder::LogMessageBuilder(
 /**
  *
  */
-inline LogMessageBuilder::~LogMessageBuilder() {
-  extern Status Write(const LogMessage &);
-  Status ret = Write(m_message);
-  if (!ret) {
-    std::cerr << "Log message not logged to all sinks." << std::endl;
-  }
-}
-
-/**
- *
- */
 template < typename T >
 inline LogMessageBuilder &LogMessageBuilder::operator<<(const T &obj) {
   std::string str;
