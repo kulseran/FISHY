@@ -66,6 +66,9 @@ void LoggingStdioSink::writeToStream(
 
   switch (m_options.m_format) {
     case Options::FORMAT_VERBOSE:
+      channel << "(" << info.m_trace.m_file << "@" << info.m_trace.m_function
+              << ":" << info.m_trace.m_line << ") | " << info.m_trace.m_threadId
+              << "+" << info.m_trace.m_stackPtr << " | ";
     case Options::FORMAT_SHORT:
       channel << formatTime(info.m_trace.m_timestamp) << " | "
               << g_logLevelStr[info.m_logLevel];
