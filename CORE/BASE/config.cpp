@@ -141,7 +141,7 @@ Status ParseFlags(const int argc, const char **argv) {
 
   for (int i = 1; i < argc; ++i) {
     const char *arg = argv[i];
-    if ((arg[0] != '-') || (argv[0] != '\0' && arg[1] != '-')) {
+    if ((arg[0] != '-') || (arg[0] != '\0' && arg[1] != '-')) {
       Log(LL::Error) << "Unknown commandline input #" << i << ": " << arg;
       return Status::BAD_ARGUMENT;
     }

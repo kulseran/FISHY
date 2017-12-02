@@ -58,7 +58,8 @@ template < typename tIter >
 inline void
 ConcurrentQueue< tType >::pushN(const tIter &begin, const tIter &end) {
   std::unique_lock< std::mutex > lock(m_mutex);
-  for (typename tIter itr = begin; itr != end && m_open.load();) {
+  tIter itr = begin;
+  while (itr != end && m_open.load()) {
     if (m_queue.size() < m_maxSize) {
       m_queue.push_back(*itr);
       ++itr;

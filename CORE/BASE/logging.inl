@@ -3,6 +3,7 @@
 
 #include <CORE/UTIL/lexical_cast.h>
 
+#include <cstring>
 #include <inttypes.h>
 
 namespace core {
