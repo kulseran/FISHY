@@ -3,6 +3,7 @@
 
 #include <CORE/TYPES/concurrent_queue.h>
 
+#include <thread>
 #include <vector>
 
 using core::types::ConcurrentQueue;
