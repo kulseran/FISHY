@@ -1,6 +1,7 @@
 #include "logging.h"
 
 #include <algorithm>
+#include <functional>
 
 namespace core {
 namespace logging {
