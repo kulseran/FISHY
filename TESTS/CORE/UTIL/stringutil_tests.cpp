@@ -2,7 +2,6 @@
 #include <TESTS/testcase.h>
 
 #include <CORE/UTIL/stringutil.h>
-#include <CORE/types.h>
 
 using core::util::Escape;
 using core::util::IdentifierSafe;

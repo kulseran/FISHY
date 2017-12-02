@@ -2,7 +2,6 @@
 #include <TESTS/testcase.h>
 
 #include <CORE/TYPES/bitset.h>
-#include <CORE/types.h>
 
 using core::types::BitSet;
 

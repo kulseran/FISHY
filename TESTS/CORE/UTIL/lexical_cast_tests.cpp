@@ -2,7 +2,6 @@
 #include <TESTS/testcase.h>
 
 #include <CORE/UTIL/lexical_cast.h>
-#include <CORE/types.h>
 
 using namespace core::util;
 

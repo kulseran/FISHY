@@ -2,7 +2,6 @@
 #include <TESTS/testcase.h>
 
 #include <CORE/BASE/config.h>
-#include <CORE/types.h>
 
 using core::config::Flag;
 using core::config::ParseFlags;
