@@ -4,6 +4,7 @@
 #include <CORE/UTIL/stringutil.h>
 
 #include <algorithm>
+#include <cstring>
 #include <mutex>
 
 using core::util::IdentifierSafe;

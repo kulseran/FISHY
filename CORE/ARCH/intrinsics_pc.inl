@@ -8,6 +8,9 @@
 #  include <Windows.h>
 #  include <emmintrin.h>
 #  include <xmmintrin.h>
+#else if defined(PLAT_LINUX)
+#  include <sys/types.h>
+#  include <xmmintrin.h>
 #endif
 
 typedef __m128 VECF_128;
