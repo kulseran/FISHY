@@ -27,7 +27,7 @@
 #if defined(FISHY_NO_INTRINSICS)
 #  include "intrinsics_none.inl"
 #else
-#  if defined(PLAT_WIN32)
+#  if defined(PLAT_WIN32) || defined(PLAT_LINUX)
 #    include "intrinsics_pc.inl"
 #  else
 #    error unsupported platform
