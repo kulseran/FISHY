@@ -158,27 +158,50 @@ Status RegisterSink(std::shared_ptr< iLogSink >);
 
 using core::logging::LL;
 
-  /**
-   * Log a message at the given log level.
-   * Usage:
-   *     Log(LL::Info) << "my Message"
-   */
-#  define Log(ll)                     \
-    core::logging::LogMessageBuilder( \
-        core::logging::GetDefaultLogger(), ll, LOG_TRACE_INFO())
-
 /**
- * Log a message now, and a message at the end of the scope containing the
- * trace.
+ * Log a message at the given log level.
+ * Usage:
+ *     Log(LL::Info) << "my Message"
  */
+#  define Log(ll) core::logging::LogMessageBuilder(ll, LOG_TRACE_INFO())
+
+  /**
+   * Log a message now, and a message at the end of the scope containing the
+   * trace.
+   */
 #  define Trace() core::logging::ScopedLogger scope_logger(LOG_TRACE_INFO())
 
-  /**
-   * Create a logger {@link core::logging::TraceInfo} for the current calling
-   * context.
-   */
+/**
+ * Create a logger {@link core::logging::TraceInfo} for the current calling
+ * context.
+ */
 #  define LOG_TRACE_INFO() \
     core::logging::TraceInfo(__FILE__, __FUNCTION__, __LINE__)
+
+/**
+ * RET_M(expression, message); Will 'return false' from a function if the
+ * expression does no evaluate to true
+ */
+#  define RET_M(expr, msg)                                             \
+    do {                                                               \
+      if (!(expr)) {                                                   \
+        Log(LL::Error) << msg << " @ " << __FILE__ << ":" << __LINE__; \
+        return false;                                                  \
+      }                                                                \
+    } while (0)
+
+/**
+ * RET_ERRORCODE_M(expression, message; Will 'return expression' from a
+ * function if the expression does not evaluate to 0.
+ */
+#  define RET_ERRORCODE_M(expr, msg)                                   \
+    do {                                                               \
+      const int ret = (expr);                                          \
+      if (ret != 0) {                                                  \
+        Log(LL::Error) << msg << " @ " << __FILE__ << ":" << __LINE__; \
+        return ret;                                                    \
+      }                                                                \
+    } while (0)
 
 #  include "logging.inl"
 #  include "logging_default_sinks.h"

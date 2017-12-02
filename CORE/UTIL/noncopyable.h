@@ -1,6 +1,4 @@
 /**
- * noncopyable.h
- *
  * Prevents object from implementing copy operations.
  *   class foo : public noncopyable {
  *   };

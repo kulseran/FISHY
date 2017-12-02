@@ -4,9 +4,17 @@
 
 using std::chrono::system_clock;
 
+/**
+ * Constants for prettyprinting the {@link LL::type} of the message.
+ */
+static const char *g_logLevelStr[LL::COUNT] = {"F: ", "I: ", "W: ", "E: "};
+
 namespace core {
 namespace logging {
 
+/**
+ *
+ */
 LoggingStdioSink::LoggingStdioSink(
     const core::types::BitSet< LL > &levels, const Options &options)
     : iLogSink(levels) {
@@ -26,6 +34,9 @@ Status LoggingStdioSink::flush() {
   return Status::ok();
 }
 
+/**
+ *
+ */
 static std::string CleanupMessage(const std::string &msgIn) {
   if (msgIn.empty() || msgIn.back() == '\n') {
     return msgIn;
@@ -33,14 +44,18 @@ static std::string CleanupMessage(const std::string &msgIn) {
   return (msgIn + '\n');
 }
 
-static const char *g_logLevelStr[LL::COUNT] = {"F: ", "I: ", "W: ", "E: "};
-
+/**
+ *
+ */
 static std::string formatTime(const system_clock::time_point &timestamp) {
+  static std::chrono::seconds start =
+      std::chrono::duration_cast< std::chrono::seconds >(
+          std::chrono::system_clock::now().time_since_epoch());
   std::string rVal;
   const std::chrono::seconds secs =
       std::chrono::duration_cast< std::chrono::seconds >(
           timestamp.time_since_epoch());
-  if (core::util::lexical_cast(secs.count(), rVal)) {
+  if (core::util::lexical_cast((secs.count() - start.count()), rVal)) {
     return rVal + "s";
   }
   return "???";
@@ -59,6 +74,9 @@ void LoggingStdioSink::writeToStream(
   }
 }
 
+/**
+ *
+ */
 Status LoggingStdioSink::write(const LogMessage &message) {
   std::string msg = CleanupMessage(message.m_msg);
   if (message.m_logLevel == LL::Warning || message.m_logLevel == LL::Error) {
@@ -69,6 +87,9 @@ Status LoggingStdioSink::write(const LogMessage &message) {
   return Status::ok();
 }
 
+/**
+ *
+ */
 LoggingStdioSink::Options::Options()
     : m_format(FORMAT_SHORT), m_syncstdio(false) {
 }

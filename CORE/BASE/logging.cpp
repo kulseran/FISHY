@@ -1,6 +1,3 @@
-/**
- *
- */
 #include "logging.h"
 
 #include <algorithm>
@@ -136,6 +133,9 @@ Status iLogSink::log(const LogMessage &message) {
   return write(message);
 }
 
+/**
+ *
+ */
 TraceInfo::TraceInfo(const char *file, const char *function, long line)
     : m_file(file),
       m_function(function),

@@ -1,8 +1,3 @@
-/**
- * bitset.inl
- *
- * Inline defs for bitset.h
- */
 #ifndef FISHY_BITSET_INL
 #define FISHY_BITSET_INL
 

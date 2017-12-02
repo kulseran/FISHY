@@ -1,9 +1,8 @@
 /**
- * stringutil.h
- *
  * String manipulation utilities.
  *   Splitter - for string splitting
  *   Joiner - for string joining
+ *   Various sanitizer functions.
  */
 #ifndef FISHY_STRINGUTIL_H
 #define FISHY_STRINGUTIL_H
@@ -113,44 +112,45 @@ class Joiner {
 /**
  * Trims the front and back of a string for whitespace.
  */
-std::string trimWhitespace(const std::string &);
+std::string TrimWhitespace(const std::string &);
 
 /**
  * Trims quotes off a string.
  */
-std::string trimQuotes(const std::string &);
+std::string TrimQuotes(const std::string &);
 
 /**
  * Convert standard \? escape sequences to their appropriate symbol.
  */
-std::string unescape(const std::string &);
+std::string Unescape(const std::string &);
 
 /**
  * Convert standard control characters to their appropriate \? symbols.
  */
-std::string escape(const std::string &);
+std::string Escape(const std::string &);
 
 /**
  * Replaces all occurances of a substring
  */
-std::string replaceStr(
-    const std::string &input, const std::string &match,
+std::string ReplaceStr(
+    const std::string &input,
+    const std::string &match,
     const std::string &replacement);
 
 /**
  * Replaces non-word characters with '_' to make input viable as an identifier.
  */
-std::string identifierSafe(const std::string &input);
+std::string IdentifierSafe(const std::string &input);
 
 /**
  * Prints a number as a human readable size
  */
-std::string prettySize(const u64 input);
+std::string PrettySize(const u64 input);
 
 /**
  * Counts the number of newlines in the string segment.
  */
-u32 countLines(
+size_t CountLines(
     const std::string::const_iterator &begin,
     const std::string::const_iterator &end);
 

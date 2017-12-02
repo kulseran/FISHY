@@ -1,6 +1,3 @@
-/**
- *
- */
 #ifndef FISHY_CONCURRENT_QUEUE_INL
 #define FISHY_CONCURRENT_QUEUE_INL
 

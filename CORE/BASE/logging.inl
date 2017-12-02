@@ -8,24 +8,39 @@
 namespace core {
 namespace logging {
 
+/**
+ *
+ */
 inline TraceInfo::TraceInfo()
     : m_file(nullptr), m_function(nullptr), m_line(-1) {
 }
 
+/**
+ *
+ */
 inline LogMessage::LogMessage() : m_logLevel(LL::Trace), m_msgLen(0) {
   m_msg[0] = 0;
 }
 
+/**
+ *
+ */
 inline LogMessage::LogMessage(const LL::type level, const TraceInfo &trace)
     : m_logLevel(level), m_trace(trace), m_msgLen(0) {
   m_msg[0] = 0;
 }
 
+/**
+ *
+ */
 inline LogMessageBuilder::LogMessageBuilder(
     const LL::type level, const TraceInfo &trace)
     : m_message(level, trace) {
 }
 
+/**
+ *
+ */
 inline LogMessageBuilder::~LogMessageBuilder() {
   extern Status Write(const LogMessage &);
   Status ret = Write(m_message);

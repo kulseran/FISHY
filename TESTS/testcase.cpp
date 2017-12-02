@@ -1,7 +1,3 @@
-/**
- * testcase.cpp
- *
- */
 #include "testcase.h"
 #include "test_assertions.h"
 
@@ -65,7 +61,8 @@ void checkTests() {
 
   std::set< std::string > nameSet;
   for (std::vector< TestInfo >::const_iterator itr = registry.begin();
-       itr != registry.end(); ++itr) {
+       itr != registry.end();
+       ++itr) {
     TEST(assertTestNotExist(itr->m_file + itr->m_name, nameSet))
     nameSet.insert(itr->m_name);
   }
@@ -78,11 +75,12 @@ int runRegisteredTests() {
   registerTestCase(__FILE__, "check tests", checkTests);
   int errorCount = 0;
   const std::vector< TestInfo > &registry = getTestRegistry();
-  const int sz = registry.size();
+  const size_t sz = registry.size();
   std::cout << "1.." << sz << std::endl;
   for (std::vector< TestInfo >::const_iterator itr = registry.begin();
-       itr != registry.end(); ++itr) {
-    const int currentId = std::distance(registry.begin(), itr) + 1;
+       itr != registry.end();
+       ++itr) {
+    const size_t currentId = std::distance(registry.begin(), itr) + 1;
     const float percent = 100.0f * ((float) currentId / (float) sz);
     try {
       itr->m_func();
@@ -91,7 +89,7 @@ int runRegisteredTests() {
     } catch (testing::TestAssertionException e) {
       std::cout << "not ok " << currentId << " Test failure at [" << e.file()
                 << ":" << e.line() << " @ " << e.func() << "] > "
-                << core::util::escape(e.what()) << std::endl;
+                << core::util::Escape(e.what()) << std::endl;
       errorCount++;
     }
   }

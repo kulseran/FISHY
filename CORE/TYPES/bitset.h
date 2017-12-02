@@ -1,6 +1,4 @@
 /**
- * bitset.h
- *
  * Type-safe bitset
  */
 #ifndef FISHY_BITSET_H
