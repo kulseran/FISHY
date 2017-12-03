@@ -12,41 +12,20 @@
 #define FISHY_LEXICAL_CAST_H
 
 #include <CORE/BASE/status.h>
+#include <CORE/TYPES/trait_helpers.h>
 #include <CORE/types.h>
 
 #include <iomanip>
-#include <iostream>
 #include <sstream>
+
 namespace core {
 namespace util {
 
 namespace detail {
-template < typename S, typename T >
-class is_streamable {
-  template < typename SS, typename TT >
-  static auto testIn(int) -> decltype(
-      std::declval< SS & >() >> std::declval< TT >(), std::true_type());
-
-  template < typename, typename >
-  static auto testIn(...) -> std::false_type;
-
-  template < typename SS, typename TT >
-  static auto testOut(int) -> decltype(
-      std::declval< SS & >() << std::declval< TT >(), std::true_type());
-
-  template < typename, typename >
-  static auto testOut(...) -> std::false_type;
-
-  public:
-  static const bool valueIn = decltype(testIn< S, T >(0))::value;
-  static const bool valueOut = decltype(testOut< S, T >(0))::value;
-};
-
 template < bool, bool >
 struct CasterImpl {
   template < typename tDest, typename tSource >
   static Status lexical_cast(const tSource &a, tDest &b) {
-    std::cerr << "# bad template" << std::endl;
     return Status(Status::BAD_ARGUMENT);
   }
 };
@@ -58,8 +37,7 @@ struct CasterImpl< true, true > {
     std::stringstream caster;
     caster << a;
     caster >> b;
-    std::cerr << "Caster in state: " << caster.fail() << std::endl;
-    return caster.fail() ? Status(Status::GENERIC_ERROR) : Status::ok();
+    return caster.fail() ? Status(Status::BAD_ARGUMENT) : Status::ok();
   }
 };
 } // namespace detail
@@ -73,9 +51,9 @@ struct CasterImpl< true, true > {
 template < typename tDest, typename tSource >
 inline Status lexical_cast(const tSource &a, tDest &b) {
   return detail::CasterImpl<
-      detail::is_streamable< std::stringstream, tDest >::valueIn,
-      detail::is_streamable< std::stringstream, tSource >::valueOut >::
-      lexical_cast(a, b);
+      core::types::has_right_shift< std::stringstream, tDest >::value,
+      core::types::has_left_shift< std::stringstream, const tSource & >::
+          value >::lexical_cast(a, b);
 }
 
 template < typename tDest >
