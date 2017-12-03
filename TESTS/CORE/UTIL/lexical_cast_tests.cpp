@@ -26,12 +26,12 @@ REGISTER_TEST_CASE(testValidCastsFromChar) {
 
 REGISTER_TEST_CASE(testValidCastsToString) {
   std::string floatOut;
-  TEST(testing::assertTrue(lexical_cast(1.0f, floatOut)));
-  TEST(testing::assertEquals(floatOut, "1"));
+  TEST(testing::assertTrue(lexical_cast(1.1f, floatOut)));
+  TEST(testing::assertEquals(floatOut, "1.1"));
 
   std::string doubleOut;
-  TEST(testing::assertTrue(lexical_cast(1.0, doubleOut)));
-  TEST(testing::assertEquals(doubleOut, "1"));
+  TEST(testing::assertTrue(lexical_cast(1.1, doubleOut)));
+  TEST(testing::assertEquals(doubleOut, "1.1"));
 
   std::string u32Out;
   TEST(testing::assertTrue(lexical_cast(1u, u32Out)));
