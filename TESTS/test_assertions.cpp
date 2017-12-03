@@ -1,8 +1,3 @@
-/**
- * test_assertions.cpp
- *
- * implementations of test assertions
- */
 #include "test_assertions.h"
 
 #include <cstring>

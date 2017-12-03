@@ -12,12 +12,35 @@
 #define FISHY_LEXICAL_CAST_H
 
 #include <CORE/BASE/status.h>
+#include <CORE/TYPES/trait_helpers.h>
 #include <CORE/types.h>
 
+#include <iomanip>
 #include <sstream>
 
 namespace core {
 namespace util {
+
+namespace detail {
+template < bool, bool >
+struct CasterImpl {
+  template < typename tDest, typename tSource >
+  static Status lexical_cast(const tSource &a, tDest &b) {
+    return Status(Status::BAD_ARGUMENT);
+  }
+};
+
+template <>
+struct CasterImpl< true, true > {
+  template < typename tDest, typename tSource >
+  static Status lexical_cast(const tSource &a, tDest &b) {
+    std::stringstream caster;
+    caster << a;
+    caster >> b;
+    return caster.fail() ? Status(Status::BAD_ARGUMENT) : Status::ok();
+  }
+};
+} // namespace detail
 
 /**
  * Cast tSource to a tDest. Requires that both tSource and tDest implement
@@ -27,10 +50,10 @@ namespace util {
  */
 template < typename tDest, typename tSource >
 inline Status lexical_cast(const tSource &a, tDest &b) {
-  std::stringstream caster;
-  caster << a;
-  caster >> b;
-  return caster.fail() ? Status(Status::BAD_ARGUMENT) : Status::ok();
+  return detail::CasterImpl<
+      core::types::has_right_shift< std::stringstream, tDest & >::value,
+      core::types::has_left_shift< std::stringstream, const tSource & >::
+          value >::lexical_cast(a, b);
 }
 
 template < typename tDest >

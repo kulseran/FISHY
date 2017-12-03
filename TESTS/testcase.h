@@ -1,6 +1,4 @@
 /**
- * testcase.h
- *
  * Core class for generate a test suit
  */
 #ifndef FISHY_TEST_CASE_H

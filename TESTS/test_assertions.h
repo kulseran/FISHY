@@ -1,6 +1,4 @@
 /**
- * test_assertions.h
- *
  * Functions to be called in test cases for checking the validity of tested
  * code's responses.
  */
@@ -10,6 +8,8 @@
 #ifndef TESTING
 #  error may only be included in tests
 #endif
+
+#include <CORE/UTIL/lexical_cast.h>
 
 #include <algorithm>
 #include <cmath>
@@ -38,7 +38,8 @@ void assertFalse(const bool expr);
  */
 template < typename tTypeT, typename tTypeU >
 inline void assertEquals(
-    const tTypeT &t, const tTypeU &u,
+    const tTypeT &t,
+    const tTypeU &u,
     bool (*pred)(const tTypeT &, const tTypeU &) = nullptr) {
   if (pred != nullptr) {
     if (pred(t, u)) {
@@ -47,7 +48,17 @@ inline void assertEquals(
   } else if (t == u) {
     return;
   }
-  fail("Objects not equal.");
+  std::string tstr;
+  std::string ustr;
+  if (!core::util::lexical_cast(t, tstr)) {
+    tstr = "<unprintable>";
+  }
+  if (!core::util::lexical_cast(u, ustr)) {
+    ustr = "<unprintable>";
+  }
+  const std::string msg =
+      "Objects not equal. Actual [" + tstr + "]. Expected [" + ustr + "]";
+  fail(msg.c_str());
 }
 
 inline bool floatCompare(const float &t, const float &u) {

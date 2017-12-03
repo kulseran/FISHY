@@ -1,11 +1,22 @@
-/**
- * stringutil.cpp
- */
 #include "stringutil.h"
 
 #include <CORE/BASE/checks.h>
 
 #include <algorithm>
+
+/**
+ * Identifiers for {@link core::util::prettySize}
+ */
+static const char *g_sizePostfix[] = {" B",
+                                      " KiB",
+                                      " MiB",
+                                      " GiB",
+                                      " TiB",
+                                      " PiB",
+                                      " EiB",
+                                      " ZiB",
+                                      " YiB",
+                                      " ERROR"};
 
 namespace core {
 namespace util {
@@ -27,8 +38,7 @@ Splitter::split(const std::string &item, const unsigned maxLen) {
     }
 
     if (m_trim) {
-      rVal.push_back(
-          core::util::trimWhitespace(item.substr(offset, itr - offset)));
+      rVal.push_back(TrimWhitespace(item.substr(offset, itr - offset)));
     } else {
       rVal.push_back(item.substr(offset, itr - offset));
     }
@@ -41,7 +51,7 @@ Splitter::split(const std::string &item, const unsigned maxLen) {
 /**
  *
  */
-std::string trimWhitespace(const std::string &v) {
+std::string TrimWhitespace(const std::string &v) {
   if (v.empty()) {
     return v;
   }
@@ -63,7 +73,7 @@ std::string trimWhitespace(const std::string &v) {
 /**
  *
  */
-std::string trimQuotes(const std::string &v) {
+std::string TrimQuotes(const std::string &v) {
   if (v.empty()) {
     return v;
   }
@@ -85,7 +95,7 @@ std::string trimQuotes(const std::string &v) {
 /**
  *
  */
-std::string unescape(const std::string &str) {
+std::string Unescape(const std::string &str) {
   std::string rVal;
   rVal.reserve(str.size());
   std::string::const_iterator itr = str.begin();
@@ -141,7 +151,7 @@ std::string unescape(const std::string &str) {
 /**
  *
  */
-std::string escape(const std::string &str) {
+std::string Escape(const std::string &str) {
   std::string rVal;
   rVal.reserve(str.size());
   std::string::const_iterator itr = str.begin();
@@ -187,8 +197,9 @@ std::string escape(const std::string &str) {
 /**
  *
  */
-std::string replaceStr(
-    const std::string &input, const std::string &match,
+std::string ReplaceStr(
+    const std::string &input,
+    const std::string &match,
     const std::string &replacement) {
   std::string rVal;
 
@@ -200,7 +211,7 @@ std::string replaceStr(
       ++itr;
       ++count;
     }
-    int delta = replacement.size() - match.size();
+    size_t delta = replacement.size() - match.size();
     rVal.reserve(input.size() + delta * count + 1);
   }
 
@@ -224,7 +235,7 @@ std::string replaceStr(
 /**
  *
  */
-std::string identifierSafe(const std::string &input) {
+std::string IdentifierSafe(const std::string &input) {
   if (input.length() == 0) {
     return input;
   }
@@ -248,13 +259,10 @@ std::string identifierSafe(const std::string &input) {
   return rVal;
 }
 
-static const char *g_sizePostfix[] = {" B",   " KiB", " MiB", " GiB", " TiB",
-                                      " PiB", " EiB", " ZiB", " YiB", " ERROR"};
-
 /**
  *
  */
-std::string prettySize(const u64 v) {
+std::string PrettySize(const u64 v) {
   u64 nv = v;
   unsigned idx = 0;
   while (nv >= 1024ull && ((idx + 1) < ARRAY_LENGTH(g_sizePostfix))) {
@@ -270,7 +278,7 @@ std::string prettySize(const u64 v) {
 /**
  *
  */
-u32 countLines(
+size_t CountLines(
     const std::string::const_iterator &begin,
     const std::string::const_iterator &end) {
   return std::count(begin, end, '\n');
