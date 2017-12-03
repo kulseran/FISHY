@@ -17,13 +17,22 @@ class Status {
    * Generic error codes.
    */
   enum eError {
+    // The process was a success.
     OK = 0,
+    // Generic error, specific to the relevant call.
     GENERIC_ERROR = 1,
+    // Bad input parameter.
     BAD_ARGUMENT = 2,
+    // Requested operation could not find a requested resource.
     NOT_FOUND = 3,
+    // The request timed out.
     TIMEOUT = 4,
+    // The request was canceled.
     CANCELED = 5,
-    OUT_OF_BOUNDS = 6
+    // The requested input is out of bounds.
+    OUT_OF_BOUNDS = 6,
+    // The requested resource contained invalid data.
+    BAD_INPUT = 7
   };
 
   /**
@@ -64,16 +73,29 @@ class Status {
     IF_ASSERTS(m_consumed = false);
   }
 
+  /**
+   *
+   */
   inline Status(const Status &other) : m_status(other.m_status) {
     IF_ASSERTS(m_consumed = other.m_consumed);
     other.consume();
   }
 
+  /**
+   *
+   */
   inline Status &operator=(Status &other) {
     m_status = other.m_status;
     IF_ASSERTS(m_consumed = other.m_consumed);
     other.consume();
+    return *this;
   }
+
+  /**
+   * Return a clone of this status, which itself will now
+   * require a call to {@link #getStatus}.
+   */
+  inline Status clone() { return Status(m_status, m_msg); }
 
   /**
    * Static {@code OK} status.
@@ -177,13 +199,12 @@ class StatusOr {
    * RET_S(expression, status); Will 'return status' from a function if the
    * expression does no evaluate to true, and log the error message
    */
-#  define RET_SM(expr, status, msg)                                   \
-    do {                                                              \
-      if (!(expr)) {                                                  \
-        Log(LL::Error) << msg << " @ " << __FILE__ << ":" << __LINE__ \
-                       << std::endl;                                  \
-        return status;                                                \
-      }                                                               \
+#  define RET_SM(expr, status, msg)                                    \
+    do {                                                               \
+      if (!(expr)) {                                                   \
+        Log(LL::Error) << msg << " @ " << __FILE__ << ":" << __LINE__; \
+        return status;                                                 \
+      }                                                                \
     } while (0)
 
 #endif

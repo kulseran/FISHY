@@ -55,29 +55,4 @@
     }                                                                        \
   } while (0)
 
-/**
- * RET_M(expression, message); Will 'return false' from a function if the
- * expression does no evaluate to true
- */
-#define RET_M(expr, msg)                                                     \
-  do {                                                                       \
-    if (!(expr)) {                                                           \
-      std::cerr << msg << " @ " << __FILE__ << ":" << __LINE__ << std::endl; \
-      return false;                                                          \
-    }                                                                        \
-  } while (0)
-
-/**
- * RET_ERRORCODE_M(expression, message; Will 'return expression' from a function
- * if the expression does not evaluate to 0.
- */
-#define RET_ERRORCODE_M(expr, msg)                                           \
-  do {                                                                       \
-    const int ret = (expr);                                                  \
-    if (ret != 0) {                                                          \
-      std::cerr << msg << " @ " << __FILE__ << ":" << __LINE__ << std::endl; \
-      return ret;                                                            \
-    }                                                                        \
-  } while (0)
-
 #endif
