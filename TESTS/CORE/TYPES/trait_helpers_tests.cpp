@@ -4,6 +4,7 @@
 #include <CORE/TYPES/trait_helpers.h>
 #include <sstream>
 #include <vector>
+#include <iostream>
 
 using core::types::has_bit_and;
 using core::types::has_bit_or;
