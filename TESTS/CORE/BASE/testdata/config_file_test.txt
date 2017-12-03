@@ -1,4 +1,4 @@
 testFlag1=3
-testFlag2 = "hats"
+testFlag2 = "boots"
 
 testFlag3 = cats
