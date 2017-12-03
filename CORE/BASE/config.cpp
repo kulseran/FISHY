@@ -83,14 +83,19 @@ inline void iFlagBase::checkSet() const {
  *
  * and sets flags as appropriate.
  */
-Status ParseConfigFile(const std::string &filename) {
+Status ParseConfigFile() {
   Trace();
+  if (!g_configFile.wasSet()) {
+    Log(LL::Trace) << "No flag config file specified.";
+    return Status::ok();
+  }
+  const std::string &filename = g_configFile.get();
   Log(LL::Trace) << "Begining parse of config file: " << filename;
 
   std::ifstream ifile(filename.c_str());
   if (!ifile.is_open()) {
     Log(LL::Trace) << "Config file " << filename << " not found.";
-    return Status::ok();
+    return Status(Status::NOT_FOUND);
   }
 
   std::string line;
@@ -180,7 +185,7 @@ Status ParseFlags(const int argc, const char **argv) {
     }
   }
 
-  return ParseConfigFile(g_configFile.get());
+  return ParseConfigFile();
 }
 
 } // namespace config

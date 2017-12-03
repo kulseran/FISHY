@@ -19,16 +19,16 @@ REGISTER_TEST_CASE(testDefaults) {
 }
 
 REGISTER_TEST_CASE(testParseValidEquals) {
-  const char *defaultArgs[] = {"filename", "--testFlag1=3", "--testFlag2=hats"};
+  const char *defaultArgs[] = {"filename", "--testFlag1=1", "--testFlag2=hats"};
   bool ret = ParseFlags(ARRAY_LENGTH(defaultArgs), defaultArgs);
 
   TEST(testing::assertTrue(ret));
-  TEST(testing::assertEquals(g_testFlag1.get(), 3));
+  TEST(testing::assertEquals(g_testFlag1.get(), 1));
   TEST(testing::assertEquals(g_testFlag2.get(), "hats"));
 }
 
 REGISTER_TEST_CASE(testParseBadValue) {
-  const char *defaultArgs[] = {"filename", "testFlag1=3"};
+  const char *defaultArgs[] = {"filename", "testFlag1=2"};
   bool ret = ParseFlags(ARRAY_LENGTH(defaultArgs), defaultArgs);
 
   TEST(testing::assertFalse(ret));
@@ -49,6 +49,6 @@ REGISTER_TEST_CASE(testParseConfig) {
 
   TEST(testing::assertTrue(ret));
   TEST(testing::assertEquals(g_testFlag1.get(), 3));
-  TEST(testing::assertEquals(g_testFlag2.get(), "hats"));
+  TEST(testing::assertEquals(g_testFlag2.get(), "boots"));
   TEST(testing::assertEquals(g_testFlag3.get(), "cats"));
 }
