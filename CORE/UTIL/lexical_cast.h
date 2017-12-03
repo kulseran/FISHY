@@ -55,7 +55,6 @@ struct CasterImpl< true, true > {
   template < typename tDest, typename tSource >
   static Status lexical_cast(const tSource &a, tDest &b) {
     std::stringstream caster;
-    caster << std::setprecision(7);
     caster << a;
     caster >> b;
     return caster.fail() ? Status(Status::BAD_ARGUMENT) : Status::ok();
