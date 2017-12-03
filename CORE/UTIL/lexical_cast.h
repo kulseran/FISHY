@@ -15,8 +15,8 @@
 #include <CORE/types.h>
 
 #include <iomanip>
+#include <iostream>
 #include <sstream>
-
 namespace core {
 namespace util {
 
@@ -46,6 +46,7 @@ template < bool, bool >
 struct CasterImpl {
   template < typename tDest, typename tSource >
   static Status lexical_cast(const tSource &a, tDest &b) {
+    std::cerr << "# bad template" << std::endl;
     return Status(Status::BAD_ARGUMENT);
   }
 };
@@ -57,7 +58,8 @@ struct CasterImpl< true, true > {
     std::stringstream caster;
     caster << a;
     caster >> b;
-    return caster.fail() ? Status(Status::BAD_ARGUMENT) : Status::ok();
+    std::cerr << "Caster in state: " << caster.fail() << std::endl;
+    return caster.fail() ? Status(Status::GENERIC_ERROR) : Status::ok();
   }
 };
 } // namespace detail
