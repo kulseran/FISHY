@@ -44,7 +44,7 @@ REGISTER_TEST_CASE(testParseBadFlag) {
 REGISTER_TEST_CASE(testParseConfig) {
   const char *defaultArgs[] = {
       "filename",
-      "--config_file=./TESTS/CORE/BASE/testdata/config_file_test.txt"};
+      "--config_file=./tests/core/base/testdata/config_file_test.txt"};
   bool ret = ParseFlags(ARRAY_LENGTH(defaultArgs), defaultArgs);
 
   TEST(testing::assertTrue(ret));
