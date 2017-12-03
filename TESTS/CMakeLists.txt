@@ -1,5 +1,8 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.1)
 project (Fishy)
+
+# only the version part of CMAKE_SYSTEM 
+MESSAGE( STATUS "CMAKE_SYSTEM_VERSION: " ${CMAKE_VERSION} )
 
 file(GLOB_RECURSE tests_src
 	"*.h"
