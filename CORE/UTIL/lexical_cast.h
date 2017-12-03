@@ -51,7 +51,7 @@ struct CasterImpl< true, true > {
 template < typename tDest, typename tSource >
 inline Status lexical_cast(const tSource &a, tDest &b) {
   return detail::CasterImpl<
-      core::types::has_right_shift< std::stringstream, tDest >::value,
+      core::types::has_right_shift< std::stringstream, tDest & >::value,
       core::types::has_left_shift< std::stringstream, const tSource & >::
           value >::lexical_cast(a, b);
 }

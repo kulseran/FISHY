@@ -30,8 +30,7 @@ REGISTER_TEST_CASE(testBasicOperators) {
 }
 
 REGISTER_TEST_CASE(testStreamOperators) {
-  TEST(testing::assertTrue(
-      has_right_shift< std::stringstream, const int & >::value));
+  TEST(testing::assertTrue(has_right_shift< std::stringstream, int & >::value));
   TEST(testing::assertTrue(
       has_left_shift< std::stringstream, const int & >::value));
   TEST(testing::assertFalse(
