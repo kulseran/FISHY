@@ -9,6 +9,8 @@
 #  error may only be included in tests
 #endif
 
+#include <CORE/UTIL/lexical_cast.h>
+
 #include <algorithm>
 #include <cmath>
 #include <memory>
@@ -46,7 +48,17 @@ inline void assertEquals(
   } else if (t == u) {
     return;
   }
-  fail("Objects not equal.");
+  std::string tstr;
+  std::string ustr;
+  if (!core::util::lexical_cast(t, tstr)) {
+    tstr = "<unprintable>";
+  }
+  if (!core::util::lexical_cast(u, ustr)) {
+    ustr = "<unprintable>";
+  }
+  const std::string msg =
+      "Objects not equal. Actual [" + tstr + "]. Expected [" + ustr + "]";
+  fail(msg.c_str());
 }
 
 inline bool floatCompare(const float &t, const float &u) {
