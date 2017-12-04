@@ -1,16 +1,9 @@
-/**
- * String parsing utilities.
- * Based on the work of Russ Cox: https://swtch.com/~rsc/regexp/regexp1.html
- *
- * Implements a Thompson NFA based RegEx matcher.
- * Ken Thompson, “Regular expression search algorithm,” Communications of the
- * ACM 11(6) (June 1968), pp. 419–422. http://doi.acm.org/10.1145/363347.363387
- * (PDF)
- */
 #include "regex.h"
+
 #include <CORE/BASE/checks.h>
 
 #include <algorithm>
+#include <stack>
 #include <vector>
 
 /**
@@ -114,7 +107,8 @@ class RegExPattern::Nfa {
     void addTerminal(u32 s) { m_terminals.push_back(s); }
     void addAllTerminal(const std::vector< u32 > &other) {
       for (std::vector< u32 >::const_iterator itr = other.begin();
-           itr != other.end(); ++itr) {
+           itr != other.end();
+           ++itr) {
         m_terminals.push_back(*itr);
       }
     }
@@ -144,7 +138,8 @@ RegExPattern::RegExPattern() : m_machine(nullptr) {
  *
  */
 RegExPattern::RegExPattern(const std::string &pattern) : m_machine(nullptr) {
-  CHECK_M(build(pattern) == eBuildError::NONE, "Unable to build RegEx");
+  CHECK_M(
+      build(pattern) == eBuildError::NONE, "Unable to statically build RegEx.");
 }
 
 /**
@@ -244,9 +239,11 @@ std::string::const_iterator RegExPattern::Nfa::scan(
 
   // Scan the buffer
   for (std::string::const_iterator itr = begin;
-       itr != end && !currentStates.empty(); ++itr) {
+       itr != end && !currentStates.empty();
+       ++itr) {
     for (vectorset::const_iterator stateId = currentStates.begin();
-         stateId != currentStates.end(); ++stateId) {
+         stateId != currentStates.end();
+         ++stateId) {
       const State &state = m_states[*stateId];
       bool match = false;
       switch (state.m_type) {
@@ -332,7 +329,8 @@ void RegExPattern::Nfa::addSplit(
  */
 bool RegExPattern::Nfa::isMatch(const vectorset &states) const {
   for (vectorset::const_iterator stateId = states.begin();
-       stateId != states.end(); ++stateId) {
+       stateId != states.end();
+       ++stateId) {
     const State &state = m_states[*stateId];
     if (state.m_type == State::MATCH) {
       return true;
@@ -678,7 +676,8 @@ void RegExPattern::Nfa::build(const tTokenList &pattern) {
 void RegExPattern::Nfa::connect(
     RegExPattern::Nfa::Fragment &f, const u32 next) {
   for (std::vector< u32 >::const_iterator itr = f.m_terminals.begin();
-       itr != f.m_terminals.end(); ++itr) {
+       itr != f.m_terminals.end();
+       ++itr) {
     State *s = &m_states[*itr];
     if (s->m_out == -1) {
       s->m_out = next;
@@ -697,7 +696,7 @@ void RegExPattern::Nfa::connect(
  */
 u32 RegExPattern::Nfa::newState(const RegExPattern::Nfa::State &s) {
   m_states.push_back(s);
-  return m_states.size() - 1;
+  return static_cast< u32 >(m_states.size()) - 1;
 }
 
 } // namespace parser

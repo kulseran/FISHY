@@ -1,12 +1,17 @@
 /**
- * Regex matcher
+ * Regular expression matcher.
+ * Based on the work of Russ Cox: https://swtch.com/~rsc/regexp/regexp1.html
+ *
+ * Implements a Thompson NFA based RegEx matcher.
+ * Ken Thompson, “Regular expression search algorithm,” Communications of the
+ * ACM 11(6) (June 1968), pp. 419–422. http://doi.acm.org/10.1145/363347.363387
+ * (PDF)
  */
 #ifndef FISHY_REGEX_H
 #define FISHY_REGEX_H
 
 #include <CORE/types.h>
 
-#include <stack>
 #include <string>
 
 namespace core {
@@ -61,7 +66,7 @@ class RegExPattern {
    *
    * @param begin start of string to match
    * @param end end of string to match
-   * @return iterator at end of match
+   * @return iterator at end of match, or begin if no match.
    */
   std::string::const_iterator scan(
       const std::string::const_iterator &begin,
