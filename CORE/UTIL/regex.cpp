@@ -3,6 +3,7 @@
 #include <CORE/BASE/checks.h>
 
 #include <algorithm>
+#include <cstring>
 #include <stack>
 #include <vector>
 
