@@ -3,6 +3,8 @@
 
 #include <CORE/UTIL/lexical_cast.h>
 
+#include <vector>
+
 using namespace core::util;
 
 REGISTER_TEST_CASE(testValidCastsFromChar) {
@@ -40,4 +42,11 @@ REGISTER_TEST_CASE(testValidCastsToString) {
   std::string s32Out;
   TEST(testing::assertTrue(lexical_cast(1, s32Out)));
   TEST(testing::assertEquals(s32Out, "1"));
+}
+
+REGISTER_TEST_CASE(testInvalidCasts) {
+  std::vector< int > aVec;
+  int anInt;
+  TEST(testing::assertFalse(lexical_cast(aVec, anInt)));
+  TEST(testing::assertFalse(lexical_cast(anInt, aVec)));
 }
