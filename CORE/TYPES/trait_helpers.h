@@ -34,7 +34,7 @@ struct left_shift { // functor for operator==
   typedef _Ty second_argument_type;
   typedef bool result_type;
 
-  constexpr bool operator()(const _Ty &_Left, const _Ty &_Right)
+  constexpr bool operator()(const _Ty &&_Left, const _Ty &&_Right)
       const { // apply operator << to operands
     return (_Left << _Right);
   }
@@ -45,7 +45,7 @@ struct left_shift< void > { // transparent functor for operator<<
   typedef int is_transparent;
 
   template < class _Ty1, class _Ty2 >
-  constexpr auto operator()(_Ty1 &_Left, _Ty2 &_Right) const -> decltype(
+  constexpr auto operator()(_Ty1 &&_Left, _Ty2 &&_Right) const -> decltype(
       static_cast< _Ty1 & >(_Left) << static_cast< _Ty2 & >(
           _Right)) { // transparently apply operator<< to operands
     return (static_cast< _Ty1 & >(_Left) << static_cast< _Ty2 & >(_Right));
@@ -58,7 +58,7 @@ struct right_shift { // functor for operator==
   typedef _Ty second_argument_type;
   typedef bool result_type;
 
-  constexpr bool operator()(const _Ty &_Left, const _Ty &_Right)
+  constexpr bool operator()(const _Ty &&_Left, const _Ty &&_Right)
       const { // apply operator >> to operands
     return (_Left >> _Right);
   }
@@ -69,10 +69,10 @@ struct right_shift< void > { // transparent functor for operator<<
   typedef int is_transparent;
 
   template < class _Ty1, class _Ty2 >
-  constexpr auto operator()(_Ty1 &_Left, _Ty2 &_Right) const -> decltype(
+  constexpr auto operator()(_Ty1 &&_Left, _Ty2 &&_Right) const -> decltype(
       static_cast< _Ty1 & >(_Left) << static_cast< _Ty2 & >(
           _Right)) { // transparently apply operator>> to operands
-    return (static_cast< _Ty1 & >(_Left) >> static_cast< _Ty2 & >(_Right));
+    return (static_cast< _Ty1 && >(_Left) >> static_cast< _Ty2 && >(_Right));
   }
 };
 

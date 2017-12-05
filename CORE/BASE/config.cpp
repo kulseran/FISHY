@@ -59,7 +59,7 @@ void PrintFlags() {
 /**
  *
  */
-inline iFlagBase::iFlagBase(const char *name, const char *desc)
+iFlagBase::iFlagBase(const char *name, const char *desc)
     : m_name(name), m_desc(desc), m_set(false) {
   CHECK_M(RegisterFlag(this), "Flag --" << getName() << " already registered!");
 }
@@ -67,7 +67,7 @@ inline iFlagBase::iFlagBase(const char *name, const char *desc)
 /**
  *
  */
-inline void iFlagBase::checkSet() const {
+void iFlagBase::checkSet() const {
   if (!m_set) {
     Log(LL::Error) << "Required flag --" << getName()
                    << " was not set. (usage: " << getDesc() << ")";

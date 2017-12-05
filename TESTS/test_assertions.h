@@ -34,47 +34,49 @@ void assertTrue(const bool expr);
 void assertFalse(const bool expr);
 
 /**
- * Kills the test if the t != u
+ * Kills the test if the actual != expected
  */
 template < typename tTypeT, typename tTypeU >
 inline void assertEquals(
-    const tTypeT &t,
-    const tTypeU &u,
+    const tTypeT &actual,
+    const tTypeU &expected,
     bool (*pred)(const tTypeT &, const tTypeU &) = nullptr) {
   if (pred != nullptr) {
-    if (pred(t, u)) {
+    if (pred(actual, expected)) {
       return;
     }
-  } else if (t == u) {
+  } else if (actual == expected) {
     return;
   }
-  std::string tstr;
-  std::string ustr;
-  if (!core::util::lexical_cast(t, tstr)) {
-    tstr = "<unprintable>";
+  std::string actualstr;
+  std::string expectedstr;
+  if (!core::util::lexical_cast(actual, actualstr)) {
+    actualstr = "<unprintable>";
   }
-  if (!core::util::lexical_cast(u, ustr)) {
-    ustr = "<unprintable>";
+  if (!core::util::lexical_cast(expected, expectedstr)) {
+    expectedstr = "<unprintable>";
   }
-  const std::string msg =
-      "Objects not equal. Actual [" + tstr + "]. Expected [" + ustr + "]";
+  const std::string msg = "Objects not equal. Actual [" + actualstr
+                          + "]. Expected [" + expectedstr + "]";
   fail(msg.c_str());
 }
 
-inline bool floatCompare(const float &t, const float &u) {
-  return std::fabs(t - u) < std::numeric_limits< float >().epsilon();
+inline bool floatCompare(const float &actual, const float &expected) {
+  return std::fabs(actual - expected)
+         < std::numeric_limits< float >().epsilon();
 }
 
-inline bool doubleCompare(const double &t, const double &u) {
-  return std::fabs(t - u) < std::numeric_limits< float >().epsilon();
+inline bool doubleCompare(const double &actual, const double &expected) {
+  return std::fabs(actual - expected)
+         < std::numeric_limits< float >().epsilon();
 }
 
-inline void assertEquals(const float &t, const float &u) {
-  assertEquals(t, u, floatCompare);
+inline void assertEquals(const float &actual, const float &expected) {
+  assertEquals(actual, expected, floatCompare);
 }
 
-inline void assertEquals(const double &t, const double &u) {
-  assertEquals(t, u, doubleCompare);
+inline void assertEquals(const double &actual, const double &expected) {
+  assertEquals(actual, expected, doubleCompare);
 }
 
 /**
