@@ -12,8 +12,7 @@ namespace util {
 /**
  *
  */
-inline ComparisonChain::ComparisonChain()
-  : m_value(0) {
+inline ComparisonChain::ComparisonChain() : m_value(0) {
 }
 
 /**
@@ -47,8 +46,9 @@ inline bool ComparisonChain::buildGreaterThan() const {
 /**
  *
  */
-template <typename tType>
-inline ComparisonChain &ComparisonChain::and(const tType &lhs, const tType &rhs) {
+template < typename tType >
+inline ComparisonChain &
+ComparisonChain::andOne(const tType &lhs, const tType &rhs) {
   if (buildEqual()) {
     m_value = compare(lhs, rhs);
   }
@@ -58,8 +58,9 @@ inline ComparisonChain &ComparisonChain::and(const tType &lhs, const tType &rhs)
 /**
  *
  */
-template <typename tType>
-inline ComparisonChain &ComparisonChain::or(const tType &lhs, const tType &rhs) {
+template < typename tType >
+inline ComparisonChain &
+ComparisonChain::orOne(const tType &lhs, const tType &rhs) {
   if (!buildEqual()) {
     m_value = compare(lhs, rhs);
   }
@@ -69,23 +70,23 @@ inline ComparisonChain &ComparisonChain::or(const tType &lhs, const tType &rhs) 
 /**
  *
  */
-inline ComparisonChain &ComparisonChain::and(const ComparisonChain &child) {
-  and (child.buildInt());
+inline ComparisonChain &ComparisonChain::andOne(const ComparisonChain &child) {
+  andOne(child.buildInt());
   return *this;
 }
 
 /**
  *
  */
-inline ComparisonChain &ComparisonChain::or(const ComparisonChain &child) {
-  or (child.buildInt());
+inline ComparisonChain &ComparisonChain::orOne(const ComparisonChain &child) {
+  orOne(child.buildInt());
   return *this;
 }
 
 /**
  *
  */
-inline ComparisonChain &ComparisonChain::and(const int &child) {
+inline ComparisonChain &ComparisonChain::andOne(const int &child) {
   if (buildEqual()) {
     m_value = child;
   }
@@ -95,71 +96,73 @@ inline ComparisonChain &ComparisonChain::and(const int &child) {
 /**
  *
  */
-inline ComparisonChain &ComparisonChain::or(const int &child) {
+inline ComparisonChain &ComparisonChain::orOne(const int &child) {
   if (!buildEqual()) {
     m_value = child;
   }
   return *this;
 }
 
-
 /**
  *
  */
-template <typename tIteratorLhs, typename tIteratorRhs>
+template < typename tIteratorLhs, typename tIteratorRhs >
 inline ComparisonChain &ComparisonChain::andAll(
-  const tIteratorLhs &lhsBegin,
-  const tIteratorLhs &lhsEnd,
-  const tIteratorRhs &rhsBegin,
-  const tIteratorRhs &rhsEnd) {
+    const tIteratorLhs &lhsBegin,
+    const tIteratorLhs &lhsEnd,
+    const tIteratorRhs &rhsBegin,
+    const tIteratorRhs &rhsEnd) {
 
   tIteratorRhs rhsItr = rhsBegin;
   tIteratorLhs lhsItr = lhsBegin;
   while (buildEqual() && rhsItr != rhsEnd && lhsItr != lhsEnd) {
-    and (*lhsItr, *rhsItr);
+    andOne(*lhsItr, *rhsItr);
     rhsItr++;
     lhsItr++;
   }
-  and (std::distance(lhsItr, lhsEnd), std::distance(rhsItr, rhsEnd));
+  andOne(std::distance(lhsItr, lhsEnd), std::distance(rhsItr, rhsEnd));
   return *this;
 }
 
 /**
  *
  */
-template <typename tIteratorLhs, typename tIteratorRhs>
+template < typename tIteratorLhs, typename tIteratorRhs >
 inline ComparisonChain &ComparisonChain::orAny(
-  const tIteratorLhs &lhsBegin,
-  const tIteratorLhs &lhsEnd,
-  const tIteratorRhs &rhsBegin,
-  const tIteratorRhs &rhsEnd) {
+    const tIteratorLhs &lhsBegin,
+    const tIteratorLhs &lhsEnd,
+    const tIteratorRhs &rhsBegin,
+    const tIteratorRhs &rhsEnd) {
 
   tIteratorRhs rhsItr = rhsBegin;
   tIteratorLhs lhsItr = lhsBegin;
   while (rhsItr != rhsEnd && lhsItr != lhsEnd) {
-    or (*lhsItr, *rhsItr);
+    orOne(*lhsItr, *rhsItr);
     rhsItr++;
     lhsItr++;
   }
-  and (std::distance(lhsItr, lhsEnd), std::distance(rhsItr, rhsEnd));
+  andOne(std::distance(lhsItr, lhsEnd), std::distance(rhsItr, rhsEnd));
   return *this;
 }
 
 /**
  *
  */
-inline ComparisonChain::ComparisonChain(int value)
-  : m_value(value) {
+inline ComparisonChain::ComparisonChain(int value) : m_value(value) {
 }
 
 /**
  *
  */
-template <typename tType>
+template < typename tType >
 inline int ComparisonChain::compare(const tType &lhs, const tType &rhs) {
-  if (lhs > rhs) { return 1; }
-  else if (lhs < rhs) { return -1; }
-  else { return 0; }
+  if (lhs > rhs) {
+    return 1;
+  } else if (lhs < rhs) {
+    return -1;
+  } else {
+    return 0;
+  }
 }
 
 } // namespace util
