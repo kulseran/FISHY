@@ -1,8 +1,3 @@
-/**
- * comparisonchain.inl
- *
- * inline implementations of comparisonchain.h
- */
 #ifndef FISHY_TOKENIZER_INL
 #define FISHY_TOKENIZER_INL
 
