@@ -1,6 +1,4 @@
 /**
- * printer.h
- *
  * Proto printer to generate code
  */
 #ifndef FISHY_PROTO_PRINTER_H

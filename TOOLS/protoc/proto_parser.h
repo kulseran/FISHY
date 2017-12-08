@@ -1,6 +1,4 @@
 /**
- * parser.h
- *
  * Proto Parser
  */
 #ifndef FISHY_PROTO_PARSER_H
