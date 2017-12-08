@@ -17,29 +17,26 @@ namespace parser {
  *
  */
 template < typename tId >
-inline Tokenizer< tId >::Tokenizer(const typename Tokenizer< tId >::tTokenizerList &tokenizers)
-  : m_tokenizers(tokenizers) {
-};
+inline Tokenizer< tId >::Tokenizer(
+    const typename Tokenizer< tId >::tTokenizerList &tokenizers)
+    : m_tokenizers(tokenizers){};
 
 /**
  *
  */
 template < typename tId >
-inline Tokenizer< tId >::Token::Token()
-  : m_valid(false) {
+inline Tokenizer< tId >::Token::Token() : m_valid(false) {
 }
 
 /**
  *
  */
 template < typename tId >
-inline Tokenizer< tId >::Token::Token(const typename tId::type id,
-                                      const std::string::const_iterator tokenBegin,
-                                      const std::string::const_iterator tokenEnd)
-  : m_id(id),
-    m_tokenBegin(tokenBegin),
-    m_tokenEnd(tokenEnd),
-    m_valid(true) {
+inline Tokenizer< tId >::Token::Token(
+    const typename tId::type id,
+    const std::string::const_iterator tokenBegin,
+    const std::string::const_iterator tokenEnd)
+    : m_id(id), m_tokenBegin(tokenBegin), m_tokenEnd(tokenEnd), m_valid(true) {
 }
 
 /**
@@ -80,7 +77,8 @@ inline std::string Tokenizer< tId >::Token::getToken() const {
  *
  */
 template < typename tId >
-inline const std::string::const_iterator &Tokenizer< tId >::Token::begin() const {
+inline const std::string::const_iterator &
+Tokenizer< tId >::Token::begin() const {
   return m_tokenBegin;
 }
 
@@ -96,24 +94,30 @@ inline const std::string::const_iterator &Tokenizer< tId >::Token::end() const {
  *
  */
 template < typename tId >
-inline bool Tokenizer< tId >::Token::operator ==(const typename Tokenizer< tId >::Token &other) const {
+inline bool Tokenizer< tId >::Token::
+operator==(const typename Tokenizer< tId >::Token &other) const {
   if (!m_valid && !other.m_valid) {
     return true;
   }
   return core::util::ComparisonChain()
-         .and(m_valid, other.m_valid)
-         .and(m_id, other.m_id)
-         .and(m_tokenBegin, other.m_tokenBegin)
-         .and(m_tokenEnd, other.m_tokenEnd)
-         .buildEqual();
+      .andOne(m_valid, other.m_valid)
+      .andOne(m_id, other.m_id)
+      .andOne(m_tokenBegin, other.m_tokenBegin)
+      .andOne(m_tokenEnd, other.m_tokenEnd)
+      .buildEqual();
 }
 
 /**
  *
  */
 template < typename tId >
-inline bool Tokenizer< tId >::getNextToken(typename Tokenizer< tId >::Token &token, const std::string::const_iterator &begin, const std::string::const_iterator &end) const {
-  for (std::vector< tTokenizer >::const_iterator itr = m_tokenizers.begin(); itr != m_tokenizers.end(); ++itr) {
+inline bool Tokenizer< tId >::getNextToken(
+    typename Tokenizer< tId >::Token &token,
+    const std::string::const_iterator &begin,
+    const std::string::const_iterator &end) const {
+  for (std::vector< tTokenizer >::const_iterator itr = m_tokenizers.begin();
+       itr != m_tokenizers.end();
+       ++itr) {
     const std::string::const_iterator tokenEnd = itr->second.scan(begin, end);
     if (tokenEnd != begin) {
       token = Token(itr->first, begin, tokenEnd);
@@ -128,7 +132,8 @@ inline bool Tokenizer< tId >::getNextToken(typename Tokenizer< tId >::Token &tok
  *
  */
 template < typename tId >
-inline const typename Tokenizer< tId >::Token &Tokenizer< tId >::const_iterator::operator *() const {
+inline const typename Tokenizer< tId >::Token &
+    Tokenizer< tId >::const_iterator::operator*() const {
   return m_currentToken;
 }
 
@@ -136,7 +141,8 @@ inline const typename Tokenizer< tId >::Token &Tokenizer< tId >::const_iterator:
  *
  */
 template < typename tId >
-inline const typename Tokenizer< tId >::Token *Tokenizer< tId >::const_iterator::operator ->() const {
+inline const typename Tokenizer< tId >::Token *
+    Tokenizer< tId >::const_iterator::operator->() const {
   return &m_currentToken;
 }
 
@@ -144,9 +150,11 @@ inline const typename Tokenizer< tId >::Token *Tokenizer< tId >::const_iterator:
  *
  */
 template < typename tId >
-inline typename Tokenizer< tId >::const_iterator &Tokenizer< tId >::const_iterator::operator ++() {
+inline typename Tokenizer< tId >::const_iterator &
+Tokenizer< tId >::const_iterator::operator++() {
   if (m_currentToken) {
-    m_tokenizer.getNextToken(m_currentToken, m_currentToken.end(), m_string.end());
+    m_tokenizer.getNextToken(
+        m_currentToken, m_currentToken.end(), m_string.end());
   }
   return *this;
 }
@@ -155,7 +163,8 @@ inline typename Tokenizer< tId >::const_iterator &Tokenizer< tId >::const_iterat
  *
  */
 template < typename tId >
-inline bool Tokenizer< tId >::const_iterator::operator ==(const typename Tokenizer< tId >::const_iterator &other) const {
+inline bool Tokenizer< tId >::const_iterator::
+operator==(const typename Tokenizer< tId >::const_iterator &other) const {
   return m_currentToken == other.m_currentToken;
 }
 
@@ -163,7 +172,8 @@ inline bool Tokenizer< tId >::const_iterator::operator ==(const typename Tokeniz
  *
  */
 template < typename tId >
-inline bool Tokenizer< tId >::const_iterator::operator !=(const typename Tokenizer< tId >::const_iterator &other) const {
+inline bool Tokenizer< tId >::const_iterator::
+operator!=(const typename Tokenizer< tId >::const_iterator &other) const {
   return !(*this == other);
 }
 
@@ -171,9 +181,9 @@ inline bool Tokenizer< tId >::const_iterator::operator !=(const typename Tokeniz
  *
  */
 template < typename tId >
-inline Tokenizer< tId >::const_iterator::const_iterator(const Tokenizer< tId > &tokenizer, const std::string &str)
-  : m_tokenizer(tokenizer),
-    m_string(str) {
+inline Tokenizer< tId >::const_iterator::const_iterator(
+    const Tokenizer< tId > &tokenizer, const std::string &str)
+    : m_tokenizer(tokenizer), m_string(str) {
   m_tokenizer.getNextToken(m_currentToken, str.begin(), str.end());
 }
 

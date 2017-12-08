@@ -7,8 +7,11 @@
 #include <stack>
 #include <vector>
 
+static const unsigned MAX_NFA_STATES = 255;
 /**
  * Fast 'set' operations for regex states.
+ * Holds a state set that is as large as the maximum NFA machine size for the
+ * regex interpreter.
  */
 class vectorset {
   public:
@@ -18,8 +21,19 @@ class vectorset {
   const_iterator begin() const { return m_pSet; }
   const_iterator end() const { return m_pSet + m_sz; }
 
+  /**
+   * Clear the set.
+   */
   void clear() { m_sz = 0; }
+
+  /**
+   * Check for emptyness
+   */
   bool empty() const { return m_sz == 0; }
+
+  /**
+   * Insert an element.
+   */
   void insert(const u32 &elem) {
     const_iterator lb = std::lower_bound(begin(), end(), elem);
     if (lb == end() || *lb != elem) {
@@ -32,13 +46,17 @@ class vectorset {
     }
   }
 
+  /**
+   * Swap the set storage pointers.
+   * Both sets must remain in scope to continue functioning.
+   */
   static void swap(vectorset &a, vectorset &b) {
     std::swap(a.m_pSet, b.m_pSet);
     std::swap(a.m_sz, b.m_sz);
   }
 
   private:
-  u8 m_set[256];
+  u8 m_set[MAX_NFA_STATES + 1];
   u8 *m_pSet;
   u8 m_sz;
 };
@@ -76,20 +94,45 @@ typedef std::vector< ReToken > tTokenList;
  */
 class RegExPattern::Nfa {
   public:
+  /**
+   * Possible states for the NFA.
+   */
   class State {
     public:
-    enum eType { MATCH, LITERAL, RANGE, INV_LITERAL, INV_RANGE, SPLIT };
+    enum eType {
+      MATCH,       // Terminal state, regex was matched
+      LITERAL,     // Single character literal
+      RANGE,       // A [] style range of possible matches
+      INV_LITERAL, // A single character literal to not match
+      INV_RANGE,   // A [] style range of possible not matches
+      SPLIT        // A | style or of possible states
+    };
     explicit State(eType type, u32 out = -1, u32 out1 = -1)
         : m_type(type), m_literal('?'), m_out(out), m_out1(out1) {}
     explicit State(eType type, char ch)
         : m_type(type), m_literal(ch), m_out(-1), m_out1(-1) {}
+
     u32 m_out;
     u32 m_out1;
     eType m_type;
     char m_literal;
   };
   Nfa() {}
+
+  /**
+   * Build an NFA based in an input pattern.
+   */
   void build(const tTokenList &pattern);
+
+  /**
+   * Scan over a string from {@code begin} to {@code end} stopping if the {@code
+   * MATCH} state is reached.
+   *
+   * @param begin the start of the sequence to find a match within
+   * @param end the end of the sequence to find a match within
+   * @return begin if no match, or an iterator in the range (begin, end]
+   *     representing one past the final character of the match
+   */
   std::string::const_iterator scan(
       const std::string::const_iterator &begin,
       const std::string::const_iterator &end) const;
@@ -124,9 +167,12 @@ class RegExPattern::Nfa {
  * Prototypes
  */
 static RegExPattern::eBuildError::type expandPattern(tTokenList &tokens);
+
 static RegExPattern::eBuildError::type
 escapePattern(tTokenList &out, const std::string &pattern);
+
 static void print(const tTokenList &pattern);
+
 static RegExPattern::eBuildError::type infixToPostfix(tTokenList &pattern);
 
 /**
@@ -668,7 +714,7 @@ void RegExPattern::Nfa::build(const tTokenList &pattern) {
   m_accept = newState(State(State::MATCH));
   connect(fragments.top(), m_accept);
   m_start = fragments.top().m_start;
-  CHECK_M(m_states.size() < 255, "Regex too complicated.");
+  CHECK_M(m_states.size() < MAX_NFA_STATES, "Regex too complicated.");
 }
 
 /**
