@@ -1,11 +1,10 @@
 /**
- * lrparser.h
- *
  * LR parser grammer
  */
 #ifndef FISHY_LRPARSER_H
 #define FISHY_LRPARSER_H
 
+#include <CORE/BASE/logging.h>
 #include <EXTERN_LIB/srutil/delegate/delegate.hpp>
 
 #include "tokenizer.h"

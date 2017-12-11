@@ -1,8 +1,3 @@
-/**
- * lrparser.inl
- *
- * LR parser grammer
- */
 #ifndef FISHY_LRPARSER_INL
 #define FISHY_LRPARSER_INL
 
@@ -352,7 +347,7 @@ inline void LRParser< tId >::storeBestError(
       return;
     }
     std::string tag = "<EOF>";
-    size_t lastLine = -1;
+    size_t lastLine = 0;
     if (itr != stack.end()) {
       if (itr->m_type == TokenOrNode::TOKEN) {
         tag = tId::names[itr->m_token.getId()];
@@ -366,12 +361,12 @@ inline void LRParser< tId >::storeBestError(
     std::stringstream msg;
     if (bestRule != m_rules.size()) {
       msg << "Unexpected " << tag << " while parsing "
-          << m_rules[bestRule].getName() << " line " << lastLine;
+          << m_rules[bestRule].getName() << " on line " << lastLine;
     } else if (lastFollow != m_rules.size()) {
       msg << "Unexpected " << tag << " following "
-          << m_rules[lastFollow].getName() << " line " << lastLine;
+          << m_rules[lastFollow].getName() << " on line " << lastLine;
     } else {
-      msg << "Unexpected " << tag << " with no matching rules. Line "
+      msg << "Unexpected " << tag << " with no matching rules on line "
           << lastLine;
     }
     cb(msg.str());
