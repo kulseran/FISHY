@@ -32,7 +32,6 @@ struct eTokenTypes {
     RPC,
     RETURNS,
 
-    OPTIONAL,
     REPEATED,
 
     // The order of the following must match FieldDef::eFieldType
@@ -71,13 +70,13 @@ struct eTokenTypes {
 };
 
 const char *eTokenTypes::names[eTokenTypes::COUNT] = {
-    "PACKAGE",  "IMPORT",     "MESSAGE",     "SERVICE",    "ENUM",
-    "RPC",      "RETURNS",    "OPTIONAL",    "REPEATED",   "DOUBLE",
-    "FLOAT",    "INT32",      "INT64",       "UINT32",     "UINT64",
-    "SINT32",   "SINT64",     "FIXED32",     "FIXED64",    "SFIXED32",
-    "SFIXED64", "BOOL",       "STRING",      "BYTES",      "IDENT",
-    "STR",      "WS",         "NUM",         "EOL",        "EQUALS",
-    "COMMENT",  "OPEN_BRACE", "CLOSE_BRACE", "OPEN_PEREN", "CLOSE_PEREN"};
+    "PACKAGE",    "IMPORT",      "MESSAGE",    "SERVICE",    "ENUM",
+    "RPC",        "RETURNS",     "REPEATED",   "DOUBLE",     "FLOAT",
+    "INT32",      "INT64",       "UINT32",     "UINT64",     "SINT32",
+    "SINT64",     "FIXED32",     "FIXED64",    "SFIXED32",   "SFIXED64",
+    "BOOL",       "STRING",      "BYTES",      "IDENT",      "STR",
+    "WS",         "NUM",         "EOL",        "EQUALS",     "COMMENT",
+    "OPEN_BRACE", "CLOSE_BRACE", "OPEN_PEREN", "CLOSE_PEREN"};
 
 typedef core::util::parser::Tokenizer< eTokenTypes > tTokenizer;
 typedef std::vector< typename tTokenizer::Token > tTokenList;
@@ -103,7 +102,7 @@ class ProtoDefBuilder {
 
     tParser::tTokenOrNodeList::const_iterator itr = begin + 1;
 
-    RET_M(!m_target.m_package.empty(), "Too many package defines.");
+    RET_M(m_target.m_package.empty(), "Too many package defines.");
     m_target.m_package = std::move(itr->m_token.getToken());
 
     return true;
@@ -296,8 +295,6 @@ bool genField(
     const tParser::tTokenOrNodeList::const_iterator &end) {
   tParser::tTokenOrNodeList::const_iterator itr = begin;
   FieldDef *pDef = new FieldDef;
-  pDef->m_repeated = itr->m_token.getId() == eTokenTypes::REPEATED;
-  ++itr;
   if (itr->m_token.getId() == eTokenTypes::IDENT) {
     pDef->m_type = FieldDef::FIELD_MSG;
     pDef->m_msgType = itr->m_token.getToken();
@@ -307,7 +304,14 @@ bool genField(
   }
   ++itr;
   pDef->m_name = itr->m_token.getToken();
-  std::advance(itr, 2);
+  ++itr;
+  if (itr->m_token.getId() == eTokenTypes::REPEATED) {
+    pDef->m_repeated = true;
+    std::advance(itr, 2);
+  } else {
+    pDef->m_repeated = false;
+    ++itr;
+  }
   CHECK(core::util::lexical_cast(itr->m_token.getToken(), pDef->m_fieldNum));
   ret = pDef;
   return true;
@@ -443,9 +447,7 @@ bool parse(ProtoDef &def, const std::string &fileData) {
   tokenRegexs.push_back(
       tTokenizer::tTokenizer(eTokenTypes::RETURNS, RegExPattern("returns ")));
   tokenRegexs.push_back(
-      tTokenizer::tTokenizer(eTokenTypes::REPEATED, RegExPattern("repeated ")));
-  tokenRegexs.push_back(
-      tTokenizer::tTokenizer(eTokenTypes::OPTIONAL, RegExPattern("optional ")));
+      tTokenizer::tTokenizer(eTokenTypes::REPEATED, RegExPattern("\\[\\] ")));
   tokenRegexs.push_back(
       tTokenizer::tTokenizer(eTokenTypes::DOUBLE, RegExPattern("double ")));
   tokenRegexs.push_back(
@@ -504,22 +506,21 @@ bool parse(ProtoDef &def, const std::string &fileData) {
   for (u32 fieldType = eTokenTypes::DOUBLE; fieldType <= eTokenTypes::BYTES;
        ++fieldType) {
     fieldRule |= tCRule(tCRule::tProc::from_function< genField >())
-                 & eTokenTypes::OPTIONAL & eTokenTypes::type(fieldType)
-                 & eTokenTypes::IDENT & eTokenTypes::EQUALS & eTokenTypes::NUM
-                 & eTokenTypes::EOL;
+                 & eTokenTypes::type(fieldType) & eTokenTypes::IDENT
+                 & eTokenTypes::EQUALS & eTokenTypes::NUM & eTokenTypes::EOL;
   }
   for (u32 fieldType = eTokenTypes::DOUBLE; fieldType <= eTokenTypes::BYTES;
        ++fieldType) {
     fieldRule |= tCRule(tCRule::tProc::from_function< genField >())
-                 & eTokenTypes::REPEATED & eTokenTypes::type(fieldType)
-                 & eTokenTypes::IDENT & eTokenTypes::EQUALS & eTokenTypes::NUM
-                 & eTokenTypes::EOL;
+                 & eTokenTypes::type(fieldType) & eTokenTypes::IDENT
+                 & eTokenTypes::REPEATED & eTokenTypes::EQUALS
+                 & eTokenTypes::NUM & eTokenTypes::EOL;
   }
   fieldRule |= tCRule(tCRule::tProc::from_function< genField >())
-               & eTokenTypes::OPTIONAL & eTokenTypes::IDENT & eTokenTypes::IDENT
-               & eTokenTypes::EQUALS & eTokenTypes::NUM & eTokenTypes::EOL;
+               & eTokenTypes::IDENT & eTokenTypes::IDENT & eTokenTypes::EQUALS
+               & eTokenTypes::NUM & eTokenTypes::EOL;
   fieldRule |= tCRule(tCRule::tProc::from_function< genField >())
-               & eTokenTypes::REPEATED & eTokenTypes::IDENT & eTokenTypes::IDENT
+               & eTokenTypes::IDENT & eTokenTypes::IDENT & eTokenTypes::REPEATED
                & eTokenTypes::EQUALS & eTokenTypes::NUM & eTokenTypes::EOL;
 
   tRule &enumFieldRule = parser.addRule("enumfield");

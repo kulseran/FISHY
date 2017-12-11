@@ -118,9 +118,9 @@ REGISTER_TEST_CASE(testLRParseErrorOnMissingEnd) {
       testFile.begin(),
       testFile.end(),
       tParser::tErrorCB::from_function< HandleError >())));
-  TEST(testing::assertEquals(g_errorMsg.size(), 1));
+  TEST(testing::assertEquals(g_errorMsg.size(), 2));
   TEST(testing::assertEquals(
-      g_errorMsg[0], "Unexpected <EOF> while parsing objectbody on line 0"));
+      g_errorMsg[1], "Unexpected <EOF> while parsing objectbody on line 0"));
 }
 
 REGISTER_TEST_CASE(testLRParseErrorOnMissingFirstToken) {
@@ -137,6 +137,5 @@ REGISTER_TEST_CASE(testLRParseErrorOnMissingFirstToken) {
       tParser::tErrorCB::from_function< HandleError >())));
   TEST(testing::assertEquals(g_errorMsg.size(), 4));
   TEST(testing::assertEquals(
-      g_errorMsg[0],
-      "Unexpected TOKEN_OBRACE while parsing objectbody on line 0"));
+      g_errorMsg[0], "Unexpected TOKEN_OBRACE while parsing object on line 0"));
 }
