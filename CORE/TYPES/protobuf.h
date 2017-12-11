@@ -17,14 +17,14 @@ namespace core {
 namespace base {
 class iBinarySerializerSink;
 }
-}
+} // namespace core
 
 namespace core {
-namespace util {
+namespace types {
 
 /**
-* Defines a field within a message.
-*/
+ * Defines a field within a message.
+ */
 struct FieldDef {
   enum eFieldType {
     FIELD_DOUBLE,
@@ -105,70 +105,72 @@ struct ProtoDef {
  */
 class ProtoDescriptor {
   public:
-    ProtoDescriptor(const MessageDef &self);
-    ProtoDescriptor(const MessageDef &self, const std::vector<const ProtoDescriptor *> &childen);
+  ProtoDescriptor(const MessageDef &self);
+  ProtoDescriptor(
+      const MessageDef &self,
+      const std::vector< const ProtoDescriptor * > &childen);
 
-    /**
-     * Find a child field by name
-     *
-     * @param name the field name to find
-     * @return the located field or nullptr
-     */
-    const FieldDef *findFieldByName(const std::string &name) const;
+  /**
+   * Find a child field by name
+   *
+   * @param name the field name to find
+   * @return the located field or nullptr
+   */
+  const FieldDef *findFieldByName(const std::string &name) const;
 
-    /**
-     * Find a child field by number
-     *
-     * @param num the field number to find
-     * @return the located field or nullptr
-     */
-    const FieldDef *findFieldByNum(const u32 num) const;
+  /**
+   * Find a child field by number
+   *
+   * @param num the field number to find
+   * @return the located field or nullptr
+   */
+  const FieldDef *findFieldByNum(const u32 num) const;
 
-    /**
-     * Find a child message by name
-     *
-     * @param name message name to find
-     * @return the child {@link ProtoDescriptor} or nullptr
-     */
-    const ProtoDescriptor *findMessageByName(const std::string &name) const;
+  /**
+   * Find a child message by name
+   *
+   * @param name message name to find
+   * @return the child {@link ProtoDescriptor} or nullptr
+   */
+  const ProtoDescriptor *findMessageByName(const std::string &name) const;
 
-    /**
-     * Find a child Enum by name
-     *
-     * @param name message name to find
-     * @return the child {@link ProtoDescriptor} or nullptr
-     */
-    const EnumDef *findEnumByName(const std::string &name) const;
+  /**
+   * Find a child Enum by name
+   *
+   * @param name message name to find
+   * @return the child {@link ProtoDescriptor} or nullptr
+   */
+  const EnumDef *findEnumByName(const std::string &name) const;
 
-    /**
-     * @return the {@link MessageDef} for this proto.
-     */
-    const MessageDef &getDef() const;
+  /**
+   * @return the {@link MessageDef} for this proto.
+   */
+  const MessageDef &getDef() const;
 
   private:
-    MessageDef m_self;
-    std::vector<const ProtoDescriptor *> m_children;
+  MessageDef m_self;
+  std::vector< const ProtoDescriptor * > m_children;
 };
 
 /**
  * Register a protodescriptor in the global db.
  * Normally done as an internal call, an no need to do this manually.
  */
-void RegisterWithProtoDb(const ProtoDescriptor *pDescriptor);
+void RegisterWithProtoDb(const ProtoDescriptor *const pDescriptor);
 
 /**
  * Lookup any globally registered protobuffer
  *
  * @param name the fully qualified proto name
  */
-const ProtoDescriptor *FindProtoByName(const std::string &name);
+const ProtoDescriptor *const FindProtoByName(const std::string &name);
 
 /**
  * Lookup any globally registered protobuffer enumeration
  *
  * @param name the fully qualified proto enum name
  */
-const EnumDef *FindProtoEnumByName(const std::string &name);
+const EnumDef *const FindProtoEnumByName(const std::string &name);
 
 /**
  * Lists all globally registered protobuffers.
@@ -180,41 +182,43 @@ std::vector< std::string > ListAllProtoNames();
  */
 class iProtoMessage {
   public:
-    virtual ~iProtoMessage() { }
+  virtual ~iProtoMessage() {}
 
-    virtual bool getField(const u32 fieldNum, std::string &value) const = 0;
-    virtual bool getField(const u32 fieldNum, const u32 index, std::string &value) const = 0;
+  virtual bool getField(const u32 fieldNum, std::string &value) const = 0;
+  virtual bool
+  getField(const u32 fieldNum, const u32 index, std::string &value) const = 0;
 
-    virtual const ProtoDescriptor &getDescriptor() const = 0;
-    virtual size_t byte_size() const = 0;
-    virtual bool oserialize(core::base::iBinarySerializerSink &) const = 0;
-    virtual bool iserialize(core::base::iBinarySerializerSink &) = 0;
+  virtual const ProtoDescriptor &getDescriptor() const = 0;
+  virtual size_t byte_size() const = 0;
+  virtual bool oserialize(core::base::iBinarySerializerSink &) const = 0;
+  virtual bool iserialize(core::base::iBinarySerializerSink &) = 0;
 
   protected:
-    iProtoMessage() {}
+  iProtoMessage() {}
 };
 
 /**
  * A RTTI implementation of iProtoMessage
  */
-class DynamicProto : public core::util::iProtoMessage {
+class DynamicProto : public iProtoMessage {
   public:
-    DynamicProto(const core::util::ProtoDescriptor &descriptor);
-    const core::util::ProtoDescriptor &getDescriptor() const override;
-    bool getField(const u32 fieldNum, std::string &value) const override;
-    bool getField(const u32 fieldNum, const u32 index, std::string &value) const override;
-    size_t byte_size() const override;
-    bool oserialize(core::base::iBinarySerializerSink &sink) const override;
-    bool iserialize(core::base::iBinarySerializerSink &fileSink) override;
+  DynamicProto(const ProtoDescriptor &descriptor);
+  const ProtoDescriptor &getDescriptor() const override;
+  bool getField(const u32 fieldNum, std::string &value) const override;
+  bool getField(
+      const u32 fieldNum, const u32 index, std::string &value) const override;
+  size_t byte_size() const override;
+  bool oserialize(core::base::iBinarySerializerSink &sink) const override;
+  bool iserialize(core::base::iBinarySerializerSink &fileSink) override;
 
   private:
-    typedef std::map<int, std::vector<std::string>> tFieldMap;
-    const core::util::ProtoDescriptor &m_descriptor;
-    tFieldMap m_fields;
-    std::vector<u8> m_buffer;
+  typedef std::map< int, std::vector< std::string > > tFieldMap;
+  const ProtoDescriptor &m_descriptor;
+  tFieldMap m_fields;
+  std::vector< u8 > m_buffer;
 };
 
-} // namespace util
+} // namespace types
 } // namespace core
 
 #endif

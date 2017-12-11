@@ -10,12 +10,13 @@
 #include <map>
 #include <set>
 
-using core::util::EnumDef;
-using core::util::FieldDef;
-using core::util::MessageDef;
-using core::util::ProtoDef;
-using core::util::RpcFunctionDef;
-using core::util::ServiceDef;
+using core::types::EnumDef;
+using core::types::FieldDef;
+using core::types::MessageDef;
+using core::types::ProtoDef;
+using core::types::RpcFunctionDef;
+using core::types::ServiceDef;
+using core::util::ReplaceStr;
 
 core::config::Flag< std::string >
     g_inputFile("infile", "Path to input proto file", "");
@@ -53,28 +54,28 @@ int main(int argc, const char **argv) {
   g_inputFile.checkSet();
 
   const std::string &filename = g_inputFile.get();
-  const std::string outFileName =
-      core::util::replaceStr(g_inputFile.get(), ".proto", "");
+  const std::string outFileName = ReplaceStr(g_inputFile.get(), ".proto", "");
 
   std::string str;
   if (!openFile(str, filename)) {
-    Log(LL::Error) << "Unable to open file: " << filename << std::endl;
+    Log(LL::Error) << "Unable to open file: ";
     return 1;
   }
 
   ProtoDef def;
   if (!proto::parse(def, str)) {
-    Log(LL::Error) << "Unable to parse tokens" << std::endl;
+    Log(LL::Error) << "Unable to parse tokens";
     return 1;
   }
 
   if (!verifyImportsAndFixFields(def)) {
-    Log(LL::Error) << "Unable to collect imports" << std::endl;
+    Log(LL::Error) << "Unable to collect imports";
     return 1;
   }
 
   if (!verifyDef(def)) {
-    Log(LL::Error) << "Error in definition" << std::endl;
+    Log(LL::Error) << "Error in definition";
+    return 1;
   }
 
   print(def, outFileName);
@@ -124,7 +125,7 @@ std::vector< std::string >::const_iterator findMatch(
  */
 static std::string fixMessageString(const std::string &str) {
   if (str.find_first_of(".") != str.npos) {
-    return "::" + core::util::replaceStr(str, ".", "::");
+    return "::" + ReplaceStr(str, ".", "::");
   } else {
     return "::" + str;
   }
@@ -159,7 +160,7 @@ bool fixupLocalFields(
       itr = findMatch(possibleEnums, field->m_msgType);
       if (itr == possibleEnums.end()) {
         Log(LL::Error) << "Unable to locate definition for: "
-                       << field->m_msgType << std::endl;
+                       << field->m_msgType;
         return false;
       }
       field->m_msgType = *itr;
@@ -191,7 +192,7 @@ static bool fixupLocalFields(
       itr = findMatch(possibleEnums, func->m_return);
       if (itr == possibleEnums.end()) {
         Log(LL::Error) << "Unable to locate definition for return value: "
-                       << func->m_return << std::endl;
+                       << func->m_return;
         return false;
       }
       func->m_return = *itr;
@@ -204,7 +205,7 @@ static bool fixupLocalFields(
       itr = findMatch(possibleEnums, func->m_param);
       if (itr == possibleEnums.end()) {
         Log(LL::Error) << "Unable to locate definition for parameter value: "
-                       << func->m_param << std::endl;
+                       << func->m_param;
         return false;
       }
       func->m_param = *itr;
@@ -225,13 +226,13 @@ bool recursiveCollectDefs(
        ++itr) {
     std::string str;
     if (!openFile(str, *itr)) {
-      Log(LL::Error) << "Unable to open import: " << *itr << std::endl;
+      Log(LL::Error) << "Unable to open import: " << *itr;
       return false;
     }
 
     ProtoDef def;
     if (!proto::parse(def, str)) {
-      Log(LL::Error) << "Unable to parse import: " << *itr << std::endl;
+      Log(LL::Error) << "Unable to parse import: " << *itr;
       return false;
     }
     childDefs.push_back(def);
@@ -281,7 +282,7 @@ bool verifyImportsAndFixFields(ProtoDef &def) {
        itr != allDefs.end();
        ++itr) {
     const std::string packageSelf =
-        "::" + core::util::replaceStr(itr->m_package, ".", "::");
+        "::" + ReplaceStr(itr->m_package, ".", "::");
     recursiveCollectDefines(
         itr->m_messages, packageSelf, possibleMessages, possibleEnums);
   }

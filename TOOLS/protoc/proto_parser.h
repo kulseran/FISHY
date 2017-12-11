@@ -4,7 +4,7 @@
 #ifndef FISHY_PROTO_PARSER_H
 #define FISHY_PROTO_PARSER_H
 
-#include <CORE/UTIL/protobuf.h>
+#include <CORE/TYPES/protobuf.h>
 
 #include <string>
 
@@ -15,7 +15,7 @@ namespace proto {
  * @param fileData input file as a string.
  * @return false on error. Errors are logged.
  */
-bool parse(core::util::ProtoDef &out, const std::string &fileData);
+bool parse(core::types::ProtoDef &out, const std::string &fileData);
 
 } // namespace proto
 

@@ -7,13 +7,15 @@
 #include <CORE/UTIL/stringutil.h>
 #include <CORE/types.h>
 
-using core::util::EnumDef;
-using core::util::FieldDef;
-using core::util::MessageDef;
-using core::util::ProtoDef;
-using core::util::RpcFunctionDef;
-using core::util::ServiceDef;
+using core::types::EnumDef;
+using core::types::FieldDef;
+using core::types::MessageDef;
+using core::types::ProtoDef;
+using core::types::RpcFunctionDef;
+using core::types::ServiceDef;
 using core::util::parser::RegExPattern;
+
+using core::util::TrimQuotes;
 
 namespace proto {
 
@@ -101,10 +103,7 @@ class ProtoDefBuilder {
 
     tParser::tTokenOrNodeList::const_iterator itr = begin + 1;
 
-    if (!m_target.m_package.empty()) {
-      Log(LL::Error) << "Too many package defines." << std::endl;
-      return false;
-    }
+    RET_M(!m_target.m_package.empty(), "Too many package defines.");
     m_target.m_package = std::move(itr->m_token.getToken());
 
     return true;
@@ -120,8 +119,7 @@ class ProtoDefBuilder {
     (void) unused;
 
     tParser::tTokenOrNodeList::const_iterator itr = begin + 1;
-    m_target.m_imports.push_back(
-        core::util::trimQuotes(itr->m_token.getToken()));
+    m_target.m_imports.push_back(TrimQuotes(itr->m_token.getToken()));
 
     return true;
   }

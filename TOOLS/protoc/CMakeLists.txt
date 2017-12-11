@@ -8,5 +8,8 @@ file(GLOB_RECURSE protoc_src
 )
 assign_source_group(${protoc_src})
 
-add_executable(bin2h ${protoc_src})
-target_link_libraries(bin2h core)
+filter_items(protoc_src ".*main.cpp")
+
+add_library(protoclib ${protoc_src})
+add_executable(protoc main.cpp ${protoc_src})
+target_link_libraries(protoc core)
