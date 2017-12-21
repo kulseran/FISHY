@@ -14,9 +14,4 @@
  */
 bool print(const core::types::ProtoDef &def, const std::string &fileNameRoot);
 
-/**
- * Styles the files output by {@link print} for proper indentation.
- */
-void styleFile(const std::string &astylePath, const std::string &fileNameRoot);
-
 #endif

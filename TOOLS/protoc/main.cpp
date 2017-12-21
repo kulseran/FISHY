@@ -1,5 +1,6 @@
 #include "proto_parser.h"
 #include "proto_printer.h"
+#include "proto_validator.h"
 
 #include <CORE/BASE/config.h>
 #include <CORE/BASE/logging.h>
@@ -40,7 +41,6 @@ static void recursiveCollectDefines(
     std::vector< std::string > &possibleMessages,
     std::vector< std::string > &possibleEnums);
 static bool verifyImportsAndFixFields(ProtoDef &def);
-static bool verifyDef(const ProtoDef &def);
 
 /**
  * Main
@@ -58,23 +58,23 @@ int main(int argc, const char **argv) {
 
   std::string str;
   if (!openFile(str, filename)) {
-    Log(LL::Error) << "Unable to open file: ";
+    Log(LL::Error) << "Unable to open file: " << filename;
     return 1;
   }
 
   ProtoDef def;
   if (!proto::parse(def, str)) {
-    Log(LL::Error) << "Unable to parse tokens";
+    Log(LL::Error) << "Unable to parse tokens.";
     return 1;
   }
 
   if (!verifyImportsAndFixFields(def)) {
-    Log(LL::Error) << "Unable to collect imports";
+    Log(LL::Error) << "Unable to collect imports.";
     return 1;
   }
 
   if (!verifyDef(def)) {
-    Log(LL::Error) << "Error in definition";
+    Log(LL::Error) << "Error in definition.";
     return 1;
   }
 
@@ -303,65 +303,5 @@ bool verifyImportsAndFixFields(ProtoDef &def) {
     }
   }
 
-  return true;
-}
-
-/**
- *
- */
-bool verifyMsg(const MessageDef &def) {
-  std::set< s32 > knownFields;
-  for (std::vector< FieldDef >::const_iterator itr = def.m_fields.begin();
-       itr != def.m_fields.end();
-       ++itr) {
-    const s32 fieldNum = itr->m_fieldNum;
-    RET_M(fieldNum > 0, "Field numbers must be positive.");
-    RET_M(
-        knownFields.find(fieldNum) == knownFields.end(),
-        "Field number " << fieldNum << " is repeated.");
-    knownFields.insert(fieldNum);
-  }
-
-  for (std::vector< MessageDef >::const_iterator message =
-           def.m_messages.begin();
-       message != def.m_messages.end();
-       ++message) {
-    if (!verifyMsg(*message)) {
-      return false;
-    }
-  }
-
-  for (std::vector< EnumDef >::const_iterator message = def.m_enums.begin();
-       message != def.m_enums.end();
-       ++message) {
-    std::set< s32 > knownFields;
-    for (std::vector< FieldDef >::const_iterator itr =
-             message->m_values.begin();
-         itr != message->m_values.end();
-         ++itr) {
-      const s32 fieldNum = itr->m_fieldNum;
-      RET_M(
-          knownFields.find(fieldNum) == knownFields.end(),
-          "Enumeration number " << fieldNum << " is repeated.");
-      RET_M(fieldNum != 0, "Enum 0 may not be specified.");
-      RET_M(fieldNum >= 0, "Enum values must be positive.");
-      knownFields.insert(fieldNum);
-    }
-  }
-  return true;
-}
-
-/**
- * Verify def
- */
-bool verifyDef(const ProtoDef &def) {
-  for (std::vector< MessageDef >::const_iterator message =
-           def.m_messages.begin();
-       message != def.m_messages.end();
-       ++message) {
-    if (!verifyMsg(*message)) {
-      return false;
-    }
-  }
   return true;
 }
