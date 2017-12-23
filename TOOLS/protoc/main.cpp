@@ -22,7 +22,7 @@ using core::util::ReplaceStr;
 core::config::Flag< std::string >
     g_inputFile("infile", "Path to input proto file", "");
 
-static bool openFile(std::string &out, const std::string &fileName);
+static Status openFile(std::string &out, const std::string &fileName);
 static std::vector< std::string >::const_iterator
 findMatch(const std::vector< std::string > &possible, const std::string ending);
 static bool fixupLocalFields(
@@ -49,7 +49,9 @@ static bool verifyImportsAndFixFields(ProtoDef &def);
  *  --infile
  */
 int main(int argc, const char **argv) {
-  core::config::ParseFlags(argc, argv);
+  if (!core::config::ParseFlags(argc, argv)) {
+    return 1;
+  }
 
   g_inputFile.checkSet();
 
@@ -86,16 +88,16 @@ int main(int argc, const char **argv) {
 /**
  *
  */
-bool openFile(std::string &out, const std::string &fileName) {
+Status openFile(std::string &out, const std::string &fileName) {
   std::ifstream ifile(fileName);
   if (!ifile.is_open()) {
-    return false;
+    return Status::NOT_FOUND;
   }
   std::copy(
       std::istreambuf_iterator< char >(ifile.rdbuf()),
       std::istreambuf_iterator< char >(),
       std::back_inserter(out));
-  return true;
+  return Status::OK;
 }
 
 /**
