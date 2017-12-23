@@ -14,8 +14,7 @@ OSERIALIZE(std::string) {
   if (buff.fail()) {
     return buff;
   }
-  if (buff.write(core::memory::ConstBlob((const u8 *) obj.data(), obj.size()))
-      != obj.size()) {
+  if (buff.write(core::memory::ConstBlob(obj)) != obj.size()) {
     buff.set_fail();
   }
   return buff;
