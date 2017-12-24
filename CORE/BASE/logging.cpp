@@ -24,6 +24,7 @@ class LogManager : core::util::noncopyable {
   std::vector< std::shared_ptr< iLogSink > > m_sinks;
   core::types::ConcurrentQueue< LogMessage > m_messages;
   std::thread m_loggerThread;
+  std::mutex m_mutex;
 
   static void logFn(LogManager *);
 };
@@ -66,6 +67,7 @@ LogManager::~LogManager() {
  *
  */
 Status LogManager::registerSink(std::shared_ptr< iLogSink > pSink) {
+  std::lock_guard< std::mutex > lock(m_mutex);
   if (std::find(m_sinks.begin(), m_sinks.end(), pSink) != m_sinks.end()) {
     return Status(Status::BAD_ARGUMENT);
   }
@@ -96,11 +98,20 @@ Status LogManager::write(const LogMessage &message) {
  */
 void LogManager::logFn(LogManager *pManager) {
   while (true) {
+    {
+      std::lock_guard< std::mutex > lock(pManager->m_mutex);
+      if (pManager->m_sinks.empty()) {
+        std::this_thread::yield();
+        continue;
+      }
+    }
+
     LogMessage message;
     if (!pManager->m_messages.pop(message)) {
       break;
     }
 
+    std::lock_guard< std::mutex > lock(pManager->m_mutex);
     for (std::vector< std::shared_ptr< iLogSink > >::iterator itr =
              pManager->m_sinks.begin();
          itr != pManager->m_sinks.end();
