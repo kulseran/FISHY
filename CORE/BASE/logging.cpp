@@ -23,8 +23,8 @@ class LogManager : core::util::noncopyable {
   private:
   std::vector< std::shared_ptr< iLogSink > > m_sinks;
   core::types::ConcurrentQueue< LogMessage > m_messages;
-  std::thread m_loggerThread;
   std::mutex m_mutex;
+  std::thread m_loggerThread;
 
   static void logFn(LogManager *);
 };
@@ -45,8 +45,8 @@ Status RegisterSink(std::shared_ptr< iLogSink > pSink) {
  *
  */
 LogManager::LogManager()
-    : m_loggerThread(std::bind(&LogManager::logFn, this)),
-      m_messages(MAX_LOG_BUFFER) {
+    : m_messages(MAX_LOG_BUFFER),
+      m_loggerThread(std::bind(&LogManager::logFn, this)) {
 }
 
 static void FlushSink(std::shared_ptr< iLogSink > &pSink) {

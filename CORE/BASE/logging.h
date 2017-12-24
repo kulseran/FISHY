@@ -131,7 +131,7 @@ class iLogSink : core::util::noncopyable {
   /**
    * Implementers should use this function to flush any pending writes.
    */
-  virtual Status flush() = 0;
+  virtual Status flush() { return Status::OK; }
 
   protected:
   /**
@@ -140,7 +140,7 @@ class iLogSink : core::util::noncopyable {
    *
    * @return Status of the write process, or async enqueue.
    */
-  virtual Status write(const LogMessage &) = 0;
+  virtual Status write(const LogMessage &) { return Status::OK; }
 
   private:
   core::types::BitSet< LL > m_levels;

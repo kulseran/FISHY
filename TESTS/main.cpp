@@ -8,8 +8,13 @@
 #include "testcase.h"
 
 #include <CORE/BASE/asserts.h>
+#include <CORE/BASE/logging.h>
 
 int main(int argc, char **argv) {
+  core::logging::RegisterSink(
+      std::make_shared< core::logging::iLogSink >(~core::types::BitSet< LL >()))
+      .ignoreErrors();
+
   std::cout << "# Testing for build: " << BUILD_BRANCH_ID << "@"
             << BUILD_VERSION_HASH << " built on " << BUILD_TIMESTAMP
             << std::endl;
