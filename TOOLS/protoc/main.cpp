@@ -1,33 +1,46 @@
 #include "proto_parser.h"
 #include "proto_printer.h"
+#include "proto_validator.h"
 
-#include <CORE/types.h>
-#include <CORE/BASE/logging.h>
 #include <CORE/BASE/config.h>
+#include <CORE/BASE/logging.h>
 #include <CORE/UTIL/stringutil.h>
+#include <CORE/types.h>
 
 #include <fstream>
 #include <map>
 #include <set>
 
-using core::util::EnumDef;
-using core::util::FieldDef;
-using core::util::MessageDef;
-using core::util::ProtoDef;
-using core::util::RpcFunctionDef;
-using core::util::ServiceDef;
+using core::types::EnumDef;
+using core::types::FieldDef;
+using core::types::MessageDef;
+using core::types::ProtoDef;
+using core::types::RpcFunctionDef;
+using core::types::ServiceDef;
+using core::util::ReplaceStr;
 
-core::config::Flag< std::string > g_astylePath("astyle_path", "Path to the AStyle.exe binary for formatting", "");
-core::config::Flag< std::string > g_inputFile("infile", "Path to input proto file", "");
+core::config::Flag< std::string >
+    g_inputFile("infile", "Path to input proto file", "");
 
-static bool openFile(std::string &out, const std::string &fileName);
-static std::vector< std::string >::const_iterator findMatch(const std::vector< std::string > &possible, const std::string ending);
-static bool fixupLocalFields(MessageDef &def, const std::vector< std::string > &possibleMessages, const std::vector< std::string > &possibleEnums);
-static bool fixupLocalFields(ServiceDef &def, const std::vector< std::string > &possibleMessages, const std::vector< std::string > &possibleEnums);
-static bool recursiveCollectDefs(std::vector< ProtoDef > &childDefs, std::vector< std::string > imports);
-static void recursiveCollectDefines(const std::vector< MessageDef > &messages, const std::string &root, std::vector< std::string > &possibleMessages, std::vector< std::string > &possibleEnums);
+static Status openFile(std::string &out, const std::string &fileName);
+static std::vector< std::string >::const_iterator
+findMatch(const std::vector< std::string > &possible, const std::string ending);
+static bool fixupLocalFields(
+    MessageDef &def,
+    const std::vector< std::string > &possibleMessages,
+    const std::vector< std::string > &possibleEnums);
+static bool fixupLocalFields(
+    ServiceDef &def,
+    const std::vector< std::string > &possibleMessages,
+    const std::vector< std::string > &possibleEnums);
+static bool recursiveCollectDefs(
+    std::vector< ProtoDef > &childDefs, std::vector< std::string > imports);
+static void recursiveCollectDefines(
+    const std::vector< MessageDef > &messages,
+    const std::string &root,
+    std::vector< std::string > &possibleMessages,
+    std::vector< std::string > &possibleEnums);
 static bool verifyImportsAndFixFields(ProtoDef &def);
-static bool verifyDef(const ProtoDef &def);
 
 /**
  * Main
@@ -36,36 +49,41 @@ static bool verifyDef(const ProtoDef &def);
  *  --infile
  */
 int main(int argc, const char **argv) {
-  core::config::ParseFlags(argc, argv);
+  if (!core::config::ParseFlags(argc, argv)) {
+    return 1;
+  }
+  core::logging::RegisterSink(std::shared_ptr< core::logging::iLogSink >(
+      new core::logging::LoggingStdioSink(
+          core::types::BitSet< LL >() | LL::Error | LL::Warning | LL::Info)));
 
   g_inputFile.checkSet();
 
   const std::string &filename = g_inputFile.get();
-  const std::string outFileName = core::util::replaceStr(g_inputFile.get(), ".proto", "");
+  const std::string outFileName = ReplaceStr(g_inputFile.get(), ".proto", "");
 
   std::string str;
   if (!openFile(str, filename)) {
-    Log(LL::Error) << "Unable to open file: " << filename << std::endl;
+    Log(LL::Error) << "Unable to open file: " << filename;
     return 1;
   }
 
   ProtoDef def;
   if (!proto::parse(def, str)) {
-    Log(LL::Error) << "Unable to parse tokens" << std::endl;
+    Log(LL::Error) << "Unable to parse tokens.";
     return 1;
   }
 
   if (!verifyImportsAndFixFields(def)) {
-    Log(LL::Error) << "Unable to collect imports" << std::endl;
+    Log(LL::Error) << "Unable to collect imports.";
     return 1;
   }
 
   if (!verifyDef(def)) {
-    Log(LL::Error) << "Error in definition" << std::endl;
+    Log(LL::Error) << "Error in definition.";
+    return 1;
   }
 
   print(def, outFileName);
-  styleFile(g_astylePath.get(), outFileName);
 
   return 0;
 }
@@ -73,19 +91,23 @@ int main(int argc, const char **argv) {
 /**
  *
  */
-bool openFile(std::string &out, const std::string &fileName) {
+Status openFile(std::string &out, const std::string &fileName) {
   std::ifstream ifile(fileName);
   if (!ifile.is_open()) {
-    return false;
+    return Status::NOT_FOUND;
   }
-  std::copy(std::istreambuf_iterator<char>(ifile.rdbuf()), std::istreambuf_iterator<char>(), std::back_inserter(out));
-  return true;
+  std::copy(
+      std::istreambuf_iterator< char >(ifile.rdbuf()),
+      std::istreambuf_iterator< char >(),
+      std::back_inserter(out));
+  return Status::OK;
 }
 
 /**
  *
  */
-std::vector< std::string >::const_iterator findMatch(const std::vector< std::string > &possible, const std::string ending) {
+std::vector< std::string >::const_iterator findMatch(
+    const std::vector< std::string > &possible, const std::string ending) {
   std::vector< std::string >::const_iterator itr;
   for (itr = possible.begin(); itr != possible.end(); ++itr) {
     if (itr->length() < ending.length()) {
@@ -108,7 +130,7 @@ std::vector< std::string >::const_iterator findMatch(const std::vector< std::str
  */
 static std::string fixMessageString(const std::string &str) {
   if (str.find_first_of(".") != str.npos) {
-    return "::" + core::util::replaceStr(str, ".", "::");
+    return "::" + ReplaceStr(str, ".", "::");
   } else {
     return "::" + str;
   }
@@ -118,12 +140,19 @@ static std::string fixMessageString(const std::string &str) {
  * Fixup the message type names to be fully specified paths.
  * Fixup messages that are actually enums to be marked as enums.
  */
-bool fixupLocalFields(MessageDef &def, const std::vector< std::string > &possibleMessages, const std::vector< std::string > &possibleEnums) {
-  for (std::vector< MessageDef >::iterator message = def.m_messages.begin(); message != def.m_messages.end(); ++message) {
+bool fixupLocalFields(
+    MessageDef &def,
+    const std::vector< std::string > &possibleMessages,
+    const std::vector< std::string > &possibleEnums) {
+  for (std::vector< MessageDef >::iterator message = def.m_messages.begin();
+       message != def.m_messages.end();
+       ++message) {
     fixupLocalFields(*message, possibleMessages, possibleEnums);
   }
 
-  for (std::vector< FieldDef >::iterator field = def.m_fields.begin(); field != def.m_fields.end(); ++field) {
+  for (std::vector< FieldDef >::iterator field = def.m_fields.begin();
+       field != def.m_fields.end();
+       ++field) {
     if (field->m_type != FieldDef::FIELD_MSG) {
       continue;
     }
@@ -135,7 +164,8 @@ bool fixupLocalFields(MessageDef &def, const std::vector< std::string > &possibl
     if (itr == possibleMessages.end()) {
       itr = findMatch(possibleEnums, field->m_msgType);
       if (itr == possibleEnums.end()) {
-        Log(LL::Error) << "Unable to locate definition for: " << field->m_msgType << std::endl;
+        Log(LL::Error) << "Unable to locate definition for: "
+                       << field->m_msgType;
         return false;
       }
       field->m_msgType = *itr;
@@ -151,8 +181,13 @@ bool fixupLocalFields(MessageDef &def, const std::vector< std::string > &possibl
  * Fixup the message type names to be fully specified paths.
  * Fixup messages that are actually enums to be marked as enums.
  */
-static bool fixupLocalFields(ServiceDef &def, const std::vector< std::string > &possibleMessages, const std::vector< std::string > &possibleEnums) {
-  for (std::vector< RpcFunctionDef >::iterator func = def.m_functions.begin(); func != def.m_functions.end(); ++func) {
+static bool fixupLocalFields(
+    ServiceDef &def,
+    const std::vector< std::string > &possibleMessages,
+    const std::vector< std::string > &possibleEnums) {
+  for (std::vector< RpcFunctionDef >::iterator func = def.m_functions.begin();
+       func != def.m_functions.end();
+       ++func) {
     func->m_return = fixMessageString(func->m_return);
     func->m_param = fixMessageString(func->m_param);
 
@@ -161,7 +196,8 @@ static bool fixupLocalFields(ServiceDef &def, const std::vector< std::string > &
     if (itr == possibleMessages.end()) {
       itr = findMatch(possibleEnums, func->m_return);
       if (itr == possibleEnums.end()) {
-        Log(LL::Error) << "Unable to locate definition for return value: " << func->m_return << std::endl;
+        Log(LL::Error) << "Unable to locate definition for return value: "
+                       << func->m_return;
         return false;
       }
       func->m_return = *itr;
@@ -173,7 +209,8 @@ static bool fixupLocalFields(ServiceDef &def, const std::vector< std::string > &
     if (itr == possibleMessages.end()) {
       itr = findMatch(possibleEnums, func->m_param);
       if (itr == possibleEnums.end()) {
-        Log(LL::Error) << "Unable to locate definition for parameter value: " << func->m_param << std::endl;
+        Log(LL::Error) << "Unable to locate definition for parameter value: "
+                       << func->m_param;
         return false;
       }
       func->m_param = *itr;
@@ -187,17 +224,20 @@ static bool fixupLocalFields(ServiceDef &def, const std::vector< std::string > &
 /**
  * Open all the imports and attempt to parse them for definitions
  */
-bool recursiveCollectDefs(std::vector< ProtoDef > &childDefs, std::vector< std::string > imports) {
-  for (std::vector< std::string >::const_iterator itr = imports.begin(); itr != imports.end(); ++itr) {
+bool recursiveCollectDefs(
+    std::vector< ProtoDef > &childDefs, std::vector< std::string > imports) {
+  for (std::vector< std::string >::const_iterator itr = imports.begin();
+       itr != imports.end();
+       ++itr) {
     std::string str;
     if (!openFile(str, *itr)) {
-      Log(LL::Error) << "Unable to open import: " << *itr << std::endl;
+      Log(LL::Error) << "Unable to open import: " << *itr;
       return false;
     }
 
     ProtoDef def;
     if (!proto::parse(def, str)) {
-      Log(LL::Error) << "Unable to parse import: " << *itr << std::endl;
+      Log(LL::Error) << "Unable to parse import: " << *itr;
       return false;
     }
     childDefs.push_back(def);
@@ -208,14 +248,24 @@ bool recursiveCollectDefs(std::vector< ProtoDef > &childDefs, std::vector< std::
 }
 
 /**
- * Collect all the possible names of messages and enums that we know exist based on the imports.
+ * Collect all the possible names of messages and enums that we know exist based
+ * on the imports.
  */
-void recursiveCollectDefines(const std::vector< MessageDef > &messages, const std::string &root, std::vector< std::string > &possibleMessages, std::vector< std::string > &possibleEnums) {
-  for (std::vector< MessageDef >::const_iterator message = messages.begin(); message != messages.end(); ++message) {
+void recursiveCollectDefines(
+    const std::vector< MessageDef > &messages,
+    const std::string &root,
+    std::vector< std::string > &possibleMessages,
+    std::vector< std::string > &possibleEnums) {
+  for (std::vector< MessageDef >::const_iterator message = messages.begin();
+       message != messages.end();
+       ++message) {
     const std::string packageSelf = root + "::" + message->m_name;
-    recursiveCollectDefines(message->m_messages, packageSelf, possibleMessages, possibleEnums);
+    recursiveCollectDefines(
+        message->m_messages, packageSelf, possibleMessages, possibleEnums);
     possibleMessages.push_back(packageSelf);
-    for (std::vector< EnumDef >::const_iterator itr = message->m_enums.begin(); itr != message->m_enums.end(); ++itr) {
+    for (std::vector< EnumDef >::const_iterator itr = message->m_enums.begin();
+         itr != message->m_enums.end();
+         ++itr) {
       possibleEnums.push_back(packageSelf + "::" + itr->m_name);
     }
   }
@@ -233,65 +283,30 @@ bool verifyImportsAndFixFields(ProtoDef &def) {
 
   std::vector< std::string > possibleMessages;
   std::vector< std::string > possibleEnums;
-  for (std::vector< ProtoDef >::const_iterator itr = allDefs.begin(); itr != allDefs.end(); ++itr) {
-    const std::string packageSelf = "::" + core::util::replaceStr(itr->m_package, ".", "::");
-    recursiveCollectDefines(itr->m_messages, packageSelf, possibleMessages, possibleEnums);
+  for (std::vector< ProtoDef >::const_iterator itr = allDefs.begin();
+       itr != allDefs.end();
+       ++itr) {
+    const std::string packageSelf =
+        "::" + ReplaceStr(itr->m_package, ".", "::");
+    recursiveCollectDefines(
+        itr->m_messages, packageSelf, possibleMessages, possibleEnums);
   }
 
-  for (std::vector< MessageDef >::iterator message = def.m_messages.begin(); message != def.m_messages.end(); ++message) {
+  for (std::vector< MessageDef >::iterator message = def.m_messages.begin();
+       message != def.m_messages.end();
+       ++message) {
     if (!fixupLocalFields(*message, possibleMessages, possibleEnums)) {
       return false;
     }
   }
 
-  for (std::vector< ServiceDef >::iterator service = def.m_services.begin(); service != def.m_services.end(); ++service) {
+  for (std::vector< ServiceDef >::iterator service = def.m_services.begin();
+       service != def.m_services.end();
+       ++service) {
     if (!fixupLocalFields(*service, possibleMessages, possibleEnums)) {
       return false;
     }
   }
 
-  return true;
-}
-
-/**
- *
- */
-bool verifyMsg(const MessageDef &def) {
-  std::set< s32 > knownFields;
-  for (std::vector< FieldDef >::const_iterator itr = def.m_fields.begin(); itr != def.m_fields.end(); ++itr) {
-    const s32 fieldNum = itr->m_fieldNum;
-    RET_M(fieldNum > 0, "Field numbers must be positive.");
-    RET_M(knownFields.find(fieldNum) == knownFields.end(), "Field number " << fieldNum << " is repeated.");
-    knownFields.insert(fieldNum);
-  }
-
-  for (std::vector< MessageDef >::const_iterator message = def.m_messages.begin(); message != def.m_messages.end(); ++message) {
-    if (!verifyMsg(*message)) {
-      return false;
-    }
-  }
-
-  for (std::vector< EnumDef >::const_iterator message = def.m_enums.begin(); message != def.m_enums.end(); ++message) {
-    std::set< s32 > knownFields;
-    for (std::vector< FieldDef >::const_iterator itr = message->m_values.begin(); itr != message->m_values.end(); ++itr) {
-      const s32 fieldNum = itr->m_fieldNum;
-      RET_M(knownFields.find(fieldNum) == knownFields.end(), "Enumeration number " << fieldNum << " is repeated.");
-      RET_M(fieldNum != 0, "Enum 0 may not be specified.");
-      RET_M(fieldNum >= 0, "Enum values must be positive.");
-      knownFields.insert(fieldNum);
-    }
-  }
-  return true;
-}
-
-/**
- * Verify def
- */
-bool verifyDef(const ProtoDef &def) {
-  for (std::vector< MessageDef >::const_iterator message = def.m_messages.begin(); message != def.m_messages.end(); ++message) {
-    if (!verifyMsg(*message)) {
-      return false;
-    }
-  }
   return true;
 }

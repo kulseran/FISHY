@@ -1,6 +1,4 @@
 /**
- * printer.h
- *
  * Proto printer to generate code
  */
 #ifndef FISHY_PROTO_PRINTER_H
@@ -14,11 +12,6 @@
  *    ${fileNameRoot}.pb.h
  *    ${fileNameRoot}.ph.cpp
  */
-bool print(const core::util::ProtoDef &def, const std::string &fileNameRoot);
-
-/**
- * Styles the files output by {@link print} for proper indentation.
- */
-void styleFile(const std::string &astylePath, const std::string &fileNameRoot);
+bool print(const core::types::ProtoDef &def, const std::string &fileNameRoot);
 
 #endif
