@@ -27,9 +27,9 @@ class LRParser {
    */
   class iNode {
     public:
-    virtual ~iNode() { }
+    virtual ~iNode() {}
   };
-  template <typename tType>
+  template < typename tType >
   class tNode : public iNode {
     public:
     tType m_data;

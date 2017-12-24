@@ -290,7 +290,8 @@ inline bool LRParser< tId >::parse(
 template < typename tId >
 inline bool LRParser< tId >::reduce(
     std::vector< typename LRParser< tId >::TokenOrNode > &stack) const {
-  for (typename RuleList::const_iterator itr = m_rules.begin(); itr != m_rules.end();
+  for (typename RuleList::const_iterator itr = m_rules.begin();
+       itr != m_rules.end();
        ++itr) {
     for (size_t chain = 0; chain < itr->chains(); ++chain) {
       const size_t len = itr->tokenLen(chain);
@@ -323,7 +324,8 @@ inline void LRParser< tId >::storeBestError(
   size_t lastFollow = m_rules.size();
   while (itr != stack.end()) {
     size_t bestMatch = 0;
-    for (typename RuleList::const_iterator rule = m_rules.begin(); rule != m_rules.end();
+    for (typename RuleList::const_iterator rule = m_rules.begin();
+         rule != m_rules.end();
          ++rule) {
       if (itr->m_type == TokenOrNode::RULE_NODE
           && itr->m_ruleId == std::distance(m_rules.begin(), rule)) {
