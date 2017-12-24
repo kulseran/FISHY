@@ -59,49 +59,19 @@ class iBinarySerializerSink {
   bool m_fail;
 };
 
-/**
- * Sink that is usable to just size a given serialization.
- */
-class FakeSink : public iBinarySerializerSink {
-  public:
-  FakeSink() : m_size(0) {}
-
-  virtual size_t write(const ::core::memory::ConstBlob &b) {
-    m_size += b.size();
-    return b.size();
-  }
-
-  virtual size_t read(::core::memory::Blob &) {
-    CHECK_INVALID_OPERATION();
-    return 0;
-  }
-
-  virtual void seek(const size_t dist) { m_size += dist; }
-
-  virtual size_t avail() { return 0; }
-
-  /**
-   * Return the currently serialized size in bytes.
-   */
-  size_t size() const { return m_size; }
-
-  private:
-  size_t m_size;
-};
-
 } // namespace base
 } // namespace core
 
-  /**
-   * Macro for defining output serializers
-   */
+/**
+ * Macro for defining output serializers
+ */
 #  define OSERIALIZE(tType)                                 \
     inline ::core::base::iBinarySerializerSink &operator<<( \
         ::core::base::iBinarySerializerSink &buff, const tType &obj)
 
-  /**
-   * Macro for defining input serializers
-   */
+/**
+ * Macro for defining input serializers
+ */
 #  define ISERIALIZE(tType)                                 \
     inline ::core::base::iBinarySerializerSink &operator>>( \
         ::core::base::iBinarySerializerSink &buff, tType &obj)
