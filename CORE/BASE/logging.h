@@ -111,7 +111,6 @@ class ScopedLogger : core::util::noncopyable {
 class iLogSink : core::util::noncopyable {
   public:
   /**
-   * @param manager The log manager to register with.
    * @param levels The log levels to allow writing of.
    */
   iLogSink(const core::types::BitSet< LL > &levels);
@@ -148,8 +147,7 @@ class iLogSink : core::util::noncopyable {
 };
 
 /**
- * Register a sink. This is called automatically by
- * the {@link iLogSink} constructor.
+ * Register a sink.
  */
 Status RegisterSink(std::shared_ptr< iLogSink >);
 
