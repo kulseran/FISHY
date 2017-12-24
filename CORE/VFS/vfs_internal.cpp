@@ -300,7 +300,7 @@ void VfsDetail::unmountAll() {
        ++itr) {
     Log(LL::Info) << "Removing mount \"" << itr->m_src.str() << "\" -> \""
                   << itr->m_dest.str() << "\"";
-    m_fileSystems[itr->m_fileSys]->unmount(itr->m_id);
+    m_fileSystems[itr->m_fileSys]->unmount(itr->m_id).ignoreErrors();
   }
   m_mountPoints.clear();
 }

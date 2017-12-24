@@ -84,7 +84,7 @@ void ifstream::close() {
   filters::streamfilter *filebuf =
       dynamic_cast< filters::streamfilter * >(handle->getNext());
   CHECK(vfs::close(filebuf));
-  CHECK(handle->chain(nullptr, std::ios::in));
+  handle->chain(nullptr, std::ios::in);
 }
 
 /**
