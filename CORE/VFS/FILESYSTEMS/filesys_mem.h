@@ -43,8 +43,8 @@ class MemFileSystem : public iFileSystem {
       const Path &rootPath,
       bool recurse = false) override;
 
-  bool create(const Path &path, const core::memory::ConstBlob &);
-  bool create(const Path &path, core::memory::Blob &);
+  Status create(const Path &path, const core::memory::ConstBlob &);
+  Status create(const Path &path, core::memory::Blob &);
 
   struct FileInfo {
     core::memory::Blob m_writeableBlob;

@@ -10,6 +10,7 @@
 #include <CORE/VFS/path.h>
 #include <CORE/VFS/vfs.h>
 
+#include <cstring>
 #include <fstream>
 
 namespace vfs {
@@ -43,7 +44,8 @@ class MemFileHandle : public filters::BaseFsStreamFilter {
 
   protected:
   virtual int_type overflow(int_type ch) override {
-    if (m_pos > m_info.m_readableBlob.size() || m_info.m_readonly) {
+    if ((static_cast< size_t >(m_pos) > m_info.m_readableBlob.size())
+        || m_info.m_readonly) {
       return EOF;
     }
     m_info.m_writeableBlob.data()[m_pos] = (u8) ch;
@@ -55,7 +57,7 @@ class MemFileHandle : public filters::BaseFsStreamFilter {
   }
 
   virtual int_type underflow() override {
-    if (m_pos > m_info.m_readableBlob.size()) {
+    if (static_cast< size_t >(m_pos) > m_info.m_readableBlob.size()) {
       return EOF;
     }
     return m_info.m_readableBlob.data()[m_pos];
@@ -65,10 +67,7 @@ class MemFileHandle : public filters::BaseFsStreamFilter {
     std::streamsize actual =
         std::min(sz, (std::streamsize) m_info.m_stats.m_size - m_pos);
     if (actual > 0) {
-      std::copy(
-          m_info.m_readableBlob.data() + m_pos,
-          m_info.m_readableBlob.data() + m_pos + actual,
-          pBuffer);
+      memcpy(pBuffer, m_info.m_readableBlob.data() + m_pos, actual);
     }
     m_pos += actual;
     return actual;
@@ -79,10 +78,11 @@ class MemFileHandle : public filters::BaseFsStreamFilter {
     if (m_info.m_readonly) {
       return 0;
     }
-    std::streamsize actual = std::min(sz, m_info.m_readableBlob.size() - m_pos);
+    std::streamsize actual = std::min(
+        sz,
+        static_cast< std::streamsize >(m_info.m_readableBlob.size() - m_pos));
     if (actual > 0) {
-      std::copy(
-          pBuffer, pBuffer + actual, m_info.m_writeableBlob.data() + m_pos);
+      memcpy(m_info.m_writeableBlob.data() + m_pos, pBuffer, actual);
     }
     m_pos += actual;
     m_info.m_stats.m_size = std::max((u64) m_pos, m_info.m_stats.m_size);
@@ -122,7 +122,7 @@ class MemFileHandle : public filters::BaseFsStreamFilter {
   }
 
   virtual int uflow() override {
-    if (m_pos + 1 > m_info.m_readableBlob.size()) {
+    if (static_cast< size_t >(m_pos) + 1 > m_info.m_readableBlob.size()) {
       return EOF;
     }
     return m_info.m_readableBlob.data()[m_pos++];
