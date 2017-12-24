@@ -1,6 +1,5 @@
 #include "proto_printer.h"
 
-// #include <CORE/ARCH/process.h>
 #include <CORE/BASE/checks.h>
 #include <CORE/BASE/logging.h>
 #include <CORE/HASH/crc32.h>
@@ -16,8 +15,6 @@ using core::types::MessageDef;
 using core::types::ProtoDef;
 using core::types::RpcFunctionDef;
 using core::types::ServiceDef;
-using core::util::IdentifierSafe;
-using core::util::ReplaceStr;
 
 static bool printHeader(const ProtoDef &def, const std::string &fileName);
 static bool printCpp(
@@ -75,6 +72,12 @@ bool print(const ProtoDef &def, const std::string &fileNameRoot) {
 }
 
 /**
+ *
+ */
+void styleFile(const std::string &astylePath, const std::string &fileNameRoot) {
+}
+
+/**
  * Prints the header file portion of the proto
  */
 bool printHeader(const ProtoDef &def, const std::string &fileName) {
@@ -83,7 +86,7 @@ bool printHeader(const ProtoDef &def, const std::string &fileName) {
     return false;
   }
 
-  const std::string safeName = IdentifierSafe(fileName);
+  const std::string safeName = core::util::IdentifierSafe(fileName);
   ofile << "#ifndef FISHY_PROTOC_" << safeName << "_H" << std::endl;
   ofile << "#define FISHY_PROTOC_" << safeName << "_H" << std::endl;
 
@@ -123,7 +126,8 @@ void printCppDescriptorGen(
     std::ofstream &ofile,
     const MessageDef &msgDef,
     const std::string &package) {
-  const std::string genFunctionName = IdentifierSafe(package + msgDef.m_name);
+  const std::string genFunctionName =
+      core::util::IdentifierSafe(package + msgDef.m_name);
   ofile << "static core::util::ProtoDescriptor &InternalGenDescriptor_"
         << genFunctionName << "() {" << std::endl;
   ofile << "core::util::MessageDef defSelf;" << std::endl;
@@ -326,7 +330,8 @@ void printCppVirtuals(
   ofile << "const core::util::ProtoDescriptor &" << package << msgDef.m_name
         << "::getDescriptor() const {" << std::endl;
   ofile << "const core::util::ProtoDescriptor &descriptor = GenDescriptor_"
-        << IdentifierSafe(package) << msgDef.m_name << "();" << std::endl;
+        << core::util::IdentifierSafe(package) << msgDef.m_name << "();"
+        << std::endl;
   ofile << "return descriptor;" << std::endl;
   ofile << "}" << std::endl;
   for (std::vector< MessageDef >::const_iterator message =
@@ -344,15 +349,16 @@ void printStaticInitializers(
     std::ofstream &ofile,
     const MessageDef &msgDef,
     const std::string &package) {
-  const std::string genFunctionName = IdentifierSafe(package + msgDef.m_name);
+  const std::string genFunctionName =
+      core::util::IdentifierSafe(package + msgDef.m_name);
 
   std::set< std::string > allIncluded;
   for (std::vector< MessageDef >::const_iterator msg =
            msgDef.m_messages.begin();
        msg != msgDef.m_messages.end();
        ++msg) {
-    allIncluded.insert(
-        IdentifierSafe(package + msgDef.m_name + "::" + msg->m_name));
+    allIncluded.insert(core::util::IdentifierSafe(
+        package + msgDef.m_name + "::" + msg->m_name));
   }
 
   ofile << "class StaticInitDescriptor_" << genFunctionName << " {"
@@ -413,14 +419,18 @@ bool printCpp(
        message != def.m_messages.end();
        ++message) {
     printCppDescriptorGen(
-        ofile, *message, ReplaceStr(def.m_package, ".", "::") + "::");
+        ofile,
+        *message,
+        core::util::ReplaceStr(def.m_package, ".", "::") + "::");
   }
   for (std::vector< MessageDef >::const_iterator message =
            def.m_messages.begin();
        message != def.m_messages.end();
        ++message) {
     printStaticInitializers(
-        ofile, *message, ReplaceStr(def.m_package, ".", "::") + "::");
+        ofile,
+        *message,
+        core::util::ReplaceStr(def.m_package, ".", "::") + "::");
   }
 
   printOpenNamespace(ofile, package);
@@ -430,7 +440,9 @@ bool printCpp(
        message != def.m_messages.end();
        ++message) {
     printCppVirtuals(
-        ofile, *message, ReplaceStr(def.m_package, ".", "::") + "::");
+        ofile,
+        *message,
+        core::util::ReplaceStr(def.m_package, ".", "::") + "::");
   }
 
   for (std::vector< ServiceDef >::const_iterator service =
@@ -438,7 +450,9 @@ bool printCpp(
        service != def.m_services.end();
        ++service) {
     printCppServiceHandlers(
-        ofile, *service, ReplaceStr(def.m_package, ".", "::") + "::");
+        ofile,
+        *service,
+        core::util::ReplaceStr(def.m_package, ".", "::") + "::");
   }
   printCloseNamespace(ofile, package);
   return true;
@@ -499,8 +513,8 @@ void printImports(
   for (std::vector< std::string >::const_iterator itr = imports.begin();
        itr != imports.end();
        ++itr) {
-    ofile << "#include <" << ReplaceStr(*itr, ".proto", ".pb.h") << ">"
-          << std::endl;
+    ofile << "#include <" << core::util::ReplaceStr(*itr, ".proto", ".pb.h")
+          << ">" << std::endl;
   }
   ofile << std::endl;
 }
