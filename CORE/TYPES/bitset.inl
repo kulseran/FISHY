@@ -75,6 +75,18 @@ operator&(const BitSet &other) const {
  *
  */
 template < typename eEnumType >
+inline BitSet< eEnumType > &BitSet< eEnumType >::
+operator&=(const BitSet &other) {
+  for (u32 i = 0; i < VEC_SIZE; ++i) {
+    m_bits[i] = m_bits[i] & other.m_bits[i];
+  }
+  return *this;
+}
+
+/**
+ *
+ */
+template < typename eEnumType >
 inline bool BitSet< eEnumType >::
 operator&(const typename eEnumType::type val) const {
   return isSet(val);
@@ -97,10 +109,44 @@ operator|(const BitSet &other) const {
  *
  */
 template < typename eEnumType >
+inline BitSet< eEnumType > &BitSet< eEnumType >::
+operator|=(const BitSet &other) {
+  for (u32 i = 0; i < VEC_SIZE; ++i) {
+    m_bits[i] = m_bits[i] | other.m_bits[i];
+  }
+  return *this;
+}
+
+/**
+ *
+ */
+template < typename eEnumType >
 inline BitSet< eEnumType > BitSet< eEnumType >::
 operator|(const typename eEnumType::type val) const {
   BitSet rVal = *this;
   rVal.set(val);
+  return rVal;
+}
+
+/**
+ *
+ */
+template < typename eEnumType >
+inline BitSet< eEnumType > &BitSet< eEnumType >::
+operator|=(const typename eEnumType::type val) {
+  set(val);
+  return *this;
+}
+
+/**
+ *
+ */
+template < typename eEnumType >
+inline BitSet< eEnumType > BitSet< eEnumType >::operator~() const {
+  BitSet< eEnumType > rVal;
+  for (u32 i = 0; i < VEC_SIZE; ++i) {
+    rVal.m_bits[i] = ~m_bits[i];
+  }
   return rVal;
 }
 
