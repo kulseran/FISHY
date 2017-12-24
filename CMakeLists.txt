@@ -55,5 +55,7 @@ function(assign_source_group)
 endfunction(assign_source_group)
 
 add_subdirectory(CORE)
+add_subdirectory(APP_SHARED)
 add_subdirectory(TESTS)
+add_subdirectory(TOOLS/bin2h)
 
