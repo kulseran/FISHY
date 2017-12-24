@@ -1,6 +1,3 @@
-/**
- * vfs_file.cpp
- */
 #include <CORE/BASE/checks.h>
 #include <CORE/VFS/FILTERS/filter_passthrough.h>
 #include <CORE/VFS/vfs_file.h>
@@ -14,9 +11,7 @@ namespace vfs {
  */
 ifstream::ifstream(const Path &path, std::ios_base::openmode mode)
     : std::istream(new filters::passthrough()), m_filterDepth(0) {
-  (void) mode;
-
-  open(path);
+  open(path, mode).ignoreErrors();
 }
 
 /**
@@ -29,42 +24,40 @@ ifstream::~ifstream() {
 /**
  *
  */
-bool ifstream::open(const Path &path, std::ios_base::openmode mode) {
+Status ifstream::open(const Path &path, std::ios_base::openmode mode) {
   CHECK_M(!is_open(), "Attempted to re-open file without closing");
 
   // Sanity check. This should have the 'in' flag on it.
-  ASSERT(mode & std::ios::in);
-  if (!(mode & std::ios::in)) {
-    return false;
+  const bool hasRequiredMode = mode & std::ios::in;
+  ASSERT(hasRequiredMode);
+  if (!hasRequiredMode) {
+    return Status::BAD_ARGUMENT;
   }
 
   // Sanity check. Many modes aren't supported!
-  ASSERT(
+  const bool hasNoInvalidModes =
       (mode & (std::ios::out | std::ios::app | std::ios::ate | std::ios::trunc))
-      == 0);
-  if ((mode & (std::ios::out | std::ios::app | std::ios::ate | std::ios::trunc))
-      != 0) {
-    return false;
+      == 0;
+  ASSERT(hasNoInvalidModes);
+  if (!hasNoInvalidModes) {
+    return Status::BAD_ARGUMENT;
   }
 
-  //_______________
-  filters::streamfilter *filebuf;
-  filters::passthrough *handle;
-
   // Attempt open
-  filebuf = vfs::open(path, mode);
+  filters::streamfilter *filebuf = vfs::open(path, mode);
   if (!filebuf) {
-    return false;
+    return Status::NOT_FOUND;
   }
 
   // Make sure we can actually connect this through.
-  handle = dynamic_cast< filters::passthrough * >(rdbuf());
+  filters::passthrough *handle =
+      dynamic_cast< filters::passthrough * >(rdbuf());
   if (!handle->chain(filebuf, mode)) {
     vfs::close(filebuf);
-    return false;
+    return Status::GENERIC_ERROR;
   }
 
-  return true;
+  return Status::OK;
 }
 
 /**
@@ -73,10 +66,7 @@ bool ifstream::open(const Path &path, std::ios_base::openmode mode) {
 bool ifstream::is_open() const {
   filters::streamfilter *handle =
       dynamic_cast< filters::streamfilter * >(rdbuf());
-  if (!handle->getNext()) {
-    return false;
-  }
-  return true;
+  return handle->getNext();
 }
 
 /**
@@ -87,16 +77,14 @@ void ifstream::close() {
     return;
   }
 
-  if (m_filterDepth != 0) {
-    throw std::runtime_error("vfs: Filters still attached to file!");
-  }
+  CHECK_M(m_filterDepth == 0, "vfs: Filters still attached to file!");
 
   filters::streamfilter *handle =
       dynamic_cast< filters::streamfilter * >(rdbuf());
   filters::streamfilter *filebuf =
       dynamic_cast< filters::streamfilter * >(handle->getNext());
-  vfs::close(filebuf);
-  handle->chain(nullptr, std::ios::in);
+  CHECK(vfs::close(filebuf));
+  CHECK(handle->chain(nullptr, std::ios::in));
 }
 
 /**
@@ -123,14 +111,13 @@ bool ifstream::pushFilter(filters::streamfilter *filter) {
   filters::streamfilter *handle =
       dynamic_cast< filters::streamfilter * >(rdbuf());
 
-  if (filter->chain(handle, std::ios::in)) {
-    rdbuf(filter);
-    ++m_filterDepth;
-
-    return true;
+  if (!filter->chain(handle, std::ios::in)) {
+    return false;
   }
 
-  return false;
+  rdbuf(filter);
+  m_filterDepth++;
+  return true;
 }
 
 /**
@@ -145,7 +132,7 @@ filters::streamfilter *ifstream::popFilter() {
   if (!m_filterDepth) {
     return nullptr;
   }
-  --m_filterDepth;
+  m_filterDepth--;
 
   filters::streamfilter *handle =
       dynamic_cast< filters::streamfilter * >(rdbuf());
@@ -174,9 +161,7 @@ std::streamoff ifstream::getFileLen() const {
  */
 ofstream::ofstream(const Path &path, std::ios_base::openmode mode)
     : std::ostream(new filters::passthrough()), m_filterDepth(0) {
-  (void) mode;
-
-  open(path);
+  open(path, mode).ignoreErrors();
 }
 
 /**
@@ -189,42 +174,40 @@ ofstream::~ofstream() {
 /**
  *
  */
-bool ofstream::open(const Path &path, std::ios_base::openmode mode) {
+Status ofstream::open(const Path &path, std::ios_base::openmode mode) {
   CHECK_M(!is_open(), "Attempted to re-open file without closing");
 
   // Sanity check. This should have the 'in' flag on it.
-  ASSERT(mode & std::ios::out);
-  if (!(mode & std::ios::out)) {
-    return false;
+  const bool hasRequiredMode = mode & std::ios::out;
+  ASSERT(hasRequiredMode);
+  if (!hasRequiredMode) {
+    return Status::BAD_ARGUMENT;
   }
 
   // Sanity check. Many modes aren't supported!
-  ASSERT(
+  const bool hasNoInvalidModes =
       (mode & (std::ios::in | std::ios::app | std::ios::ate | std::ios::trunc))
-      == 0);
-  if ((mode & (std::ios::in | std::ios::app | std::ios::ate | std::ios::trunc))
-      != 0) {
-    return false;
+      == 0;
+  ASSERT(hasNoInvalidModes);
+  if (!hasNoInvalidModes) {
+    return Status::BAD_ARGUMENT;
   }
 
-  //_______________
-  filters::streamfilter *filebuf;
-  filters::passthrough *handle;
-
   // Attempt open
-  filebuf = vfs::open(path, mode);
+  filters::streamfilter *filebuf = vfs::open(path, mode);
   if (!filebuf) {
-    return false;
+    return Status::NOT_FOUND;
   }
 
   // Make sure we can actually connect this through.
-  handle = dynamic_cast< filters::passthrough * >(rdbuf());
+  filters::passthrough *handle =
+      dynamic_cast< filters::passthrough * >(rdbuf());
   if (!handle->chain(filebuf, mode)) {
-    vfs::close(filebuf);
-    return false;
+    CHECK(vfs::close(filebuf));
+    return Status::GENERIC_ERROR;
   }
 
-  return true;
+  return Status::OK;
 }
 
 /**
@@ -233,10 +216,7 @@ bool ofstream::open(const Path &path, std::ios_base::openmode mode) {
 bool ofstream::is_open() const {
   filters::streamfilter *handle =
       dynamic_cast< filters::streamfilter * >(rdbuf());
-  if (!handle->getNext()) {
-    return false;
-  }
-  return true;
+  return handle->getNext();
 }
 
 /**
@@ -247,16 +227,14 @@ void ofstream::close() {
     return;
   }
 
-  if (m_filterDepth != 0) {
-    throw std::runtime_error("vfs: Filters still attached to file!");
-  }
+  CHECK_M(m_filterDepth == 0, "vfs: Filters still attached to file!");
 
   filters::streamfilter *handle =
       dynamic_cast< filters::streamfilter * >(rdbuf());
   filters::streamfilter *filebuf =
       dynamic_cast< filters::streamfilter * >(handle->getNext());
-  vfs::close(filebuf);
-  handle->chain(nullptr, std::ios::in);
+  CHECK(vfs::close(filebuf));
+  CHECK(handle->chain(nullptr, std::ios::in));
 }
 
 /**
@@ -283,14 +261,14 @@ bool ofstream::pushFilter(filters::streamfilter *filter) {
   filters::streamfilter *handle =
       dynamic_cast< filters::streamfilter * >(rdbuf());
 
-  if (filter->chain(handle, std::ios::in)) {
-    rdbuf(filter);
-    ++m_filterDepth;
-
-    return true;
+  if (!filter->chain(handle, std::ios::in)) {
+    return false;
   }
 
-  return false;
+  rdbuf(filter);
+  m_filterDepth++;
+
+  return true;
 }
 
 /**
@@ -305,7 +283,7 @@ filters::streamfilter *ofstream::popFilter() {
   if (!m_filterDepth) {
     return nullptr;
   }
-  --m_filterDepth;
+  m_filterDepth--;
 
   filters::streamfilter *handle =
       dynamic_cast< filters::streamfilter * >(rdbuf());

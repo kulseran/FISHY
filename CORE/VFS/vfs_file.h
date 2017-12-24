@@ -1,6 +1,4 @@
 /**
- * vfs_file.h
- *
  * Implemention of file io as a replacement to std::fstream
  */
 #ifndef FISHY_VFS_FILE_H
@@ -8,13 +6,8 @@
 
 #include "path.h"
 
+#include <CORE/BASE/status.h>
 #include <CORE/UTIL/noncopyable.h>
-#include <CORE/types.h>
-
-// Disable C4250, see
-// https://connect.microsoft.com/VisualStudio/feedback/details/733720/
-// #pragma warning(push)
-// #pragma warning(disable : 4250)
 
 namespace vfs {
 
@@ -31,7 +24,7 @@ class ifstream : public std::istream, core::util::noncopyable {
       const Path &, std::ios_base::openmode = std::ios::in | std::ios::binary);
   ~ifstream();
 
-  bool
+  Status
   open(const Path &, std::ios_base::openmode = std::ios::in | std::ios::binary);
   bool is_open() const;
 
@@ -44,7 +37,7 @@ class ifstream : public std::istream, core::util::noncopyable {
   bool pushFilter(filters::streamfilter *);
 
   private:
-  u32 m_filterDepth;
+  int m_filterDepth;
 };
 
 /**
@@ -56,7 +49,7 @@ class ofstream : public std::ostream, core::util::noncopyable {
       const Path &, std::ios_base::openmode = std::ios::out | std::ios::binary);
   ~ofstream();
 
-  bool open(
+  Status open(
       const Path &, std::ios_base::openmode = std::ios::out | std::ios::binary);
   bool is_open() const;
 
@@ -67,11 +60,9 @@ class ofstream : public std::ostream, core::util::noncopyable {
   filters::streamfilter *popFilter();
 
   private:
-  u32 m_filterDepth;
+  int m_filterDepth;
 };
 
 } // namespace vfs
-
-// #  pragma warning(pop)
 
 #endif
