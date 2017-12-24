@@ -49,8 +49,9 @@ class VfsDetail {
   public:
   tMountList m_mountPoints;
   tFileSystemList m_fileSystems;
-  u32 id;
-  bool g_vfsUseSecurePaths;
+  u32 m_id;
+  bool m_vfsUseSecurePaths;
+
   std::mutex m_mutex;
 
   VfsDetail();
@@ -60,6 +61,23 @@ class VfsDetail {
    *
    */
   tMountId NextMountId();
+
+  void addFileSys(std::shared_ptr< iFileSystem > &fileSys);
+  tMountId mount(
+      const Path &src,
+      const Path &dest,
+      std::ios_base::openmode mode,
+      bool userChecks);
+  tMountId mountTempFolder();
+
+  bool unmount(const tMountId mountId);
+  void unmountAll();
+  void setSecurePathing(bool useSecurePaths);
+
+  bool close(filters::streamfilter *filebuf);
+  filters::streamfilter *open(const Path &path, const std::ios::openmode mode);
+
+  FileStats stat(const Path &path);
 };
 
 static const tFileSysId INVALID_FILESYS_ID = (tFileSysId) -1;
@@ -96,40 +114,45 @@ VfsDetail::~VfsDetail() {
  *
  */
 tMountId VfsDetail::NextMountId() {
-  ASSERT(id < std::numeric_limits< u32 >::max());
-  return ((tMountId) id++);
+  ASSERT(m_id < std::numeric_limits< u32 >::max());
+  return ((tMountId) m_id++);
 }
 
 /**
  *
  */
 void AddFileSys(std::shared_ptr< iFileSystem > &fileSys) {
-  LOCK_MUTEX(g_detail.m_mutex);
-  g_detail.m_fileSystems.push_back(fileSys);
+  GetVFS().addFileSys(fileSys);
 }
 
 /**
  *
  */
-tMountId MountInternal(
-    const Path &src,
-    const Path &dest,
-    std::ios_base::openmode mode,
-    bool userChecks);
+void VfsDetail::addFileSys(std::shared_ptr< iFileSystem > &fileSys) {
+  std::lock_guard< std::mutex > lock(m_mutex);
+  m_fileSystems.push_back(fileSys);
+}
 
 /**
  *
  */
 tMountId
 Mount(const Path &src, const Path &dest, std::ios_base::openmode mode) {
-  return MountInternal(src, dest, mode, true);
+  return GetVFS().mount(src, dest, mode, true);
 }
 
 /**
  *
  */
 tMountId MountTempFolder() {
-  LOCK_MUTEX(g_detail.m_mutex);
+  return GetVFS().mountTempFolder();
+}
+
+/**
+ *
+ */
+tMountId VfsDetail::mountTempFolder() {
+  std::lock_guard< std::mutex > lock(m_mutex);
 
   static const char *OSTMP = "ostmp/";
 
@@ -144,7 +167,7 @@ tMountId MountTempFolder() {
   }
 
   vfs::Path osRootTempPath(vfs::Path(pTempDir).resolve().str() + "/");
-  const tMountId tempMount = MountInternal(
+  const tMountId tempMount = mount(
       osRootTempPath, OSTMP, std::ios_base::binary | std::ios_base::out, false);
   if (tempMount == INVALID_MOUNT_ID) {
     return INVALID_MOUNT_ID;
@@ -171,7 +194,7 @@ tMountId MountTempFolder() {
   }
   Unmount(tempMount);
 
-  return MountInternal(
+  return mount(
       osRootTempPath + tempPath,
       TMP_PATH,
       std::ios_base::binary | std::ios_base::in | std::ios_base::out,
@@ -181,16 +204,17 @@ tMountId MountTempFolder() {
 /**
  *
  */
-tMountId MountInternal(
+tMountId VfsDetail::mount(
     const Path &src,
     const Path &dest,
     std::ios_base::openmode mode,
     bool userChecks) {
-  TraceMsg("vfs::Mount(\"" << src.str() << "\", \"" << dest.str() << "\")");
+  Log(LL::Trace) << "vfs::Mount(\"" << src.str() << "\", \"" << dest.str()
+                 << "\")";
 
-  LOCK_MUTEX(g_detail.m_mutex);
+  std::lock_guard< std::mutex > lock(m_mutex);
   Path resolvedPath = src;
-  if (g_vfsUseSecurePaths) {
+  if (m_vfsUseSecurePaths) {
     resolvedPath = resolvedPath.resolve();
     if (resolvedPath.empty()) {
       return INVALID_MOUNT_ID;
@@ -201,11 +225,12 @@ tMountId MountInternal(
   const tMountId mountId = NextMountId();
   tFileSysId validFileSysId = INVALID_FILESYS_ID;
 
-  for (tFileSystemList::iterator filesys = g_detail.m_fileSystems.begin();
-       filesys != g_detail.m_fileSystems.end();
+  for (tFileSystemList::iterator filesys = m_fileSystems.begin();
+       filesys != m_fileSystems.end();
        ++filesys) {
     if ((*filesys)->mount(mountId, resolvedPath, mode)) {
-      validFileSysId = std::distance(g_detail.m_fileSystems.begin(), filesys);
+      validFileSysId = static_cast< tFileSysId >(
+          std::distance(m_fileSystems.begin(), filesys));
       break;
     }
   }
@@ -219,9 +244,9 @@ tMountId MountInternal(
   mountPoint.m_dest = dest.resolve();
   mountPoint.m_id = mountId;
   mountPoint.m_fileSys = validFileSysId;
-  g_detail.m_mountPoints.push_back(mountPoint);
+  m_mountPoints.push_back(mountPoint);
   Log(LL::Info) << "Adding mount \"" << mountPoint.m_src.str() << "\" -> \""
-                << mountPoint.m_dest.str() << "\"" << std::endl;
+                << mountPoint.m_dest.str() << "\"";
   return mountPoint.m_id;
 }
 
@@ -229,19 +254,26 @@ tMountId MountInternal(
  *
  */
 bool Unmount(const tMountId mountId) {
-  LOCK_MUTEX(g_detail.m_mutex);
+  return GetVFS().unmount(mountId);
+}
+
+/**
+ *
+ */
+bool VfsDetail::unmount(const tMountId mountId) {
+  std::lock_guard< std::mutex > lock(m_mutex);
 
   if (mountId == INVALID_MOUNT_ID) {
     return true;
   }
 
-  for (tMountList::iterator itr = g_detail.m_mountPoints.begin();
-       itr != g_detail.m_mountPoints.end();) {
+  for (tMountList::iterator itr = m_mountPoints.begin();
+       itr != m_mountPoints.end();) {
     if (itr->m_id == mountId) {
       Log(LL::Info) << "Removing mount \"" << itr->m_src.str() << "\" -> \""
-                    << itr->m_dest.str() << "\"" << std::endl;
-      g_detail.m_fileSystems[itr->m_fileSys]->unmount(itr->m_id);
-      itr = g_detail.m_mountPoints.erase(itr);
+                    << itr->m_dest.str() << "\"";
+      m_fileSystems[itr->m_fileSys]->unmount(itr->m_id);
+      itr = m_mountPoints.erase(itr);
       return true;
     } else {
       ++itr;
@@ -250,24 +282,41 @@ bool Unmount(const tMountId mountId) {
   return false;
 }
 
+/**
+ *
+ */
 void UnmountAll() {
-  LOCK_MUTEX(g_detail.m_mutex);
+  GetVFS().unmountAll();
+}
 
-  for (tMountList::iterator itr = g_detail.m_mountPoints.begin();
-       itr != g_detail.m_mountPoints.end();
+/**
+ *
+ */
+void VfsDetail::unmountAll() {
+  std::lock_guard< std::mutex > lock(m_mutex);
+
+  for (tMountList::iterator itr = m_mountPoints.begin();
+       itr != m_mountPoints.end();
        ++itr) {
     Log(LL::Info) << "Removing mount \"" << itr->m_src.str() << "\" -> \""
-                  << itr->m_dest.str() << "\"" << std::endl;
-    g_detail.m_fileSystems[itr->m_fileSys]->unmount(itr->m_id);
+                  << itr->m_dest.str() << "\"";
+    m_fileSystems[itr->m_fileSys]->unmount(itr->m_id);
   }
-  g_detail.m_mountPoints.clear();
+  m_mountPoints.clear();
 }
 
 /**
  *
  */
 bool close(filters::streamfilter *filebuf) {
-  LOCK_MUTEX(g_detail.m_mutex);
+  return GetVFS().close(filebuf);
+}
+
+/**
+ *
+ */
+bool VfsDetail::close(filters::streamfilter *filebuf) {
+  std::lock_guard< std::mutex > lock(m_mutex);
   filters::BaseFsStreamFilter *pFile =
       dynamic_cast< filters::BaseFsStreamFilter * >(filebuf);
   ASSERT(pFile->getFileSystem());
@@ -289,19 +338,19 @@ class FileSysVisitor {
   findFileSysOperation(const Path &path, tRetVal &ret, tFunc &func) {
     Path inPath = path.resolve();
     if (inPath.empty()) {
-      if (g_vfsUseSecurePaths) {
-        Log(LL::Error) << "Unable to resolve path: " << path.str() << std::endl;
+      if (GetVFS().m_vfsUseSecurePaths) {
+        Log(LL::Error) << "Unable to resolve path: " << path.str();
         return false;
       } else {
         inPath = path;
       }
     }
 
-    for (tMountList::reverse_iterator itr = g_detail.m_mountPoints.rbegin();
-         itr != g_detail.m_mountPoints.rend();
+    for (tMountList::reverse_iterator itr = GetVFS().m_mountPoints.rbegin();
+         itr != GetVFS().m_mountPoints.rend();
          ++itr) {
-      iFileSystem *pFileSys = g_detail.m_fileSystems[itr->m_fileSys].get();
-      if (!g_vfsUseSecurePaths
+      iFileSystem *pFileSys = GetVFS().m_fileSystems[itr->m_fileSys].get();
+      if (!GetVFS().m_vfsUseSecurePaths
           && dynamic_cast< StdioFileSystem * >(pFileSys) != nullptr) {
         const Path resolvedPath = inPath;
         if (func(itr->m_id, resolvedPath, ret, pFileSys)) {
@@ -350,7 +399,15 @@ class OpenVisitor {
  *
  */
 filters::streamfilter *open(const Path &path, const std::ios::openmode mode) {
-  LOCK_MUTEX(g_detail.m_mutex);
+  return GetVFS().open(path, mode);
+}
+
+/**
+ *
+ */
+filters::streamfilter *
+VfsDetail::open(const Path &path, const std::ios::openmode mode) {
+  std::lock_guard< std::mutex > lock(m_mutex);
   filters::streamfilter *retVal = nullptr;
   OpenVisitor visitor(mode);
   FileSysVisitor< filters::streamfilter * >::tFunc visitorFunc =
@@ -379,7 +436,14 @@ class StatVisitor {
  *
  */
 FileStats Stat(const Path &path) {
-  LOCK_MUTEX(g_detail.m_mutex);
+  return GetVFS().stat(path);
+}
+
+/**
+ *
+ */
+FileStats VfsDetail::stat(const Path &path) {
+  std::lock_guard< std::mutex > lock(m_mutex);
   FileStats retVal;
   StatVisitor visitor;
   FileSysVisitor< FileStats >::tFunc visitorFunc = FileSysVisitor< FileStats >::
@@ -394,17 +458,18 @@ namespace util {
  *
  */
 bool Copy(const Path &pathIn, const Path &pathOut) {
-  TraceScope();
-  TraceMsg("Copying '" << pathIn.str() << "' to '" << pathOut.str() << "'");
+  Trace();
+  Log(LL::Trace) << "Copying '" << pathIn.str() << "' to '" << pathOut.str()
+                 << "'";
   filters::streamfilter *in = open(pathIn, std::ios::in | std::ios::binary);
   if (!in) {
-    Log(LL::Error) << "Unable to open input for copy operation." << std::endl;
+    Log(LL::Error) << "Unable to open input for copy operation.";
     return false;
   }
 
   filters::streamfilter *out = open(pathOut, std::ios::out | std::ios::binary);
   if (!out) {
-    Log(LL::Error) << "Unable to open output for copy operation." << std::endl;
+    Log(LL::Error) << "Unable to open output for copy operation.";
     close(in);
     return false;
   }
@@ -446,7 +511,7 @@ class MkDirVisitor {
  *
  */
 bool MkDir(const Path &path) {
-  LOCK_MUTEX(g_detail.m_mutex);
+  std::lock_guard< std::mutex > lock(GetVFS().m_mutex);
   FileStats stats = Stat(path);
   if (!stats.m_exists) {
     bool retVal = false;
@@ -478,7 +543,7 @@ class RmDirVisitor {
  *
  */
 bool RmDir(const Path &path) {
-  LOCK_MUTEX(g_detail.m_mutex);
+  std::lock_guard< std::mutex > lock(GetVFS().m_mutex);
   bool retVal = false;
   RmDirVisitor visitor;
   FileSysVisitor< bool >::tFunc visitorFunc = FileSysVisitor< bool >::tFunc::
@@ -505,7 +570,7 @@ class RemoveVisitor {
  *
  */
 bool Remove(const Path &path) {
-  LOCK_MUTEX(g_detail.m_mutex);
+  std::lock_guard< std::mutex > lock(GetVFS().m_mutex);
   bool retVal = false;
   RemoveVisitor visitor;
   FileSysVisitor< bool >::tFunc visitorFunc = FileSysVisitor< bool >::tFunc::
@@ -557,7 +622,8 @@ class VFSDirectoryIterator
   static Path resolveOrDie(const Path &path) {
     Path inPath = path.resolve();
     if (path.empty()) {
-      CHECK_M(!g_vfsUseSecurePaths, "Attempted to iterate invalid path.");
+      CHECK_M(
+          !GetVFS().m_vfsUseSecurePaths, "Attempted to iterate invalid path.");
       inPath = path;
     }
     return inPath;
@@ -572,8 +638,8 @@ class VFSDirectoryIterator
       setNode(node);
     }
     iFileSystem::DirectoryNode translatedNode = node;
-    for (tMountList::iterator itr = g_detail.m_mountPoints.begin();
-         itr != g_detail.m_mountPoints.end();
+    for (tMountList::iterator itr = GetVFS().m_mountPoints.begin();
+         itr != GetVFS().m_mountPoints.end();
          ++itr) {
       if (itr->m_id == node.m_mountId) {
         translatedNode.m_path =
@@ -589,19 +655,19 @@ class VFSDirectoryIterator
    * Iterate through to the next mount point that matches the input path.
    */
   bool findNextMount() {
-    tMountList::reverse_iterator itr = g_detail.m_mountPoints.rbegin();
+    tMountList::reverse_iterator itr = GetVFS().m_mountPoints.rbegin();
     if (m_lastMount != INVALID_MOUNT_ID) {
-      while (itr != g_detail.m_mountPoints.rend() && itr->m_id != m_lastMount) {
+      while (itr != GetVFS().m_mountPoints.rend() && itr->m_id != m_lastMount) {
         ++itr;
       }
-      if (itr != g_detail.m_mountPoints.rend()) {
+      if (itr != GetVFS().m_mountPoints.rend()) {
         ++itr;
       }
     }
 
     // Find all mount points with path as a parrent
-    for (; itr != g_detail.m_mountPoints.rend(); ++itr) {
-      iFileSystem *pFileSys = g_detail.m_fileSystems[itr->m_fileSys].get();
+    for (; itr != GetVFS().m_mountPoints.rend(); ++itr) {
+      iFileSystem *pFileSys = GetVFS().m_fileSystems[itr->m_fileSys].get();
       Path resolvedPath;
       if (itr->m_dest.isParent(m_root)) {
         resolvedPath = itr->m_src + m_root.stripParent(itr->m_dest);
@@ -654,8 +720,15 @@ Path GetTempFile() {
  *
  */
 void SetSecurePathing(bool useSecurePaths) {
-  LOCK_MUTEX(g_detail.m_mutex);
-  g_vfsUseSecurePaths = useSecurePaths;
+  GetVFS().setSecurePathing(useSecurePaths);
+}
+
+/**
+ *
+ */
+void VfsDetail::setSecurePathing(bool useSecurePaths) {
+  std::lock_guard< std::mutex > lock(m_mutex);
+  m_vfsUseSecurePaths = useSecurePaths;
 }
 
 } // namespace vfs

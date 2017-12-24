@@ -1,6 +1,3 @@
-/**
- * vfs_filter.cpp
- */
 #include <CORE/BASE/asserts.h>
 #include <CORE/VFS/vfs_filter.h>
 
@@ -11,8 +8,7 @@ namespace filters {
 /**
  *
  */
-streamfilter::streamfilter()
-  : m_buf(nullptr) {
+streamfilter::streamfilter() : m_buf(nullptr) {
 }
 
 /**
@@ -67,7 +63,10 @@ std::streamsize streamfilter::showmanyc() {
 /**
  *
  */
-streamfilter::pos_type streamfilter::seekoff(streamfilter::off_type delta, std::ios_base::seekdir dir, std::ios_base::openmode mode) {
+streamfilter::pos_type streamfilter::seekoff(
+    streamfilter::off_type delta,
+    std::ios_base::seekdir dir,
+    std::ios_base::openmode mode) {
   ASSERT(m_buf);
 
   // out+seek => sync
@@ -85,7 +84,7 @@ streamfilter::pos_type streamfilter::seekoff(streamfilter::off_type delta, std::
 
   if (actualDelta != 0) {
     if (gptr()) {
-      char *newGetPos = gptr() + (int)actualDelta;
+      char *newGetPos = gptr() + (int) actualDelta;
       if (newGetPos >= eback() && newGetPos < egptr()) {
         setg(eback(), newGetPos, egptr());
       } else {
@@ -101,17 +100,21 @@ streamfilter::pos_type streamfilter::seekoff(streamfilter::off_type delta, std::
 
 #if defined(PLAT_WIN32)
 /**
- * MS compiler's 'safe' features break the xsgetn overload resulting in amazingly slow performance.
+ * MS compiler's 'safe' features break the xsgetn overload resulting in
+ * amazingly slow performance.
  */
-std::streamsize streamfilter::_Xsgetn_s(char *pBuffer, size_t ptrlen, std::streamsize sz) {
+std::streamsize
+streamfilter::_Xsgetn_s(char *pBuffer, size_t ptrlen, std::streamsize sz) {
   std::streamsize realSz = std::min(size_t(sz), ptrlen);
   return xsgetn(pBuffer, realSz);
 }
 
 /**
-* MS compiler's 'safe' features break the xsgetn overload resulting in amazingly slow performance.
-*/
-std::streamsize streamfilter::_Xsputn_s(char *pBuffer, size_t ptrlen, std::streamsize sz) {
+ * MS compiler's 'safe' features break the xsgetn overload resulting in
+ * amazingly slow performance.
+ */
+std::streamsize
+streamfilter::_Xsputn_s(char *pBuffer, size_t ptrlen, std::streamsize sz) {
   std::streamsize realSz = std::min(size_t(sz), ptrlen);
   return xsputn(pBuffer, realSz);
 }
@@ -120,14 +123,18 @@ std::streamsize streamfilter::_Xsputn_s(char *pBuffer, size_t ptrlen, std::strea
 /**
  *
  */
-streamfilter::pos_type streamfilter::seekpos(streamfilter::pos_type pos, std::ios_base::openmode mode) {
+streamfilter::pos_type streamfilter::seekpos(
+    streamfilter::pos_type pos, std::ios_base::openmode mode) {
   return seekoff(pos, std::ios::beg, mode);
 }
 
 /**
  *
  */
-streamfilter::pos_type streamfilter::doseekoff(off_type delta, std::ios_base::seekdir dir, std::ios_base::openmode mode) const {
+streamfilter::pos_type streamfilter::doseekoff(
+    off_type delta,
+    std::ios_base::seekdir dir,
+    std::ios_base::openmode mode) const {
   pos_type start;
   switch (dir) {
     case std::ios_base::beg:

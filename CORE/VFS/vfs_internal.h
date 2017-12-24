@@ -1,6 +1,3 @@
-/**
- * vfs_internal.h
- */
 #ifndef FISHY_VFS_INTERNAL_H
 #define FISHY_VFS_INTERNAL_H
 

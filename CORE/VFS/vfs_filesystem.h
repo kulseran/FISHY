@@ -1,6 +1,4 @@
 /**
- * vfs_filesystem.h
- *
  * Interface for creating a filesystem that can be used as a source for a
  * vfs::file
  */
