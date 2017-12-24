@@ -30,7 +30,7 @@ template < typename tId >
 class Tokenizer {
   public:
   typedef std::pair< typename tId::type, RegExPattern > tTokenizer;
-  typedef std::vector< typename tTokenizer > tTokenizerList;
+  typedef std::vector< tTokenizer > tTokenizerList;
 
   /**
    * Construct a Tokenizer with the given
@@ -104,10 +104,10 @@ class Tokenizer {
     private:
     friend class Tokenizer;
 
-    const_iterator(const Tokenizer &tokenizer, const std::string &str);
+    const_iterator(const Tokenizer< tId > &tokenizer, const std::string &str);
 
     Token m_currentToken;
-    const Tokenizer &m_tokenizer;
+    const Tokenizer< tId > &m_tokenizer;
     const std::string &m_string;
   };
 
@@ -139,7 +139,7 @@ class Tokenizer {
   const_iterator end() const { return const_iterator(*this, ""); }
 
   private:
-  std::vector< tTokenizer > m_tokenizers;
+  tTokenizerList m_tokenizers;
 };
 
 } // namespace parser
