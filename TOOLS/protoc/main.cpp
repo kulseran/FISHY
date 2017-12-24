@@ -52,6 +52,9 @@ int main(int argc, const char **argv) {
   if (!core::config::ParseFlags(argc, argv)) {
     return 1;
   }
+  core::logging::RegisterSink(std::shared_ptr< core::logging::iLogSink >(
+      new core::logging::LoggingStdioSink(
+          core::types::BitSet< LL >() | LL::Error | LL::Warning | LL::Info)));
 
   g_inputFile.checkSet();
 
