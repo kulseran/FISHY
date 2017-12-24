@@ -30,7 +30,7 @@ inline LRParser< tId >::TokenOrNode::TokenOrNode(
  */
 template < typename tId >
 inline LRParser< tId >::TokenOrNode::TokenOrNode(
-    const size_t rule, const size_t line, void *pNode)
+    const size_t rule, const size_t line, iNode *pNode)
     : m_ruleId(rule), m_pNode(pNode), m_type(RULE_NODE), m_line(line) {
 }
 
@@ -92,7 +92,7 @@ inline typename LRParser< tId >::RuleOrTokenChain
     operator&(const typename tId::type &token) const {
   RuleOrTokenChain rVal = *this;
   rVal.m_nodes.push_back(TokenOrNode(
-      Tokenizer< tId >::Token(
+      typename Tokenizer< tId >::Token(
           token, std::string().begin(), std::string().end()),
       0));
   return rVal;
@@ -155,7 +155,7 @@ inline bool LRParser< tId >::Rule::reduce(
     return false;
   }
 
-  void *pNode = nullptr;
+  iNode *pNode = nullptr;
   if (chain.m_callback) {
     if (!chain.m_callback(pNode, begin, end)) {
       return false;
@@ -264,7 +264,7 @@ inline bool LRParser< tId >::parse(
   stack.reserve(m_stackDepth);
 
   std::string::const_iterator cur = begin;
-  Tokenizer< tId >::Token token;
+  typename Tokenizer< tId >::Token token;
   size_t line = 0;
   while (m_tokenizer.getNextToken(token, cur, end)) {
     cur = token.end();
@@ -290,14 +290,14 @@ inline bool LRParser< tId >::parse(
 template < typename tId >
 inline bool LRParser< tId >::reduce(
     std::vector< typename LRParser< tId >::TokenOrNode > &stack) const {
-  for (RuleList::const_iterator itr = m_rules.begin(); itr != m_rules.end();
+  for (typename RuleList::const_iterator itr = m_rules.begin(); itr != m_rules.end();
        ++itr) {
     for (size_t chain = 0; chain < itr->chains(); ++chain) {
       const size_t len = itr->tokenLen(chain);
       if (len > stack.size()) {
         continue;
       }
-      tTokenOrNodeList::const_iterator begin =
+      typename tTokenOrNodeList::const_iterator begin =
           stack.begin() + (stack.size() - len);
       TokenOrNode token;
       if (itr->reduce(token, chain, begin, stack.end())) {
@@ -317,13 +317,13 @@ template < typename tId >
 inline void LRParser< tId >::storeBestError(
     const std::vector< typename LRParser< tId >::TokenOrNode > &stack,
     const typename LRParser< tId >::tErrorCB &cb) const {
-  std::vector< TokenOrNode >::const_iterator itr = stack.begin();
+  typename std::vector< TokenOrNode >::const_iterator itr = stack.begin();
 
   size_t bestRule = m_rules.size();
   size_t lastFollow = m_rules.size();
   while (itr != stack.end()) {
     size_t bestMatch = 0;
-    for (RuleList::const_iterator rule = m_rules.begin(); rule != m_rules.end();
+    for (typename RuleList::const_iterator rule = m_rules.begin(); rule != m_rules.end();
          ++rule) {
       if (itr->m_type == TokenOrNode::RULE_NODE
           && itr->m_ruleId == std::distance(m_rules.begin(), rule)) {

@@ -4,6 +4,8 @@
 #ifndef FISHY_SERIALIZER_BASESINKS_H
 #define FISHY_SERIALIZER_BASESINKS_H
 
+#include <cstring>
+
 namespace core {
 namespace base {
 

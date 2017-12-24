@@ -25,7 +25,7 @@ typedef tParser::Rule Rule;
  *
  */
 static bool HandleField2(
-    void *&ret,
+    tParser::iNode *&ret,
     const tParser::tTokenOrNodeList::const_iterator &begin,
     const tParser::tTokenOrNodeList::const_iterator &end) {
   TEST(testing::assertEquals(2, std::distance(begin, end)));
@@ -36,7 +36,7 @@ static bool HandleField2(
  *
  */
 static bool HandleField3(
-    void *&ret,
+    tParser::iNode *&ret,
     const tParser::tTokenOrNodeList::const_iterator &begin,
     const tParser::tTokenOrNodeList::const_iterator &end) {
   TEST(testing::assertEquals(3, std::distance(begin, end)));

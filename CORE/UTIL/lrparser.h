@@ -23,6 +23,19 @@ class LRParser {
   class Rule;
 
   /**
+   * Base class for rule node information in {@link TokenOrNode}
+   */
+  class iNode {
+    public:
+    virtual ~iNode() { }
+  };
+  template <typename tType>
+  class tNode : public iNode {
+    public:
+    tType m_data;
+  };
+
+  /**
    * Container for a parse token or a rule node.
    */
   class TokenOrNode {
@@ -31,13 +44,13 @@ class LRParser {
 
     TokenOrNode();
     TokenOrNode(typename Tokenizer< tId >::Token token, const size_t line);
-    TokenOrNode(const size_t rule, const size_t line, void *pNode);
+    TokenOrNode(const size_t rule, const size_t line, iNode *pNode);
     bool matches(const TokenOrNode &other) const;
 
     type m_type;
     typename Tokenizer< tId >::Token m_token;
     size_t m_ruleId;
-    void *m_pNode;
+    iNode *m_pNode;
     size_t m_line;
   };
   typedef std::vector< TokenOrNode > tTokenOrNodeList;
@@ -59,7 +72,7 @@ class LRParser {
      * @param end the end of the token chain that matched this rule
      */
     typedef srutil::delegate< bool(
-        void *&node,
+        iNode *&node,
         const typename tTokenOrNodeList::const_iterator &begin,
         const typename tTokenOrNodeList::const_iterator &end) >
         tProc;

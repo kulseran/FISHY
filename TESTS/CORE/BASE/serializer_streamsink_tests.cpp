@@ -4,7 +4,7 @@
 #include <CORE/BASE/serializer_streamsink.h>
 #include <CORE/BASE/serializer_strings.h>
 
-#include <strstream>
+#include <sstream>
 
 using core::base::InStreamSink;
 using core::base::OutStreamSink;

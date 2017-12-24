@@ -16,6 +16,4 @@ add_executable(tests ${tests_src})
 target_compile_definitions(tests PRIVATE TESTING=1)
 set_target_properties(tests PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 
-set(THREADS_PREFER_PTHREAD_FLAG ON)
-find_package(Threads REQUIRED)
-target_link_libraries(tests core Threads::Threads protoclib)
+target_link_libraries(tests core protoclib)

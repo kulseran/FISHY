@@ -34,7 +34,8 @@ REGISTER_TEST_CASE(testBlobSink) {
 REGISTER_TEST_CASE(testConstBlobSink) {
   const std::string sourceStr = "hello world";
   const std::string expected = "world";
-  ConstBlobSink source(sourceStr);
+  const ConstBlob sourceBlob(sourceStr);
+  ConstBlobSink source(sourceBlob);
   u8 actual[16] = {0};
   Blob bufferBlob(actual, 16);
 

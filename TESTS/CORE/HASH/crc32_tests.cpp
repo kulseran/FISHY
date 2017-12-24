@@ -4,6 +4,8 @@
 #include <CORE/HASH/crc32.h>
 #include <CORE/types.h>
 
+#include <cstring>
+
 using namespace core::hash;
 
 REGISTER_TEST_CASE(crc32TestHash) {

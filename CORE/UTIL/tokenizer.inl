@@ -110,7 +110,7 @@ inline bool Tokenizer< tId >::getNextToken(
     typename Tokenizer< tId >::Token &token,
     const std::string::const_iterator &begin,
     const std::string::const_iterator &end) const {
-  for (tTokenizerList::const_iterator itr = m_tokenizers.begin();
+  for (typename tTokenizerList::const_iterator itr = m_tokenizers.begin();
        itr != m_tokenizers.end();
        ++itr) {
     const std::string::const_iterator tokenEnd = itr->second.scan(begin, end);

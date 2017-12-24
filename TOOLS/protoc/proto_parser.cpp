@@ -95,7 +95,7 @@ class ProtoDefBuilder {
    *
    */
   bool setPackage(
-      void *&unused,
+      tParser::iNode *&unused,
       const tParser::tTokenOrNodeList::const_iterator &begin,
       const tParser::tTokenOrNodeList::const_iterator &end) {
     (void) unused;
@@ -112,7 +112,7 @@ class ProtoDefBuilder {
    *
    */
   bool addImport(
-      void *&unused,
+      tParser::iNode *&unused,
       const tParser::tTokenOrNodeList::const_iterator &begin,
       const tParser::tTokenOrNodeList::const_iterator &end) {
     (void) unused;
@@ -127,7 +127,7 @@ class ProtoDefBuilder {
    *
    */
   bool addService(
-      void *&unused,
+      tParser::iNode *&unused,
       const tParser::tTokenOrNodeList::const_iterator &begin,
       const tParser::tTokenOrNodeList::const_iterator &end) {
     (void) unused;
@@ -136,9 +136,9 @@ class ProtoDefBuilder {
     ServiceDef def;
     def.m_name = std::move(itr->m_token.getToken());
     std::advance(itr, 2);
-    std::vector< RpcFunctionDef > *pRpcs =
-        reinterpret_cast< std::vector< RpcFunctionDef > * >(itr->m_pNode);
-    def.m_functions = std::move(*pRpcs);
+    tParser::tNode<std::vector< RpcFunctionDef >> *pRpcs =
+        reinterpret_cast< tParser::tNode<std::vector< RpcFunctionDef >> * >(itr->m_pNode);
+    def.m_functions = std::move(pRpcs->m_data);
     delete pRpcs;
 
     m_target.m_services.push_back(def);
@@ -149,14 +149,14 @@ class ProtoDefBuilder {
    *
    */
   bool addMessage(
-      void *&unused,
+      tParser::iNode *&unused,
       const tParser::tTokenOrNodeList::const_iterator &begin,
       const tParser::tTokenOrNodeList::const_iterator &end) {
     (void) unused;
 
     tParser::tTokenOrNodeList::const_iterator itr = begin + 1;
-    MessageDef *pMessage = reinterpret_cast< MessageDef * >(itr->m_pNode);
-    m_target.m_messages.push_back(std::move(*pMessage));
+    tParser::tNode<MessageDef> *pMessage = reinterpret_cast< tParser::tNode<MessageDef> * >(itr->m_pNode);
+    m_target.m_messages.push_back(std::move(pMessage->m_data));
     delete pMessage;
 
     return true;
@@ -170,14 +170,14 @@ class ProtoDefBuilder {
  *
  */
 bool genEnumField(
-    void *&ret,
+    tParser::iNode *&ret,
     const tParser::tTokenOrNodeList::const_iterator &begin,
     const tParser::tTokenOrNodeList::const_iterator &end) {
   tParser::tTokenOrNodeList::const_iterator itr = begin;
-  FieldDef *pDef = new FieldDef;
-  pDef->m_name = itr->m_token.getToken();
+  tParser::tNode<FieldDef> *pDef = new tParser::tNode<FieldDef>;
+  pDef->m_data.m_name = itr->m_token.getToken();
   std::advance(itr, 2);
-  CHECK(core::util::lexical_cast(itr->m_token.getToken(), pDef->m_fieldNum));
+  CHECK(core::util::lexical_cast(itr->m_token.getToken(), pDef->m_data.m_fieldNum));
   ret = pDef;
   return true;
 }
@@ -186,13 +186,13 @@ bool genEnumField(
  *
  */
 bool genFieldList(
-    void *&ret,
+    tParser::iNode *&ret,
     const tParser::tTokenOrNodeList::const_iterator &begin,
     const tParser::tTokenOrNodeList::const_iterator &end) {
   tParser::tTokenOrNodeList::const_iterator itr = begin;
-  std::vector< FieldDef > *pList = new std::vector< FieldDef >();
-  FieldDef *pDef = reinterpret_cast< FieldDef * >(itr->m_pNode);
-  pList->push_back(std::move(*pDef));
+  tParser::tNode<std::vector< FieldDef >> *pList = new tParser::tNode<std::vector< FieldDef > >;
+  tParser::tNode<FieldDef> *pDef = reinterpret_cast< tParser::tNode<FieldDef> * >(itr->m_pNode);
+  pList->m_data.push_back(std::move(pDef->m_data));
   delete pDef;
   ret = pList;
   return true;
@@ -202,15 +202,15 @@ bool genFieldList(
  *
  */
 bool appendFieldList(
-    void *&ret,
+    tParser::iNode *&ret,
     const tParser::tTokenOrNodeList::const_iterator &begin,
     const tParser::tTokenOrNodeList::const_iterator &end) {
   tParser::tTokenOrNodeList::const_iterator itr = begin;
-  std::vector< FieldDef > *pList =
-      reinterpret_cast< std::vector< FieldDef > * >(itr->m_pNode);
+  tParser::tNode<std::vector< FieldDef > > *pList =
+      reinterpret_cast< tParser::tNode<std::vector< FieldDef > > * >(itr->m_pNode);
   ++itr;
-  FieldDef *pDef = reinterpret_cast< FieldDef * >(itr->m_pNode);
-  pList->push_back(std::move(*pDef));
+  tParser::tNode<FieldDef> *pDef = reinterpret_cast< tParser::tNode<FieldDef> * >(itr->m_pNode);
+  pList->m_data.push_back(std::move(pDef->m_data));
   delete pDef;
   ret = pList;
   return true;
@@ -220,16 +220,16 @@ bool appendFieldList(
  *
  */
 bool genRpc(
-    void *&ret,
+    tParser::iNode *&ret,
     const tParser::tTokenOrNodeList::const_iterator &begin,
     const tParser::tTokenOrNodeList::const_iterator &end) {
   tParser::tTokenOrNodeList::const_iterator itr = begin + 1;
-  RpcFunctionDef *pDef = new RpcFunctionDef;
-  pDef->m_name = itr->m_token.getToken();
+  tParser::tNode<RpcFunctionDef> *pDef = new tParser::tNode<RpcFunctionDef>;
+  pDef->m_data.m_name = itr->m_token.getToken();
   std::advance(itr, 2);
-  pDef->m_param = itr->m_token.getToken();
+  pDef->m_data.m_param = itr->m_token.getToken();
   std::advance(itr, 4);
-  pDef->m_return = itr->m_token.getToken();
+  pDef->m_data.m_return = itr->m_token.getToken();
   ret = pDef;
   return true;
 }
@@ -238,13 +238,13 @@ bool genRpc(
  *
  */
 bool genRpcList(
-    void *&ret,
+    tParser::iNode *&ret,
     const tParser::tTokenOrNodeList::const_iterator &begin,
     const tParser::tTokenOrNodeList::const_iterator &end) {
   tParser::tTokenOrNodeList::const_iterator itr = begin;
-  std::vector< RpcFunctionDef > *pList = new std::vector< RpcFunctionDef >();
-  RpcFunctionDef *pRpc = reinterpret_cast< RpcFunctionDef * >(itr->m_pNode);
-  pList->push_back(std::move(*pRpc));
+  tParser::tNode<std::vector< RpcFunctionDef > > *pList = new tParser::tNode<std::vector< RpcFunctionDef > >;
+  tParser::tNode<RpcFunctionDef> *pRpc = reinterpret_cast< tParser::tNode<RpcFunctionDef> * >(itr->m_pNode);
+  pList->m_data.push_back(std::move(pRpc->m_data));
   delete pRpc;
   ret = pList;
   return true;
@@ -254,14 +254,14 @@ bool genRpcList(
  *
  */
 bool appendRpcList(
-    void *&ret,
+    tParser::iNode *&ret,
     const tParser::tTokenOrNodeList::const_iterator &begin,
     const tParser::tTokenOrNodeList::const_iterator &end) {
   tParser::tTokenOrNodeList::const_iterator itr = begin;
-  std::vector< RpcFunctionDef > *pList =
-      reinterpret_cast< std::vector< RpcFunctionDef > * >(itr->m_pNode);
+  tParser::tNode<std::vector< RpcFunctionDef > > *pList =
+      reinterpret_cast< tParser::tNode<std::vector< RpcFunctionDef > > * >(itr->m_pNode);
   ++itr;
-  pList->push_back(*reinterpret_cast< RpcFunctionDef * >(itr->m_pNode));
+  pList->m_data.push_back(reinterpret_cast< tParser::tNode<RpcFunctionDef> * >(itr->m_pNode)->m_data);
   delete itr->m_pNode;
   ret = pList;
   return true;
@@ -271,16 +271,16 @@ bool appendRpcList(
  *
  */
 bool genEnum(
-    void *&ret,
+    tParser::iNode *&ret,
     const tParser::tTokenOrNodeList::const_iterator &begin,
     const tParser::tTokenOrNodeList::const_iterator &end) {
   tParser::tTokenOrNodeList::const_iterator itr = begin + 1;
-  EnumDef *pDef = new EnumDef;
-  pDef->m_name = itr->m_token.getToken();
+  tParser::tNode<EnumDef> *pDef = new tParser::tNode<EnumDef>;
+  pDef->m_data.m_name = itr->m_token.getToken();
   std::advance(itr, 2);
-  std::vector< FieldDef > *pValues =
-      reinterpret_cast< std::vector< FieldDef > * >(itr->m_pNode);
-  pDef->m_values = std::move(*pValues);
+  tParser::tNode<std::vector< FieldDef > > *pValues =
+      reinterpret_cast< tParser::tNode<std::vector< FieldDef > > * >(itr->m_pNode);
+  pDef->m_data.m_values = std::move(pValues->m_data);
   delete pValues;
   ret = pDef;
   return true;
@@ -290,29 +290,29 @@ bool genEnum(
  *
  */
 bool genField(
-    void *&ret,
+    tParser::iNode *&ret,
     const tParser::tTokenOrNodeList::const_iterator &begin,
     const tParser::tTokenOrNodeList::const_iterator &end) {
   tParser::tTokenOrNodeList::const_iterator itr = begin;
-  FieldDef *pDef = new FieldDef;
+  tParser::tNode<FieldDef> *pDef = new tParser::tNode<FieldDef>;
   if (itr->m_token.getId() == eTokenTypes::IDENT) {
-    pDef->m_type = FieldDef::FIELD_MSG;
-    pDef->m_msgType = itr->m_token.getToken();
+    pDef->m_data.m_type = FieldDef::FIELD_MSG;
+    pDef->m_data.m_msgType = itr->m_token.getToken();
   } else {
-    pDef->m_type =
+    pDef->m_data.m_type =
         FieldDef::eFieldType(itr->m_token.getId() - eTokenTypes::DOUBLE);
   }
   ++itr;
-  pDef->m_name = itr->m_token.getToken();
+  pDef->m_data.m_name = itr->m_token.getToken();
   ++itr;
   if (itr->m_token.getId() == eTokenTypes::REPEATED) {
-    pDef->m_repeated = true;
+    pDef->m_data.m_repeated = true;
     std::advance(itr, 2);
   } else {
-    pDef->m_repeated = false;
+    pDef->m_data.m_repeated = false;
     ++itr;
   }
-  CHECK(core::util::lexical_cast(itr->m_token.getToken(), pDef->m_fieldNum));
+  CHECK(core::util::lexical_cast(itr->m_token.getToken(), pDef->m_data.m_fieldNum));
   ret = pDef;
   return true;
 }
@@ -321,14 +321,14 @@ bool genField(
  *
  */
 bool finalizeMessage(
-    void *&ret,
+    tParser::iNode *&ret,
     const tParser::tTokenOrNodeList::const_iterator &begin,
     const tParser::tTokenOrNodeList::const_iterator &end) {
   tParser::tTokenOrNodeList::const_iterator itr = begin + 1;
   const std::string name = itr->m_token.getToken();
   std::advance(itr, 2);
-  MessageDef *pDef = reinterpret_cast< MessageDef * >(itr->m_pNode);
-  pDef->m_name = std::move(name);
+  tParser::tNode<MessageDef> *pDef = reinterpret_cast< tParser::tNode<MessageDef> * >(itr->m_pNode);
+  pDef->m_data.m_name = std::move(name);
   ret = pDef;
   return true;
 }
@@ -337,14 +337,14 @@ bool finalizeMessage(
  *
  */
 bool genMessageBodyMessage(
-    void *&ret,
+    tParser::iNode *&ret,
     const tParser::tTokenOrNodeList::const_iterator &begin,
     const tParser::tTokenOrNodeList::const_iterator &end) {
   tParser::tTokenOrNodeList::const_iterator itr = begin;
-  MessageDef *pDef = reinterpret_cast< MessageDef * >(itr->m_pNode);
+  tParser::tNode<MessageDef> *pDef = reinterpret_cast< tParser::tNode<MessageDef> * >(itr->m_pNode);
   ++itr;
-  MessageDef *pDefChild = reinterpret_cast< MessageDef * >(itr->m_pNode);
-  pDef->m_messages.push_back(std::move(*pDefChild));
+  tParser::tNode<MessageDef> *pDefChild = reinterpret_cast< tParser::tNode<MessageDef> * >(itr->m_pNode);
+  pDef->m_data.m_messages.push_back(std::move(pDefChild->m_data));
   delete pDefChild;
   ret = pDef;
   return true;
@@ -354,14 +354,14 @@ bool genMessageBodyMessage(
  *
  */
 bool genMessageMessageBody(
-    void *&ret,
+    tParser::iNode *&ret,
     const tParser::tTokenOrNodeList::const_iterator &begin,
     const tParser::tTokenOrNodeList::const_iterator &end) {
   tParser::tTokenOrNodeList::const_iterator itr = begin;
-  MessageDef *pDefChild = reinterpret_cast< MessageDef * >(itr->m_pNode);
+  tParser::tNode<MessageDef> *pDefChild = reinterpret_cast< tParser::tNode<MessageDef> * >(itr->m_pNode);
   ++itr;
-  MessageDef *pDef = reinterpret_cast< MessageDef * >(itr->m_pNode);
-  pDef->m_messages.push_back(std::move(*pDefChild));
+  tParser::tNode<MessageDef> *pDef = reinterpret_cast< tParser::tNode<MessageDef> * >(itr->m_pNode);
+  pDef->m_data.m_messages.push_back(std::move(pDefChild->m_data));
   delete pDefChild;
   ret = pDef;
   return true;
@@ -371,19 +371,19 @@ bool genMessageMessageBody(
  *
  */
 bool genMessageEnum(
-    void *&ret,
+    tParser::iNode *&ret,
     const tParser::tTokenOrNodeList::const_iterator &begin,
     const tParser::tTokenOrNodeList::const_iterator &end) {
   tParser::tTokenOrNodeList::const_iterator itr = begin;
-  MessageDef *pDef;
+  tParser::tNode<MessageDef> *pDef;
   if (itr + 1 == end) {
-    pDef = new MessageDef;
+    pDef = new tParser::tNode<MessageDef>;
   } else {
-    pDef = reinterpret_cast< MessageDef * >(itr->m_pNode);
+    pDef = reinterpret_cast< tParser::tNode<MessageDef> * >(itr->m_pNode);
     ++itr;
   }
-  EnumDef *pEnumDef = reinterpret_cast< EnumDef * >(itr->m_pNode);
-  pDef->m_enums.push_back(std::move(*pEnumDef));
+  tParser::tNode<EnumDef> *pEnumDef = reinterpret_cast< tParser::tNode<EnumDef> * >(itr->m_pNode);
+  pDef->m_data.m_enums.push_back(std::move(pEnumDef->m_data));
   delete pEnumDef;
   ret = pDef;
   return true;
@@ -393,19 +393,19 @@ bool genMessageEnum(
  *
  */
 bool genMessageField(
-    void *&ret,
+    tParser::iNode *&ret,
     const tParser::tTokenOrNodeList::const_iterator &begin,
     const tParser::tTokenOrNodeList::const_iterator &end) {
   tParser::tTokenOrNodeList::const_iterator itr = begin;
-  MessageDef *pDef;
+  tParser::tNode<MessageDef> *pDef;
   if (itr + 1 == end) {
-    pDef = new MessageDef;
+    pDef = new tParser::tNode<MessageDef>;
   } else {
-    pDef = reinterpret_cast< MessageDef * >(itr->m_pNode);
+    pDef = reinterpret_cast< tParser::tNode<MessageDef> * >(itr->m_pNode);
     ++itr;
   }
-  FieldDef *pField = reinterpret_cast< FieldDef * >(itr->m_pNode);
-  pDef->m_fields.push_back(std::move(*pField));
+  tParser::tNode<FieldDef> *pField = reinterpret_cast< tParser::tNode<FieldDef> * >(itr->m_pNode);
+  pDef->m_data.m_fields.push_back(std::move(pField->m_data));
   delete pField;
   ret = pDef;
   return true;
