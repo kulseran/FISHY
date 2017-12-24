@@ -30,6 +30,9 @@ namespace vfs {
 typedef u32 tFileSysId;
 typedef std::vector< std::shared_ptr< iFileSystem > > tFileSystemList;
 
+/**
+ * Container for information about mount points.
+ */
 struct MountPoint {
   tMountId m_id;
   tFileSysId m_fileSys;
@@ -39,43 +42,62 @@ struct MountPoint {
 };
 typedef std::vector< MountPoint > tMountList;
 
-struct Detail {
+/**
+ * Container for information about the VFS.
+ */
+class VfsDetail {
+  public:
   tMountList m_mountPoints;
   tFileSystemList m_fileSystems;
+  u32 id;
+  bool g_vfsUseSecurePaths;
   std::mutex m_mutex;
 
-  Detail() {}
+  VfsDetail();
+  ~VfsDetail();
+
+  /**
+   *
+   */
+  tMountId NextMountId();
 };
 
-//----------------------------------------------------------------------------
-// P R O T O T Y P E S
-//----------------------------------------------------------------------------
-tMountId NextMountId();
-
-//----------------------------------------------------------------------------
-// G L O B A L S
-//----------------------------------------------------------------------------
 static const tFileSysId INVALID_FILESYS_ID = (tFileSysId) -1;
-static bool g_vfsUseSecurePaths = false;
-Detail g_detail;
-bool g_vfsInitialized = false;
-
-//----------------------------------------------------------------------------
-// I M P L E M E N T A T I O N
-//----------------------------------------------------------------------------
 
 /**
  *
  */
-void Init() {
+VfsDetail &GetVFS() {
+  static VfsDetail s_detail;
+  return s_detail;
+}
+
+/**
+ *
+ */
+VfsDetail::VfsDetail() {
   Trace();
-  LOCK_MUTEX(g_detail.m_mutex);
-  if (g_vfsInitialized) {
-    return;
-  }
-  g_detail.m_fileSystems.push_back(getStaticStdioFileSystem());
-  g_detail.m_fileSystems.push_back(getStaticMemFileSystem());
-  g_vfsInitialized = true;
+  std::lock_guard< std::mutex > lock(m_mutex);
+  m_fileSystems.push_back(getStaticStdioFileSystem());
+  m_fileSystems.push_back(getStaticMemFileSystem());
+}
+
+/**
+ *
+ */
+VfsDetail::~VfsDetail() {
+  Trace();
+  std::lock_guard< std::mutex > lock(m_mutex);
+  ASSERT(m_mountPoints.size() == 0);
+  m_fileSystems.clear();
+}
+
+/**
+ *
+ */
+tMountId VfsDetail::NextMountId() {
+  ASSERT(id < std::numeric_limits< u32 >::max());
+  return ((tMountId) id++);
 }
 
 /**
@@ -84,25 +106,6 @@ void Init() {
 void AddFileSys(std::shared_ptr< iFileSystem > &fileSys) {
   LOCK_MUTEX(g_detail.m_mutex);
   g_detail.m_fileSystems.push_back(fileSys);
-}
-
-/**
- *
- */
-bool IsInitalized() {
-  LOCK_MUTEX(g_detail.m_mutex);
-  return g_vfsInitialized;
-}
-
-/**
- *
- */
-void Dest() {
-  Trace();
-  LOCK_MUTEX(g_detail.m_mutex);
-  ASSERT(g_detail.m_mountPoints.size() == 0);
-  g_detail.m_fileSystems.clear();
-  g_vfsInitialized = false;
 }
 
 /**
@@ -258,14 +261,6 @@ void UnmountAll() {
     g_detail.m_fileSystems[itr->m_fileSys]->unmount(itr->m_id);
   }
   g_detail.m_mountPoints.clear();
-}
-
-/**
- *
- */
-tMountId NextMountId() {
-  static u32 id = 1;
-  return ((tMountId) id++);
 }
 
 /**

@@ -1,6 +1,3 @@
-/**
- * filesys_stdio.cpp
- */
 #include "filesys_stdio.h"
 
 #include <CORE/BASE/checks.h>
@@ -102,42 +99,42 @@ class StdiosysFileHandle : public filters::BaseFsStreamFilter {
  *
  */
 std::shared_ptr< StdioFileSystem > getStaticStdioFileSystem() {
-  static std::shared_ptr< StdioFileSystem > s_filesys(new StdioFileSystem());
+  static std::shared_ptr< StdioFileSystem > s_filesys(new StdioFileSystem);
   return s_filesys;
 }
 
 /**
  *
  */
-bool StdioFileSystem::mount(
+Status StdioFileSystem::mount(
     const tMountId mountId,
     const vfs::Path &path,
     const std::ios_base::openmode mode) {
   FileStats stats;
   bool ret = stat(INVALID_MOUNT_ID, path, stats);
   if (!ret || !stats.m_exists || !stats.m_isDir) {
-    return false;
+    return Status::NOT_FOUND;
   }
-  if (path.dir() != path.str()) {
-    Log(LL::Error) << "stdio would mount directory, however mountpoint path is "
-                      "lacking trailing seperator.";
-    return false;
-  }
+  CHECK_M(
+      path.dir() == path.str(),
+      "stdio would mount directory, however mountpoint path is lacking "
+      "trailing seperator.");
   MountInfo info;
   info.m_mode = mode;
   m_mounts[mountId] = info;
-  return true;
+  return Status::OK;
 }
 
 /**
  *
  */
-bool StdioFileSystem::unmount(const tMountId mountId) {
-  RET_M(
+Status StdioFileSystem::unmount(const tMountId mountId) {
+  RET_SM(
       m_mounts.find(mountId) != m_mounts.end(),
+      Status::OUT_OF_BOUNDS,
       "Can't unmount non-existant mount!");
   m_mounts.erase(mountId);
-  return true;
+  return Status::OK;
 }
 
 /**
@@ -180,18 +177,18 @@ void StdioFileSystem::close(filters::BaseFsStreamFilter *pFile) {
 /**
  *
  */
-bool StdioFileSystem::remove(
-    const tMountId mountId, const Path &dir, bool &ret) {
+Status
+StdioFileSystem::remove(const tMountId mountId, const Path &dir, bool &ret) {
   if (dir.empty()) {
-    return false;
+    return Status::BAD_ARGUMENT;
   }
   if ((m_mounts.find(mountId)->second.m_mode & std::ios::out)
       != std::ios::out) {
-    return false;
+    return Status::BAD_ARGUMENT;
   }
 
   ret = (::remove(dir.c_str()) == 0);
-  return true;
+  return Status::OK;
 }
 
 #define S_ISDIR(S) (((S) &_S_IFDIR) != 0)
@@ -199,16 +196,16 @@ bool StdioFileSystem::remove(
 /**
  *
  */
-bool StdioFileSystem::stat(
+Status StdioFileSystem::stat(
     const tMountId mountId, const Path &path, FileStats &retVal) {
   if (mountId != INVALID_MOUNT_ID
       && (m_mounts.find(mountId)->second.m_mode & std::ios::in)
              != std::ios::in) {
-    return false;
+    return Status::BAD_ARGUMENT;
   }
 
   if (path.empty()) {
-    return false;
+    return Status::BAD_ARGUMENT;
   }
 
   struct stat stats;
@@ -217,27 +214,27 @@ bool StdioFileSystem::stat(
     pathStr.pop_back();
   }
   if (::stat(pathStr.c_str(), &stats) < 0) {
-    return true;
+    return Status::NOT_FOUND;
   }
 
   retVal.m_modifiedTime = (u64) stats.st_mtime; // seconds
   retVal.m_exists = true;
   retVal.m_isDir = S_ISDIR(stats.st_mode);
   retVal.m_size = stats.st_size;
-  return true;
+  return Status::OK;
 }
 
 /**
  *
  */
-bool StdioFileSystem::mkdir(
-    const tMountId mountId, const Path &dir, bool &ret) {
+Status
+StdioFileSystem::mkdir(const tMountId mountId, const Path &dir, bool &ret) {
   if (dir.empty()) {
-    return false;
+    return Status::BAD_ARGUMENT;
   }
   if ((m_mounts.find(mountId)->second.m_mode & std::ios::out)
       != std::ios::out) {
-    return false;
+    return Status::BAD_ARGUMENT;
   }
 
 #if defined(PLAT_WIN32)
@@ -245,20 +242,20 @@ bool StdioFileSystem::mkdir(
 #else
 #  error mkdir not supported on this platform
 #endif
-  return true;
+  return Status::OK;
 }
 
 /**
  *
  */
-bool StdioFileSystem::rmdir(
-    const tMountId mountId, const Path &dir, bool &ret) {
+Status
+StdioFileSystem::rmdir(const tMountId mountId, const Path &dir, bool &ret) {
   if (dir.empty()) {
-    return false;
+    return Status::BAD_ARGUMENT;
   }
   if ((m_mounts.find(mountId)->second.m_mode & std::ios::out)
       != std::ios::out) {
-    return false;
+    return Status::BAD_ARGUMENT;
   }
 
 #if defined(PLAT_WIN32)
@@ -266,7 +263,7 @@ bool StdioFileSystem::rmdir(
 #else
 #  error mkdir not supported on this platform
 #endif
-  return true;
+  return Status::OK;
 }
 
 /**

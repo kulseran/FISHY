@@ -12,21 +12,6 @@
 namespace vfs {
 
 /**
- * Must be called before all other vfs operations
- */
-void Init();
-
-/**
- * Should be called before application exit
- */
-void Dest();
-
-/**
- * @return true if {@link Init} has been called
- */
-bool IsInitalized();
-
-/**
  * Enable/Disable secure path checking.
  * When enabled, mount points must be children of the current working directory
  * of the application. And all file paths opened on a mount point must be
