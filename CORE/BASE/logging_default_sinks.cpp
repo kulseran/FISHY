@@ -83,6 +83,7 @@ void LoggingStdioSink::writeToStream(
 Status LoggingStdioSink::write(const LogMessage &message) {
   std::string msg = CleanupMessage(message.m_msg);
   if (message.m_logLevel == LL::Warning || message.m_logLevel == LL::Error) {
+    std::cout.flush();
     writeToStream(std::cerr, message, msg);
   } else {
     writeToStream(std::cout, message, msg);

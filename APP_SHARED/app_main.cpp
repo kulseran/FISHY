@@ -43,6 +43,8 @@ int main(const int argc, const char **argv) {
   }
   setupLogging();
   Trace();
+  Log(LL::Trace) << "Build info: " << BUILD_BRANCH_ID << "@"
+                 << BUILD_VERSION_HASH << " on " << BUILD_TIMESTAMP;
 
   // Setup Networking
   // core::net::Initialize();
@@ -72,7 +74,7 @@ int main(const int argc, const char **argv) {
 
 #if FISHY_DEBUG
   if (g_debugHalt.get() && rVal != 0) {
-    std::cout << "Press Enter to Continue...";
+    Log(LL::Error) << "Press Enter to Continue...";
     std::cin.get();
   }
   ASSERT(rVal == 0);
@@ -102,6 +104,8 @@ void setupLogging() {
     default:
       break;
   }
-  core::logging::RegisterSink(std::shared_ptr< core::logging::iLogSink >(
-      new core::logging::LoggingStdioSink(loggerLevels)));
+  CHECK_M(
+      core::logging::RegisterSink(std::shared_ptr< core::logging::iLogSink >(
+          new core::logging::LoggingStdioSink(loggerLevels))),
+      "Unable to setup stdio log sinks.");
 }

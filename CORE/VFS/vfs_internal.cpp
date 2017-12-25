@@ -272,9 +272,10 @@ bool VfsDetail::unmount(const tMountId mountId) {
     if (itr->m_id == mountId) {
       Log(LL::Info) << "Removing mount \"" << itr->m_src.str() << "\" -> \""
                     << itr->m_dest.str() << "\"";
-      m_fileSystems[itr->m_fileSys]->unmount(itr->m_id);
-      itr = m_mountPoints.erase(itr);
-      return true;
+      if (m_fileSystems[itr->m_fileSys]->unmount(itr->m_id)) {
+        itr = m_mountPoints.erase(itr);
+        return true;
+      }
     } else {
       ++itr;
     }

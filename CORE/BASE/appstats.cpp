@@ -72,7 +72,9 @@ class InfoFinder : public std::unary_function< const tAppInfo &, bool > {
     if (stat.first == nullptr) {
       return false;
     }
-    ASSERT(m_pName);
+    if (m_pName == nullptr) {
+      return false;
+    }
     return strcmp(stat.first, m_pName) == 0;
   }
 
