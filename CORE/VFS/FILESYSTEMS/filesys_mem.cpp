@@ -1,6 +1,3 @@
-/**
- * filesys_mem.cpp
- */
 #include "filesys_mem.h"
 
 #include <CORE/ARCH/timer.h>

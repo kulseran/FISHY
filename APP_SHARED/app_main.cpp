@@ -1,12 +1,9 @@
-/**
- * app_main.cpp
- */
 #include "app_main.h"
 
 #include <CORE/BASE/appstats.h>
 #include <CORE/BASE/config.h>
 #include <CORE/BASE/logging.h>
-// #include <CORE/VFS/vfs.h>
+#include <CORE/VFS/vfs.h>
 
 #include <.generated/version.h>
 
@@ -50,9 +47,8 @@ int main(const int argc, const char **argv) {
   // core::net::Initialize();
 
   // Setup VFS
-  // vfs::Init();
-  // vfs::Mount("./", "./");
-  // vfs::Mount("memfile/", "./memfile/");
+  vfs::Mount("./", "./");
+  vfs::Mount("memfile/", "./memfile/");
 
   // Init Application
   G_pApplication->init(argv[0]);
@@ -63,14 +59,13 @@ int main(const int argc, const char **argv) {
   Log(LL::Trace) << "Exiting Application Main";
 
   // Shutdown VFS
-  // vfs::UnmountAll();
-  // vfs::Dest();
+  vfs::UnmountAll();
 
   // Shutdown Networking
   // core::net::Shutdown();
 
   // Finish
-  Log(LL::Trace) << "App Terminated: " << rVal;
+  Log(LL::Trace) << "App Terminated with status: " << rVal;
 
 #if FISHY_DEBUG
   if (g_debugHalt.get() && rVal != 0) {

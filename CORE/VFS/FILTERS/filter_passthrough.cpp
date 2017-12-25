@@ -1,6 +1,3 @@
-/**
- * filter_passthrough.cpp
- */
 #include "filter_passthrough.h"
 
 #include <CORE/BASE/asserts.h>
@@ -16,12 +13,14 @@ bool passthrough::chain(streamfilter *filter, const std::ios::openmode mode) {
     return false;
   }
 
-  m_seekLen = std::min(m_seekLen, (pos_type)(((pos_type) length()) - m_seekLow));
+  m_seekLen =
+      std::min(m_seekLen, (pos_type)(((pos_type) length()) - m_seekLow));
   return true;
 }
 
 /**
- * Just push the character out if there is room. (SLOW! this happens one char at a time)
+ * Just push the character out if there is room. (SLOW! this happens one char at
+ * a time)
  */
 passthrough::int_type passthrough::overflow(passthrough::int_type ch) {
   ASSERT(m_buf);
@@ -38,9 +37,9 @@ passthrough::int_type passthrough::overflow(passthrough::int_type ch) {
 }
 
 /**
- * The default uflow assumes that we specified a buffer. But, we specifically haven't.
- * So, we need to do a slower version that will actually give us a result without crash.
- * This results in a slow read of a single char at a time.
+ * The default uflow assumes that we specified a buffer. But, we specifically
+ * haven't. So, we need to do a slower version that will actually give us a
+ * result without crash. This results in a slow read of a single char at a time.
  */
 passthrough::int_type passthrough::uflow() {
   if (m_curPos >= length()) {
@@ -85,10 +84,13 @@ std::streamsize passthrough::xsputn(const char *pBuffer, std::streamsize sz) {
 /**
  * Seek the lower stream, and make sure our local position matches
  */
-passthrough::pos_type passthrough::seekoff(passthrough::off_type delta, std::ios_base::seekdir dir, std::ios_base::openmode mode) {
+passthrough::pos_type passthrough::seekoff(
+    passthrough::off_type delta,
+    std::ios_base::seekdir dir,
+    std::ios_base::openmode mode) {
   // Find out where we are on the lower stream
   pos_type realCurPos = m_buf->pubseekoff(0, std::ios::cur, mode);
-  if (realCurPos == (pos_type) - 1) {
+  if (realCurPos == (pos_type) -1) {
     return realCurPos;
   }
 
@@ -103,13 +105,13 @@ passthrough::pos_type passthrough::seekoff(passthrough::off_type delta, std::ios
   // Do our local seek
   m_curPos = (m_seekLow > realCurPos) ? (0) : (realCurPos - m_seekLow);
   streamfilter::seekoff(delta, dir, mode);
-  if (m_curPos == (pos_type) - 1) {
+  if (m_curPos == (pos_type) -1) {
     return m_curPos;
   }
 
   // Reseek the lower stream
   realCurPos = m_buf->pubseekpos(m_curPos + m_seekLow, mode);
-  if (realCurPos == (pos_type) - 1) {
+  if (realCurPos == (pos_type) -1) {
     return realCurPos;
   }
 

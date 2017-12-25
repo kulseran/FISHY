@@ -1,13 +1,13 @@
-#include <TESTS/testcase.h>
 #include <TESTS/test_assertions.h>
+#include <TESTS/testcase.h>
 
-#include <CORE/types.h>
 #include <CORE/MEMORY/memory.h>
+#include <CORE/types.h>
 
-using core::memory::isPow2;
-using core::memory::nextPow2;
 using core::memory::allocAligned;
 using core::memory::freeAligned;
+using core::memory::isPow2;
+using core::memory::nextPow2;
 
 REGISTER_TEST_CASE(testPow2) {
   TEST(testing::assertTrue(isPow2((intptr_t) 1)));
@@ -35,7 +35,7 @@ REGISTER_TEST_CASE(testNextPow2) {
 
 REGISTER_TEST_CASE(testAllocFree) {
   u8 *testPtr = (u8 *) allocAligned(16, 16);
-  TEST(testing::assertEquals(int ((intptr_t) testPtr & 15), 0));
+  TEST(testing::assertEquals(int((intptr_t) testPtr & 15), 0));
   freeAligned(testPtr);
 }
 

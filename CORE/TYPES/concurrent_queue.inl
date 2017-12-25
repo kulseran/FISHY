@@ -125,6 +125,14 @@ inline void ConcurrentQueue< tType >::close() {
   m_consumerCV.notify_all();
 }
 
+/**
+ *
+ */
+template < typename tType >
+inline bool ConcurrentQueue< tType >::isOpen() const {
+  return m_open.load();
+}
+
 } // namespace types
 } // namespace core
 

@@ -97,7 +97,7 @@ Status LogManager::write(const LogMessage &message) {
  *
  */
 void LogManager::logFn(LogManager *pManager) {
-  while (true) {
+  while (pManager->m_messages.isOpen()) {
     {
       std::lock_guard< std::mutex > lock(pManager->m_mutex);
       if (pManager->m_sinks.empty()) {

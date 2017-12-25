@@ -1,8 +1,3 @@
-/**
- * vfs_filesystem.inl
- *
- *
- */
 #ifndef FISHY_VFS_FILESYSTEM_INL
 #define FISHY_VFS_FILESYSTEM_INL
 
