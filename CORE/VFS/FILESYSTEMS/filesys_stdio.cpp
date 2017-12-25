@@ -270,7 +270,7 @@ StdioFileSystem::rmdir(const tMountId mountId, const Path &dir, bool &ret) {
  * Internal iterator structure for traversing a directory tree.
  */
 class StdioDirectoryIterator
-    : public iFileSystem::DirectoryIterator::iDirectoryIteratorImpl {
+    : public DirectoryIterator::iDirectoryIteratorImpl {
   public:
   StdioDirectoryIterator() {}
 
@@ -311,7 +311,7 @@ class StdioDirectoryIterator
 
   virtual bool next() override {
 #if defined(PLAT_WIN32)
-    iFileSystem::DirectoryNode node;
+    DirectoryNode node;
     if (m_pChild) {
       node = m_pChild->get();
       if (node.m_stats.m_exists) {
@@ -323,7 +323,7 @@ class StdioDirectoryIterator
       m_pChild = nullptr;
     }
     if (m_hFind == INVALID_HANDLE_VALUE) {
-      setNode(iFileSystem::DirectoryNode());
+      setNode(DirectoryNode());
       return false;
     }
 
@@ -378,14 +378,14 @@ class StdioDirectoryIterator
 /**
  *
  */
-iFileSystem::DirectoryIterator StdioFileSystem::iterate(
+DirectoryIterator StdioFileSystem::iterate(
     const tMountId mountId, const Path &root, bool recurse) {
   if ((m_mounts.find(mountId)->second.m_mode & std::ios::in) != std::ios::in) {
-    return iFileSystem::DirectoryIterator();
+    return DirectoryIterator();
   }
 
-  return iFileSystem::DirectoryIterator(
-      std::shared_ptr< iFileSystem::DirectoryIterator::iDirectoryIteratorImpl >(
+  return DirectoryIterator(
+      std::shared_ptr< DirectoryIterator::iDirectoryIteratorImpl >(
           new StdioDirectoryIterator(mountId, Path(root.dir()), recurse)));
 }
 

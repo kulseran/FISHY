@@ -7,6 +7,8 @@
 #include <CORE/VFS/vfs_filter.h>
 #include <CORE/types.h>
 
+#include <algorithm>
+
 namespace vfs {
 namespace filters {
 

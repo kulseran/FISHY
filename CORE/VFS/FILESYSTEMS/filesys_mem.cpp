@@ -275,9 +275,9 @@ MemFileSystem::rmdir(const tMountId mountId, const Path &dir, bool &ret) {
 /**
  *
  */
-iFileSystem::DirectoryIterator
+DirectoryIterator
 MemFileSystem::iterate(const tMountId mountId, const Path &root, bool recurse) {
-  return iFileSystem::DirectoryIterator();
+  return DirectoryIterator();
 }
 
 Status

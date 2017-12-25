@@ -1,6 +1,8 @@
 #include <CORE/BASE/asserts.h>
 #include <CORE/VFS/vfs_filter.h>
 
+#include <algorithm>
+
 namespace vfs {
 
 namespace filters {

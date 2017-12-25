@@ -7,6 +7,7 @@
 #include <CORE/UTIL/stringutil.h>
 #include <CORE/VFS/vfs.h>
 #include <CORE/VFS/vfs_file.h>
+#include <CORE/VFS/vfs_util.h>
 #include <CORE/types.h>
 
 #include <algorithm>
@@ -98,7 +99,7 @@ Status ProcessFile() {
 
   RET_SM(
       g_allowOverwrite.get()
-          || !vfs::Stat(vfs::Path(g_outputFileName.get())).m_exists,
+          || !vfs::util::Stat(vfs::Path(g_outputFileName.get())).m_exists,
       Status::BAD_ARGUMENT,
       "Unable to overwrite existing file. Use --allow_overwrite if this is "
       "intended.");

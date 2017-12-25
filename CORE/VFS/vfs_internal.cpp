@@ -13,10 +13,10 @@
 #include <CORE/VFS/path.h>
 #include <CORE/VFS/vfs.h>
 #include <CORE/VFS/vfs_filter.h>
+#include <CORE/VFS/vfs_util.h>
 #include <EXTERN_LIB/srutil/delegate/delegate.hpp>
 
 #include <algorithm>
-#include <atomic>
 #include <cstdlib>
 #include <fstream>
 #include <vector>
@@ -24,7 +24,6 @@
 namespace vfs {
 
 #define S_ISDIR(S) ((S) &_S_IFDIR)
-#define TMP_PATH "tmp/"
 #define COPY_BUFFER_SZ 1024
 
 typedef u32 tFileSysId;
@@ -172,7 +171,7 @@ tMountId VfsDetail::mountTempFolder() {
   if (tempMount == INVALID_MOUNT_ID) {
     return INVALID_MOUNT_ID;
   }
-  if (!vfs::Stat(vfs::Path(OSTMP) + vfs::Path("fishy/")).m_exists) {
+  if (!vfs::util::Stat(vfs::Path(OSTMP) + vfs::Path("fishy/")).m_exists) {
     if (!vfs::util::MkDir(vfs::Path(OSTMP) + vfs::Path("fishy/"))) {
       Unmount(tempMount);
       return INVALID_MOUNT_ID;
@@ -186,7 +185,7 @@ tMountId VfsDetail::mountTempFolder() {
         .ignoreErrors();
     const std::string tempDir = "fishy/" + ticks + "/";
     tempPath = Path(tempDir);
-  } while (vfs::Stat(vfs::Path(OSTMP) + tempPath).m_exists);
+  } while (vfs::util::Stat(vfs::Path(OSTMP) + tempPath).m_exists);
 
   if (!vfs::util::MkDir(vfs::Path(OSTMP) + tempPath)) {
     Unmount(tempMount);
@@ -196,7 +195,7 @@ tMountId VfsDetail::mountTempFolder() {
 
   return mount(
       osRootTempPath + tempPath,
-      TMP_PATH,
+      vfs::util::TMP_PATH,
       std::ios_base::binary | std::ios_base::in | std::ios_base::out,
       false);
 }
@@ -220,7 +219,9 @@ tMountId VfsDetail::mount(
       return INVALID_MOUNT_ID;
     }
   }
-  CHECK_M(!userChecks || dest.str() != TMP_PATH, "Use '#MountTempFolder' API.");
+  CHECK_M(
+      !userChecks || dest.str() != vfs::util::TMP_PATH,
+      "Use '#MountTempFolder' API.");
 
   const tMountId mountId = NextMountId();
   tFileSysId validFileSysId = INVALID_FILESYS_ID;
@@ -436,13 +437,6 @@ class StatVisitor {
 /**
  *
  */
-FileStats Stat(const Path &path) {
-  return GetVFS().stat(path);
-}
-
-/**
- *
- */
 FileStats VfsDetail::stat(const Path &path) {
   std::lock_guard< std::mutex > lock(m_mutex);
   FileStats retVal;
@@ -454,6 +448,13 @@ FileStats VfsDetail::stat(const Path &path) {
 }
 
 namespace util {
+
+/**
+ *
+ */
+FileStats Stat(const Path &path) {
+  return GetVFS().stat(path);
+}
 
 /**
  *
@@ -584,8 +585,7 @@ bool Remove(const Path &path) {
  * Internal iterator class that will walk through all the mount points in
  * reverse order, and output any iterations that it can find.
  */
-class VFSDirectoryIterator
-    : public iFileSystem::DirectoryIterator::iDirectoryIteratorImpl {
+class VFSDirectoryIterator : public DirectoryIterator::iDirectoryIteratorImpl {
   public:
   /**
    *
@@ -602,7 +602,7 @@ class VFSDirectoryIterator
    */
   virtual bool next() override {
     m_child++;
-    while (m_child.get() == iFileSystem::DirectoryNode()) {
+    while (m_child.get() == DirectoryNode()) {
       if (!findNextMount()) {
         return false;
       }
@@ -615,7 +615,7 @@ class VFSDirectoryIterator
   const Path m_root;
   const bool m_recurse;
   tMountId m_lastMount;
-  iFileSystem::DirectoryIterator m_child;
+  DirectoryIterator m_child;
 
   /**
    * Resolves the input path for iteration.
@@ -634,11 +634,11 @@ class VFSDirectoryIterator
    * Sets the output of this iterator.
    * Before doing so, translates the path from file system space into vfs space.
    */
-  void setTranslatedNode(const iFileSystem::DirectoryNode &node) {
+  void setTranslatedNode(const DirectoryNode &node) {
     if (!node.m_stats.m_exists) {
       setNode(node);
     }
-    iFileSystem::DirectoryNode translatedNode = node;
+    DirectoryNode translatedNode = node;
     for (tMountList::iterator itr = GetVFS().m_mountPoints.begin();
          itr != GetVFS().m_mountPoints.end();
          ++itr) {
@@ -679,7 +679,7 @@ class VFSDirectoryIterator
       if (!resolvedPath.empty()) {
         m_lastMount = itr->m_id;
         m_child = pFileSys->iterate(itr->m_id, resolvedPath, m_recurse);
-        if (m_child.get() != iFileSystem::DirectoryNode()) {
+        if (m_child.get() != DirectoryNode()) {
           setTranslatedNode(m_child.get());
           return m_child.get().m_stats.m_exists;
         }
@@ -692,27 +692,10 @@ class VFSDirectoryIterator
 /**
  *
  */
-iFileSystem::DirectoryIterator List(const Path &path, bool recurse) {
-  return iFileSystem::DirectoryIterator(
-      std::shared_ptr< iFileSystem::DirectoryIterator::iDirectoryIteratorImpl >(
+DirectoryIterator List(const Path &path, bool recurse) {
+  return DirectoryIterator(
+      std::shared_ptr< DirectoryIterator::iDirectoryIteratorImpl >(
           new VFSDirectoryIterator(path, recurse)));
-}
-
-/**
- *
- */
-Path GetTempDir() {
-  return Path(TMP_PATH);
-}
-
-/**
- *
- */
-Path GetTempFile() {
-  static std::atomic_int32_t uniqueFileCounter = 0;
-  std::string fileName;
-  core::util::lexical_cast(uniqueFileCounter++, fileName).ignoreErrors();
-  return Path("tmp/" + fileName);
 }
 
 } // namespace util

@@ -7,10 +7,8 @@
 #include <CORE/ARCH/platform.h>
 #include <CORE/UTIL/noncopyable.h>
 
-#include <algorithm>
 #include <ios>
 #include <iostream>
-#include <limits>
 
 namespace vfs {
 namespace filters {

@@ -8,59 +8,57 @@ namespace vfs {
 /**
  *
  */
-inline bool iFileSystem::DirectoryNode::
-operator==(const DirectoryNode &other) const {
+inline bool DirectoryNode::operator==(const DirectoryNode &other) const {
   return core::util::ComparisonChain()
       .andOne(m_path.str(), other.m_path.str())
       .andOne(m_mountId, other.m_mountId)
       .buildEqual();
 }
 
-inline bool iFileSystem::DirectoryNode::
-operator!=(const DirectoryNode &other) const {
+/**
+ *
+ */
+inline bool DirectoryNode::operator!=(const DirectoryNode &other) const {
   return !(*this == other);
 }
 
 /**
  *
  */
-inline iFileSystem::DirectoryIterator::iDirectoryIteratorImpl::
-    iDirectoryIteratorImpl() {
+inline DirectoryIterator::iDirectoryIteratorImpl::iDirectoryIteratorImpl() {
 }
 
 /**
  *
  */
-inline iFileSystem::DirectoryIterator::iDirectoryIteratorImpl::
-    ~iDirectoryIteratorImpl() {
+inline DirectoryIterator::iDirectoryIteratorImpl::~iDirectoryIteratorImpl() {
 }
 
 /**
  *
  */
-inline iFileSystem::DirectoryNode
-iFileSystem::DirectoryIterator::iDirectoryIteratorImpl::get() const {
+inline DirectoryNode DirectoryIterator::iDirectoryIteratorImpl::get() const {
   return m_node;
 }
 
 /**
  *
  */
-inline void iFileSystem::DirectoryIterator::iDirectoryIteratorImpl::setNode(
-    const DirectoryNode &node) {
+inline void
+DirectoryIterator::iDirectoryIteratorImpl::setNode(const DirectoryNode &node) {
   m_node = node;
 }
 
 /**
  *
  */
-inline iFileSystem::DirectoryIterator::DirectoryIterator() {
+inline DirectoryIterator::DirectoryIterator() {
 }
 
 /**
  *
  */
-inline iFileSystem::DirectoryIterator::DirectoryIterator(
+inline DirectoryIterator::DirectoryIterator(
     const std::shared_ptr< iDirectoryIteratorImpl > &data)
     : m_pData(data) {
 }
@@ -68,18 +66,17 @@ inline iFileSystem::DirectoryIterator::DirectoryIterator(
 /**
  *
  */
-inline iFileSystem::DirectoryNode iFileSystem::DirectoryIterator::get() const {
+inline DirectoryNode DirectoryIterator::get() const {
   if (m_pData) {
     return m_pData->get();
   }
-  return iFileSystem::DirectoryNode();
+  return DirectoryNode();
 }
 
 /**
  *
  */
-inline iFileSystem::DirectoryIterator &iFileSystem::DirectoryIterator::
-operator++() {
+inline DirectoryIterator &DirectoryIterator::operator++() {
   if (m_pData) {
     if (!m_pData->next()) {
       m_pData.reset();
@@ -91,8 +88,7 @@ operator++() {
 /**
  *
  */
-inline iFileSystem::DirectoryIterator iFileSystem::DirectoryIterator::
-operator++(int) {
+inline DirectoryIterator DirectoryIterator::operator++(int) {
   DirectoryIterator tmp(*this);
   ++(*this);
   return tmp;
@@ -101,7 +97,7 @@ operator++(int) {
 /**
  *
  */
-inline bool iFileSystem::DirectoryIterator::
+inline bool DirectoryIterator::
 operator==(const DirectoryIterator &other) const {
   if (m_pData == other.m_pData) {
     return true;
@@ -114,7 +110,7 @@ operator==(const DirectoryIterator &other) const {
 /**
  *
  */
-inline bool iFileSystem::DirectoryIterator::
+inline bool DirectoryIterator::
 operator!=(const DirectoryIterator &other) const {
   return !(*this == other);
 }
