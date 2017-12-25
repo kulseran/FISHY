@@ -38,4 +38,10 @@ REGISTER_TEST_CASE(testFirstNonNull) {
 
   TEST(testing::assertEquals(first_non_null(pA, pB), pB));
   TEST(testing::assertEquals(first_non_null(pB, pC), pB));
+
+  const int *pD = nullptr;
+  const int *pE = &b;
+  const int *pF = nullptr;
+  TEST(testing::assertEquals(first_non_null(pD, pE), pE));
+  TEST(testing::assertEquals(first_non_null(pE, pF), pE));
 }

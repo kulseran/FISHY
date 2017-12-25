@@ -43,4 +43,6 @@ REGISTER_TEST_CASE(testRelativeEqual) {
   TEST(testing::assertTrue(float_relative_equal(10.0f, 10.0f)));
   TEST(testing::assertTrue(float_relative_equal(10.0f, 10.01f, 0.1f)));
   TEST(testing::assertFalse(float_relative_equal(10.0f, 10.01f, 0.0001f)));
+  TEST(testing::assertFalse(float_relative_equal(10.01f, 10.0f, 0.0001f)));
+  TEST(testing::assertFalse(float_relative_equal(0.01f, 0.0f, 0.0001f)));
 }
