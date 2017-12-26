@@ -158,7 +158,7 @@ Status StdioFileSystem::open(
   pStdioFile->_stream.open(filename.c_str(), mode);
   if (!pStdioFile->_stream.is_open()) {
     delete pStdioFile;
-    return Status::BAD_ARGUMENT;
+    return Status::NOT_FOUND;
   }
 
   pStdioFile->open_base(pStdioFile->_stream.rdbuf());

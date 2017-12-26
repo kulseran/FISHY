@@ -76,7 +76,7 @@ REGISTER_TEST_CASE(testMemFileOpenBadFileMode) {
       Status::OK));
 
   const std::string expectedContent = "This is a file.";
-  core::memory::ConstBlob testBlob(expectedContent);
+  const core::memory::ConstBlob testBlob(expectedContent);
   const vfs::Path filename("memfile/test.txt");
   TEST(testing::assertTrue(filesys.create(filename, testBlob)));
 
@@ -93,11 +93,11 @@ REGISTER_TEST_CASE(testMemFileCreateRemove) {
 
   std::string expectedContent = "This is a file.";
 
-  core::memory::ConstBlob testBlob1(expectedContent);
+  const core::memory::ConstBlob testBlob1(expectedContent);
   const vfs::Path filename1("memfile/test1.txt");
   TEST(testing::assertTrue(filesys.create(filename1, testBlob1)));
 
-  core::memory::Blob testBlob2(expectedContent);
+  const core::memory::Blob testBlob2(expectedContent);
   const vfs::Path filename2("memfile/test2.txt");
   TEST(testing::assertTrue(filesys.create(filename2, testBlob2)));
 
@@ -145,17 +145,21 @@ REGISTER_TEST_CASE(testMemStat) {
   FileStats stats;
   TEST(testing::assertFalse(
       filesys.stat(vfs::INVALID_MOUNT_ID, vfs::Path(), stats)));
-  TEST(testing::assertTrue(filesys.stat(
-      vfs::INVALID_MOUNT_ID, vfs::Path("memfile/test.txt"), stats)));
+  TEST(testing::assertEquals(
+      filesys.stat(vfs::INVALID_MOUNT_ID, "memfile/test.txt", stats)
+          .getStatus(),
+      Status::OK));
   TEST(testing::assertFalse(stats.m_exists));
 
-  std::string expectedContent = "This is a file.";
-  core::memory::ConstBlob testBlob(expectedContent);
+  const std::string expectedContent = "This is a file.";
+  const core::memory::ConstBlob testBlob(expectedContent);
   const vfs::Path filename("memfile/test.txt");
   TEST(testing::assertTrue(filesys.create(filename, testBlob)));
 
-  TEST(testing::assertTrue(filesys.stat(
-      vfs::INVALID_MOUNT_ID, vfs::Path("memfile/test.txt"), stats)));
+  TEST(testing::assertEquals(
+      filesys.stat(vfs::INVALID_MOUNT_ID, "memfile/test.txt", stats)
+          .getStatus(),
+      Status::OK));
   TEST(testing::assertTrue(stats.m_exists));
   TEST(testing::assertFalse(stats.m_isDir));
   TEST(testing::assertEquals(stats.m_size, 15));
@@ -171,7 +175,7 @@ REGISTER_TEST_CASE(testMemConstFileEndToEnd) {
       Status::OK));
 
   const std::string expectedContent = "This is a file.";
-  core::memory::ConstBlob testBlob(expectedContent);
+  const core::memory::ConstBlob testBlob(expectedContent);
   const vfs::Path filename("memfile/test.txt");
 
   TEST(testing::assertTrue(filesys.create(filename, testBlob)));
@@ -181,12 +185,15 @@ REGISTER_TEST_CASE(testMemConstFileEndToEnd) {
           .getStatus(),
       Status::OK));
   TEST(testing::assertNotNull(pFile));
-  TEST(testing::assertEquals(pFile->getFilterName(), "memfilehandle"));
+  TEST(testing::assertEquals(
+      std::string(pFile->getFilterName()), std::string("memfilehandle")));
   TEST(testing::assertEquals(pFile->length(), 15));
+
   char actualContent[16] = {0};
   pFile->sgetn(actualContent, 15);
   TEST(testing::assertEquals(actualContent, expectedContent));
   filesys.close(pFile);
+
   bool ret = false;
   TEST(testing::assertEquals(
       filesys.remove(mountId, filename, ret).getStatus(), Status::OK));
