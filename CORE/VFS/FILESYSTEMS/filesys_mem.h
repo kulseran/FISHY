@@ -44,9 +44,25 @@ class MemFileSystem : public iFileSystem {
       const Path &rootPath,
       bool recurse = false) override;
 
-  Status create(const Path &path, const core::memory::ConstBlob &);
-  Status create(const Path &path, core::memory::Blob &);
+  /**
+   * Create a readonly file in the system.
+   * This file must be deleted by a call to {@link #remove}.
+   * The caller must ensure that the referenced buffer remains in scope until
+   * the file removal.
+   */
+  Status create(const Path &path, const core::memory::ConstBlob &buffer);
 
+  /**
+   * Create a writable file in the system.
+   * This file must be deleted by a call to {@link #remove}.
+   * The caller must ensure that the referenced buffer remains in scope until
+   * the file removal.
+   */
+  Status create(const Path &path, core::memory::Blob &buffer);
+
+  /**
+   *
+   */
   struct FileInfo {
     core::memory::Blob m_writeableBlob;
     core::memory::ConstBlob m_readableBlob;
