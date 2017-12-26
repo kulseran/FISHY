@@ -23,10 +23,11 @@ class MemFileSystem : public iFileSystem {
       const std::ios_base::openmode mode) override;
   virtual Status unmount(const tMountId) override;
 
-  virtual filters::BaseFsStreamFilter *open(
+  virtual Status open(
+      filters::BaseFsStreamFilter *&pFile,
       const tMountId mountIdx,
       const Path &filename,
-      std::ios_base::openmode mode) override;
+      const std::ios_base::openmode mode) override;
   virtual void close(filters::BaseFsStreamFilter *file) override;
 
   virtual Status

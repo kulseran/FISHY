@@ -80,13 +80,14 @@ class iFileSystem {
    * @param mountId the mountpoint to open the file under
    * @param filename the physical filename to open
    * @param mode the open mode for the file
-   * @return a valid {@link BaseFsStreamFilter} pointer on success, or nullptr
-   * on failure
+   * @param pFile if return is {@link Status::OK} a valid {@link
+   *     BaseFsStreamFilter} pointer, otherwise nullptr.
    */
-  virtual filters::BaseFsStreamFilter *open(
+  virtual Status open(
+      filters::BaseFsStreamFilter *&pFile,
       const tMountId mountId,
       const Path &filename,
-      std::ios_base::openmode mode) = 0;
+      const std::ios_base::openmode mode) = 0;
 
   /**
    * This should close the handle that you returned from open.

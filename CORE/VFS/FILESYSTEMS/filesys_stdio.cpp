@@ -140,28 +140,30 @@ Status StdioFileSystem::unmount(const tMountId mountId) {
 /**
  *
  */
-filters::BaseFsStreamFilter *StdioFileSystem::open(
+Status StdioFileSystem::open(
+    filters::BaseFsStreamFilter *&pFile,
     const tMountId mountId,
     const Path &filename,
-    std::ios_base::openmode mode) {
+    const std::ios_base::openmode mode) {
   Log(LL::Trace) << "Stdio File opening: " << filename.str();
-  if (m_mounts.find(mountId) == m_mounts.end()) {
-    Log(LL::Error) << "Can't open file on non-existant mount.";
-    return nullptr;
-  }
+  pFile = nullptr;
+
+  CHECK(m_mounts.find(mountId) != m_mounts.end());
+
   if ((m_mounts.find(mountId)->second.m_mode & mode) != mode) {
-    return nullptr;
+    return Status::BAD_ARGUMENT;
   }
 
-  StdiosysFileHandle *pFile = new StdiosysFileHandle();
-  pFile->_stream.open(filename.c_str(), mode);
-  if (!pFile->_stream.is_open()) {
-    delete pFile;
-    return nullptr;
+  StdiosysFileHandle *pStdioFile = new StdiosysFileHandle();
+  pStdioFile->_stream.open(filename.c_str(), mode);
+  if (!pStdioFile->_stream.is_open()) {
+    delete pStdioFile;
+    return Status::BAD_ARGUMENT;
   }
 
-  pFile->open_base(pFile->_stream.rdbuf());
-  return pFile;
+  pStdioFile->open_base(pStdioFile->_stream.rdbuf());
+  pFile = pStdioFile;
+  return Status::OK;
 }
 
 /**

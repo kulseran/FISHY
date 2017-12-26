@@ -383,8 +383,9 @@ class OpenVisitor {
       const Path &resolvedPath,
       filters::streamfilter *&out,
       iFileSystem *pFileSys) {
-    filters::BaseFsStreamFilter *pFile =
-        pFileSys->open(mountId, resolvedPath, m_mode);
+    filters::BaseFsStreamFilter *pFile = nullptr;
+    // TODO(kulseran): Propagate the status.
+    pFileSys->open(pFile, mountId, resolvedPath, m_mode).ignoreErrors();
     if (pFile != nullptr) {
       pFile->setFileSystem(pFileSys);
       out = pFile;

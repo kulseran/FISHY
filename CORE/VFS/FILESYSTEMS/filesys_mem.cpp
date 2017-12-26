@@ -41,8 +41,8 @@ class MemFileHandle : public filters::BaseFsStreamFilter {
 
   protected:
   virtual int_type overflow(int_type ch) override {
-    if ((static_cast< size_t >(m_pos) > m_info.m_readableBlob.size())
-        || m_info.m_readonly) {
+    CHECK(!m_info.m_readonly);
+    if ((static_cast< size_t >(m_pos) > m_info.m_readableBlob.size())) {
       return EOF;
     }
     m_info.m_writeableBlob.data()[m_pos] = (u8) ch;
@@ -72,9 +72,7 @@ class MemFileHandle : public filters::BaseFsStreamFilter {
 
   virtual std::streamsize
   xsputn(const char *pBuffer, std::streamsize sz) override {
-    if (m_info.m_readonly) {
-      return 0;
-    }
+    CHECK(!m_info.m_readonly);
     std::streamsize actual = std::min(
         sz,
         static_cast< std::streamsize >(m_info.m_readableBlob.size() - m_pos));
@@ -167,28 +165,35 @@ Status MemFileSystem::unmount(const tMountId mountId) {
 /**
  *
  */
-filters::BaseFsStreamFilter *MemFileSystem::open(
+Status MemFileSystem::open(
+    filters::BaseFsStreamFilter *&pFile,
     const tMountId mountId,
     const Path &filename,
-    std::ios_base::openmode mode) {
+    const std::ios_base::openmode mode) {
   Log(LL::Trace) << "Memfile File opening: " << filename.str();
   std::lock_guard< std::mutex > lock(m_lock);
-  if (m_mounts.find(mountId) == m_mounts.end()) {
-    Log(LL::Error) << "Can't open file on non-existant mount.";
-    return nullptr;
-  }
+
+  CHECK(m_mounts.find(mountId) != m_mounts.end());
+
+  pFile = nullptr;
+
   if ((m_mounts.find(mountId)->second.m_mode & mode) != mode) {
-    return nullptr;
+    return Status::BAD_ARGUMENT;
   }
 
   tFileMap::iterator itr = m_files.find(filename.str());
   if (itr == m_files.end()) {
-    return nullptr;
+    return Status::NOT_FOUND;
   }
 
-  MemFileHandle *pFile = new MemFileHandle();
-  pFile->open_base(itr->second);
-  return pFile;
+  if (itr->second.m_readonly && ((mode & std::ios::out) != 0)) {
+    return Status::BAD_ARGUMENT;
+  }
+
+  MemFileHandle *pMemFile = new MemFileHandle();
+  pMemFile->open_base(itr->second);
+  pFile = pMemFile;
+  return Status::OK;
 }
 
 /**
