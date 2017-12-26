@@ -1,3 +1,5 @@
 .build/
 .generated/
 *.swp
+LastCoverageResults.log
+CoverageReport*/
