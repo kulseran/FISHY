@@ -1,11 +1,11 @@
 package test;
 
 message TestProtoEmbeded {
-  optional string a_string = 1;
+  string a_string = 1;
 }
 
 message TestProto {
-  optional int32 a_int = 1;
-  optional string a_string = 2;
-  optional TestProtoEmbeded a_message = 3;
+  int32 a_int = 1;
+  string a_string = 2;
+  TestProtoEmbeded a_message = 3;
 }
