@@ -12,6 +12,7 @@
 #  include <Windows.h>
 #  include <direct.h>
 #elif defined(PLAT_LINUX)
+#include <unistd.h>
 #endif
 
 namespace vfs {
@@ -268,6 +269,7 @@ StdioFileSystem::rmdir(const tMountId mountId, const Path &dir, bool &ret) {
 #if defined(PLAT_WIN32)
   ret = (::_rmdir(dir.c_str()) == 0);
 #elif defined(PLAT_LINUX)
+  ret = (::rmdir(dir.c_str()) == 0);
 #else
 #  error mkdir not supported on this platform
 #endif
@@ -300,6 +302,7 @@ class StdioDirectoryIterator
     }
     next();
 #elif defined(PLAT_LINUX)
+   CHECK_NOT_IMPLEMENTED();
 #else
 #  error directory iterator not supported on this platform
 #endif
@@ -314,6 +317,7 @@ class StdioDirectoryIterator
       delete m_pChild;
     }
 #elif defined(PLAT_LINUX)
+   CHECK_NOT_IMPLEMENTED();
 #else
 #  error directory iterator not supported on this platform
 #endif
@@ -366,6 +370,7 @@ class StdioDirectoryIterator
     } while (strcmp(m_findData.cFileName, ".") == 0
              || strcmp(m_findData.cFileName, "..") == 0);
 #elif defined(PLAT_LINUX)
+   CHECK_NOT_IMPLEMENTED();
 #else
 #  error directory iterator not supported on this platform
 #endif
