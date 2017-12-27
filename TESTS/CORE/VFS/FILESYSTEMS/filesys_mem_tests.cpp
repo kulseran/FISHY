@@ -174,8 +174,8 @@ REGISTER_TEST_CASE(testMemConstFileEndToEnd) {
           .getStatus(),
       Status::OK));
 
-  const std::string expectedContent = "This is a file.";
-  const core::memory::ConstBlob testBlob(expectedContent);
+  std::string expectedContent = "badfoodbadfoodbadfoodbadfood";
+  core::memory::Blob testBlob(expectedContent);
   const vfs::Path filename("memfile/test.txt");
 
   TEST(testing::assertTrue(filesys.create(filename, testBlob)));
@@ -187,11 +187,14 @@ REGISTER_TEST_CASE(testMemConstFileEndToEnd) {
   TEST(testing::assertNotNull(pFile));
   TEST(testing::assertEquals(
       std::string(pFile->getFilterName()), std::string("memfilehandle")));
-  TEST(testing::assertEquals(pFile->length(), 15));
+  TEST(testing::assertEquals(pFile->length(), 0));
 
+  pFile->sputn("Hello world", 11);
+  pFile->pubseekpos(0, std::ios::beg);
   char actualContent[16] = {0};
   pFile->sgetn(actualContent, 15);
-  TEST(testing::assertEquals(actualContent, expectedContent));
+  const std::string expectedNewContent = "Hello world";
+  TEST(testing::assertEquals(actualContent, expectedNewContent));
   filesys.close(pFile);
 
   bool ret = false;
