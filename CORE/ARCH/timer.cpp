@@ -1,9 +1,10 @@
 #include "timer.h"
 
-#ifdef PLAT_WIN32
+#if defined(PLAT_WIN32)
 #  include <windows.h>
 #  pragma comment(lib, "Winmm.lib")
-#else
+#elif defined(PLAT_LINUX)
+#  include <sys/time.h>
 #endif
 
 #include <ctime>

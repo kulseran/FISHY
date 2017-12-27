@@ -6,6 +6,7 @@
 
 #include "path.h"
 
+#include <ios>
 #include <memory>
 
 namespace vfs {

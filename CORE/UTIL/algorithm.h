@@ -12,7 +12,7 @@ namespace util {
  */
 template < typename tContainer, typename tPredicate >
 inline void erase_if(tContainer &items, const tPredicate &pred) {
-  for (tContainer::iterator it = items.begin(); it != items.end();) {
+  for (typename tContainer::iterator it = items.begin(); it != items.end();) {
     if (pred(*it)) {
       it = items.erase(it);
     } else {

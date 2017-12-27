@@ -18,7 +18,7 @@ Path GetTempDir() {
  *
  */
 Path GetTempFile() {
-  static std::atomic_int32_t uniqueFileCounter = 0;
+  static std::atomic_int32_t uniqueFileCounter(0);
   std::string fileName;
   core::util::lexical_cast(uniqueFileCounter++, fileName).ignoreErrors();
   return Path("tmp/" + fileName);

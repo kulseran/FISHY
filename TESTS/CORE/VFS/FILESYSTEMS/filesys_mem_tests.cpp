@@ -190,7 +190,7 @@ REGISTER_TEST_CASE(testMemConstFileEndToEnd) {
   TEST(testing::assertEquals(pFile->length(), 0));
 
   pFile->sputn("Hello world", 11);
-  pFile->pubseekpos(0, std::ios::beg);
+  pFile->pubseekpos(0, std::ios::in);
   char actualContent[16] = {0};
   pFile->sgetn(actualContent, 15);
   const std::string expectedNewContent = "Hello world";

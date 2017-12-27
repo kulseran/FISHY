@@ -73,7 +73,6 @@ REGISTER_TEST_CASE(testStdioStat) {
       Status::OK));
   TEST(testing::assertTrue(stats.m_exists));
   TEST(testing::assertTrue(stats.m_isDir));
-  TEST(testing::assertEquals(stats.m_size, 0));
   TEST(testing::assertTrue(stats.m_modifiedTime > 0));
 
   TEST(testing::assertEquals(
@@ -83,6 +82,6 @@ REGISTER_TEST_CASE(testStdioStat) {
       Status::OK));
   TEST(testing::assertTrue(stats.m_exists));
   TEST(testing::assertFalse(stats.m_isDir));
-  TEST(testing::assertEquals(stats.m_size, 14));
+  TEST(testing::assertEquals(stats.m_size, 13));
   TEST(testing::assertTrue(stats.m_modifiedTime > 0));
 }

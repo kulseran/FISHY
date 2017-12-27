@@ -11,6 +11,7 @@
 #if defined(PLAT_WIN32)
 #  include <Windows.h>
 #  include <direct.h>
+#elif defined(PLAT_LINUX)
 #endif
 
 namespace vfs {
@@ -193,7 +194,9 @@ StdioFileSystem::remove(const tMountId mountId, const Path &dir, bool &ret) {
   return Status::OK;
 }
 
+#ifndef S_ISDIR
 #define S_ISDIR(S) (((S) &_S_IFDIR) != 0)
+#endif
 
 /**
  *
@@ -241,6 +244,8 @@ StdioFileSystem::mkdir(const tMountId mountId, const Path &dir, bool &ret) {
 
 #if defined(PLAT_WIN32)
   ret = (::_mkdir(dir.c_str()) == 0);
+#elif defined(PLAT_LINUX)
+  ret = (::mkdir(dir.c_str(), S_IRUSR | S_IWUSR | S_IXUSR | S_IRGRP | S_IROTH) == 0);
 #else
 #  error mkdir not supported on this platform
 #endif
@@ -262,6 +267,7 @@ StdioFileSystem::rmdir(const tMountId mountId, const Path &dir, bool &ret) {
 
 #if defined(PLAT_WIN32)
   ret = (::_rmdir(dir.c_str()) == 0);
+#elif defined(PLAT_LINUX)
 #else
 #  error mkdir not supported on this platform
 #endif
@@ -293,6 +299,7 @@ class StdioDirectoryIterator
       }
     }
     next();
+#elif defined(PLAT_LINUX)
 #else
 #  error directory iterator not supported on this platform
 #endif
@@ -306,6 +313,7 @@ class StdioDirectoryIterator
     if (m_pChild) {
       delete m_pChild;
     }
+#elif defined(PLAT_LINUX)
 #else
 #  error directory iterator not supported on this platform
 #endif
@@ -357,6 +365,7 @@ class StdioDirectoryIterator
       }
     } while (strcmp(m_findData.cFileName, ".") == 0
              || strcmp(m_findData.cFileName, "..") == 0);
+#elif defined(PLAT_LINUX)
 #else
 #  error directory iterator not supported on this platform
 #endif
@@ -372,6 +381,7 @@ class StdioDirectoryIterator
 #if defined(PLAT_WIN32)
   WIN32_FIND_DATA m_findData;
   HANDLE m_hFind;
+#elif defined(PLAT_LINUX)
 #else
 #  error directory iterator not supported on this platform
 #endif
