@@ -96,6 +96,12 @@ REGISTER_TEST_CASE(testLogicalAnd) {
   // { 0, 11 } & { 10 } -> { }
   bool result3 = bits1 & eTestBits16::BIT10;
   TEST(testing::assertFalse(result3));
+
+  // { 0, 11 } & { 0 } -> { 0 }
+  BitSet< eTestBits16 > result4 = bits1;
+  result4 &= bits2;
+  TEST(testing::assertTrue(result4.isSet(eTestBits16::BIT0)));
+  TEST(testing::assertFalse(result4.isSet(eTestBits16::BIT11)));
 }
 
 REGISTER_TEST_CASE(testLogicalOr) {
@@ -129,4 +135,37 @@ REGISTER_TEST_CASE(testLogicalOr) {
   TEST(testing::assertTrue(result4.isSet(eTestBits16::BIT0)));
   TEST(testing::assertTrue(result4.isSet(eTestBits16::BIT10)));
   TEST(testing::assertTrue(result4.isSet(eTestBits16::BIT11)));
+
+  // { 0, 11 } | { 101 } -> { 0, 10, 11 }
+  BitSet< eTestBits16 > result5;
+  result5 |= bits1;
+  result5 |= eTestBits16::BIT10;
+  TEST(testing::assertTrue(result5.isSet(eTestBits16::BIT0)));
+  TEST(testing::assertTrue(result5.isSet(eTestBits16::BIT10)));
+  TEST(testing::assertTrue(result5.isSet(eTestBits16::BIT11)));
+}
+
+REGISTER_TEST_CASE(testLogicalInvert) {
+  BitSet< eTestBits16 > bits1;
+  bits1.set(eTestBits16::BIT0);
+  bits1.set(eTestBits16::BIT7);
+  bits1.set(eTestBits16::BIT15);
+
+  BitSet< eTestBits16 > result1 = ~bits1;
+  TEST(testing::assertFalse(result1.isSet(eTestBits16::BIT0)));
+  TEST(testing::assertTrue(result1.isSet(eTestBits16::BIT1)));
+  TEST(testing::assertTrue(result1.isSet(eTestBits16::BIT2)));
+  TEST(testing::assertTrue(result1.isSet(eTestBits16::BIT3)));
+  TEST(testing::assertTrue(result1.isSet(eTestBits16::BIT4)));
+  TEST(testing::assertTrue(result1.isSet(eTestBits16::BIT5)));
+  TEST(testing::assertTrue(result1.isSet(eTestBits16::BIT6)));
+  TEST(testing::assertFalse(result1.isSet(eTestBits16::BIT7)));
+  TEST(testing::assertTrue(result1.isSet(eTestBits16::BIT8)));
+  TEST(testing::assertTrue(result1.isSet(eTestBits16::BIT9)));
+  TEST(testing::assertTrue(result1.isSet(eTestBits16::BIT10)));
+  TEST(testing::assertTrue(result1.isSet(eTestBits16::BIT11)));
+  TEST(testing::assertTrue(result1.isSet(eTestBits16::BIT12)));
+  TEST(testing::assertTrue(result1.isSet(eTestBits16::BIT13)));
+  TEST(testing::assertTrue(result1.isSet(eTestBits16::BIT14)));
+  TEST(testing::assertFalse(result1.isSet(eTestBits16::BIT15)));
 }

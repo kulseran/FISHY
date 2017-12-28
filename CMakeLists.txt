@@ -45,6 +45,8 @@ add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 # All Buildables
 ################
 add_subdirectory(CORE)
+add_subdirectory(APP_SHARED)
 add_subdirectory(TESTS)
+add_subdirectory(TOOLS/bin2h)
 add_subdirectory(TOOLS/protoc)
 

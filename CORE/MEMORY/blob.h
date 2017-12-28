@@ -17,7 +17,7 @@ namespace memory {
 class ConstBlob {
   public:
   ConstBlob();
-  ConstBlob(const u8 *const data, const size_t size);
+  ConstBlob(const u8 *data, const size_t size);
   ConstBlob(const std::string &data);
 
   /**
@@ -36,8 +36,8 @@ class ConstBlob {
   size_t size() const;
 
   private:
-  const size_t m_size;
-  const u8 *const m_pData;
+  size_t m_size;
+  const u8 *m_pData;
 };
 
 /**
@@ -86,7 +86,7 @@ class Blob {
 
   private:
   size_t m_size;
-  u8 *const m_pData;
+  u8 *m_pData;
 };
 
 } // namespace memory

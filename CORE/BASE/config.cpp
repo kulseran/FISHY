@@ -51,8 +51,8 @@ void PrintFlags() {
   for (tFlagIter itr = GetGlobalFlags().begin(); itr != GetGlobalFlags().end();
        ++itr) {
     const iFlagBase *pFlag = itr->second;
-    std::cout << pFlag->getName() << ": " << pFlag->getDesc()
-              << " (= " << pFlag->toString() << ")" << std::endl;
+    Log(LL::Info) << pFlag->getName() << ": " << pFlag->getDesc()
+                  << " (= " << pFlag->toString() << ")";
   }
 }
 

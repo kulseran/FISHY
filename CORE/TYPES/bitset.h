@@ -75,11 +75,6 @@ class BitSet {
   BitSet &operator&=(const BitSet &other);
 
   /**
-   * Logical AND setter
-   */
-  BitSet &operator&=(const typename eEnumType::type val);
-
-  /**
    * Logical OR setter
    */
   BitSet &operator|=(const BitSet &other);
@@ -93,11 +88,6 @@ class BitSet {
    * Logical bitwise NOT
    */
   BitSet operator~() const;
-
-  /**
-   * @return true if any bit is set, false otherwise
-   */
-  operator bool() const;
 
   bool operator==(const BitSet< eEnumType > &other) const;
 

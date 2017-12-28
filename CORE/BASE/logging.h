@@ -111,7 +111,6 @@ class ScopedLogger : core::util::noncopyable {
 class iLogSink : core::util::noncopyable {
   public:
   /**
-   * @param manager The log manager to register with.
    * @param levels The log levels to allow writing of.
    */
   iLogSink(const core::types::BitSet< LL > &levels);
@@ -132,7 +131,7 @@ class iLogSink : core::util::noncopyable {
   /**
    * Implementers should use this function to flush any pending writes.
    */
-  virtual Status flush() = 0;
+  virtual Status flush() { return Status::OK; }
 
   protected:
   /**
@@ -141,15 +140,14 @@ class iLogSink : core::util::noncopyable {
    *
    * @return Status of the write process, or async enqueue.
    */
-  virtual Status write(const LogMessage &) = 0;
+  virtual Status write(const LogMessage &) { return Status::OK; }
 
   private:
   core::types::BitSet< LL > m_levels;
 };
 
 /**
- * Register a sink. This is called automatically by
- * the {@link iLogSink} constructor.
+ * Register a sink.
  */
 Status RegisterSink(std::shared_ptr< iLogSink >);
 

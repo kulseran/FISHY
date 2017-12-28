@@ -1,0 +1,11 @@
+package test;
+
+message TestProtoEmbeded {
+  string a_string = 1;
+}
+
+message TestProto {
+  int32 a_int = 1;
+  string a_string = 2;
+  TestProtoEmbeded a_message = 3;
+}

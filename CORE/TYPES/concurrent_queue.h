@@ -75,6 +75,11 @@ class ConcurrentQueue {
    */
   void close();
 
+  /**
+   * Check if the queue is still open.
+   */
+  bool isOpen() const;
+
   private:
   mutable std::mutex m_mutex;
   mutable std::condition_variable m_producerCV;

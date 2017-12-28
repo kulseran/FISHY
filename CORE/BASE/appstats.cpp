@@ -48,10 +48,9 @@ class StatFinder : public std::unary_function< const tAppStat &, bool > {
     if (stat.first == m_pName) {
       return true;
     }
-    if (stat.first == nullptr) {
+    if (stat.first == nullptr || m_pName == nullptr) {
       return false;
     }
-    ASSERT(m_pName);
     return strcmp(stat.first, m_pName) == 0;
   }
 
@@ -69,10 +68,9 @@ class InfoFinder : public std::unary_function< const tAppInfo &, bool > {
     if (stat.first == m_pName) {
       return true;
     }
-    if (stat.first == nullptr) {
+    if (stat.first == nullptr || m_pName == nullptr) {
       return false;
     }
-    ASSERT(m_pName);
     return strcmp(stat.first, m_pName) == 0;
   }
 
