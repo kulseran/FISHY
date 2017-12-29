@@ -32,7 +32,10 @@ class Status {
     // The requested input is out of bounds.
     OUT_OF_BOUNDS = 6,
     // The requested resource contained invalid data.
-    BAD_INPUT = 7
+    BAD_INPUT = 7,
+    // The requested operation could not be completed, because of an internal
+    // consistency error in the state of the object.
+    BAD_STATE = 8
   };
 
   /**
@@ -184,10 +187,10 @@ class StatusOr {
   tType m_returnValue;
 };
 
-  /**
-   * RET_S(expression, status); Will 'return status' from a function if the
-   * expression does no evaluate to true
-   */
+/**
+ * RET_S(expression, status); Will 'return status' from a function if the
+ * expression does no evaluate to true
+ */
 #  define RET_S(expr, status) \
     do {                      \
       if (!(expr)) {          \
@@ -195,10 +198,10 @@ class StatusOr {
       }                       \
     } while (0)
 
-  /**
-   * RET_S(expression, status); Will 'return status' from a function if the
-   * expression does no evaluate to true, and log the error message
-   */
+/**
+ * RET_S(expression, status); Will 'return status' from a function if the
+ * expression does no evaluate to true, and log the error message
+ */
 #  define RET_SM(expr, status, msg)                                    \
     do {                                                               \
       if (!(expr)) {                                                   \
