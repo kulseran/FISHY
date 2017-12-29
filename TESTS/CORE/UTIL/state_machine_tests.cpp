@@ -5,6 +5,7 @@
 #include <CORE/types.h>
 
 using core::util::iState;
+using core::util::StateID;
 using core::util::StateMachine;
 
 class TestState1 : public iState {
@@ -18,13 +19,15 @@ class TestState1 : public iState {
 
   void onInit() override { m_was_init = true; }
   void onTerm() override { m_was_term = true; }
-  int update() override {
+  Status update() override {
     m_updates++;
-    return 0;
+    return Status::OK;
   }
   void onEnter() override { m_enters++; }
   void onExit() override { m_exits++; }
   const char *getDebugName() const override { return "TestState1"; }
+
+  void addTransition(const StateID id) { m_validTransitions.insert(id); }
 
   bool m_was_init;
   bool m_was_term;
@@ -36,6 +39,7 @@ class TestState1 : public iState {
 class TestState2 : public iState {
   public:
   const char *getDebugName() const override { return "TestState2"; }
+  void addTransition(const StateID id) { m_validTransitions.insert(id); }
 };
 
 REGISTER_TEST_CASE(stateMachineTestAddUnique) {
@@ -44,6 +48,7 @@ REGISTER_TEST_CASE(stateMachineTestAddUnique) {
 
   TEST(testing::assertTrue(machine.addState(&testState1)));
   TEST(testing::assertFalse(machine.addState(&testState1)));
+  machine.term();
 }
 
 REGISTER_TEST_CASE(stateMachineTestInitTerm) {
@@ -63,20 +68,20 @@ REGISTER_TEST_CASE(stateMachineTestEnterUpdateExit) {
   TestState1 testState2;
   TEST(testing::assertTrue(machine.addState(&testState1)));
   TEST(testing::assertTrue(machine.addState(&testState2)));
+  testState1.addTransition(testState2.getId());
   machine.init();
 
-  machine.requestTransition(
-      fsengine::system::STATE_INVALID, testState1.getId());
-  TEST(testing::assertEquals(0, machine.update()));
-  TEST(testing::assertEquals(0, machine.update()));
+  machine.requestTransition(core::util::STATE_INVALID, testState1.getId());
+  TEST(testing::assertEquals(machine.update().getStatus(), Status::OK));
+  TEST(testing::assertEquals(machine.update().getStatus(), Status::OK));
   machine.requestTransition(testState1.getId(), testState2.getId());
-  TEST(testing::assertEquals(0, machine.update()));
+  TEST(testing::assertEquals(machine.update().getStatus(), Status::OK));
 
-  TEST(testing::assertEquals(1, testState1.m_enters));
-  TEST(testing::assertEquals(1, testState2.m_enters));
-  TEST(testing::assertEquals(1, testState1.m_exits));
-  TEST(testing::assertEquals(2, testState1.m_updates));
-  TEST(testing::assertEquals(1, testState2.m_updates));
+  TEST(testing::assertEquals(testState1.m_enters, 1));
+  TEST(testing::assertEquals(testState2.m_enters, 1));
+  TEST(testing::assertEquals(testState1.m_exits, 1));
+  TEST(testing::assertEquals(testState1.m_updates, 2));
+  TEST(testing::assertEquals(testState2.m_updates, 1));
 
   machine.term();
 }
@@ -87,14 +92,14 @@ REGISTER_TEST_CASE(sateMachineTestDefaultStateBehavior) {
   TestState2 testState2;
   TEST(testing::assertTrue(machine.addState(&testState1)));
   TEST(testing::assertTrue(machine.addState(&testState2)));
+  testState1.addTransition(testState2.getId());
   machine.init();
 
-  machine.requestTransition(
-      fsengine::system::STATE_INVALID, testState1.getId());
-  TEST(testing::assertEquals(0, machine.update()));
-  TEST(testing::assertEquals(0, machine.update()));
+  machine.requestTransition(core::util::STATE_INVALID, testState1.getId());
+  TEST(testing::assertEquals(machine.update().getStatus(), Status::OK));
+  TEST(testing::assertEquals(machine.update().getStatus(), Status::OK));
   machine.requestTransition(testState1.getId(), testState2.getId());
-  TEST(testing::assertEquals(0, machine.update()));
+  TEST(testing::assertEquals(machine.update().getStatus(), Status::OK));
 
   machine.term();
 }
