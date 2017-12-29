@@ -7,6 +7,7 @@
 #include <CORE/BASE/status.h>
 #include <CORE/types.h>
 
+#include <set>
 #include <vector>
 
 namespace core {
@@ -61,12 +62,19 @@ class iState {
    */
   virtual const char *getDebugName() const = 0;
 
+  /**
+   * For debugging, should return all the valid state IDs that may be requested
+   * as transitions to.
+   */
+  const std::set< StateID > &getValidTransitions() const;
+
   protected:
   friend class StateMachine;
   void setOwner(StateMachine *pOwner);
 
   StateID m_id;
   StateMachine *m_pOwner;
+  std::set< StateID > m_validTransitions;
 };
 
 /**
@@ -113,10 +121,17 @@ class StateMachine {
    */
   StateID getCurrentState() const;
 
+  /**
+   * Generate a string in DOT file format of the current state setup.
+   */
+  std::string getDotFile() const;
+
   private:
   struct StateInfo {
     StateID id;
     iState *pState;
+
+    bool operator==(const StateID id) const { return id == this->id; }
   };
 
   void changeStates();

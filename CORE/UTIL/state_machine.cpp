@@ -9,10 +9,6 @@
 namespace core {
 namespace util {
 
-bool StateIdsEquals(const iState *&pState, const long id) {
-  return pState->getId() == id;
-}
-
 /**
  *
  */
@@ -38,6 +34,13 @@ void iState::setOwner(StateMachine *pOwner) {
  */
 StateID iState::getId() const {
   return m_id;
+}
+
+/**
+ *
+ */
+const std::set< StateID > &iState::getValidTransitions() const {
+  return m_validTransitions;
 }
 
 /**
@@ -103,15 +106,18 @@ Status StateMachine::update() {
 
   return itr->pState->update();
 }
+
 /**
  *
  */
 void StateMachine::init() {
   Trace();
-  std::for_each(
-      m_states.begin(),
-      m_states.end(),
-      std::bind(&iState::onInit, std::placeholders::_1));
+  for (tStateVector::iterator itr = m_states.begin(); itr != m_states.end();
+       ++itr) {
+    itr->pState->onInit();
+  }
+
+  Log(LL::Info) << getDotFile();
 }
 
 /**
@@ -126,10 +132,10 @@ void StateMachine::term() {
     itr->pState->onExit();
   }
 
-  std::for_each(
-      m_states.begin(),
-      m_states.end(),
-      std::bind(&iState::onTerm, std::placeholders::_1));
+  for (tStateVector::iterator itr = m_states.begin(); itr != m_states.end();
+       ++itr) {
+    itr->pState->onTerm();
+  }
 
   m_states.clear();
 }
@@ -140,6 +146,14 @@ void StateMachine::term() {
 void StateMachine::requestTransition(StateID id, StateID id_next) {
   ASSERT(id == m_curStateID || id == STATE_INVALID);
   m_nextStateID = id_next;
+
+  IF_ASSERTS(tStateVector::const_iterator itr =
+                 std::find(m_states.begin(), m_states.end(), m_curStateID);
+             if (itr != m_states.end()) {
+               ASSERT(
+                   itr->pState->getValidTransitions().find(m_nextStateID)
+                   != itr->pState->getValidTransitions().end());
+             });
 }
 
 /**
@@ -167,6 +181,36 @@ void StateMachine::changeStates() {
       m_curStateID = STATE_INVALID;
     }
   }
+}
+
+/**
+ *
+ */
+std::string StateMachine::getDotFile() const {
+  std::stringstream rVal;
+
+  rVal << "digraph statemachine {\n";
+  for (tStateVector::size_type i = 0; i < m_states.size(); ++i) {
+    rVal << "  state_" << i << " [label=\""
+         << m_states[i].pState->getDebugName() << "\"];\n";
+  }
+  for (tStateVector::size_type i = 0; i < m_states.size(); ++i) {
+    const std::set< StateID > &transitions =
+        m_states[i].pState->getValidTransitions();
+    for (std::set< StateID >::const_iterator itr = transitions.begin();
+         itr != transitions.end();
+         ++itr) {
+      const tStateVector::const_iterator foundState =
+          std::find(m_states.begin(), m_states.end(), *itr);
+      ASSERT(foundState != m_states.end());
+
+      rVal << "  state_" << i << " -> state_"
+           << std::distance(m_states.begin(), foundState) << ";\n";
+    }
+  }
+
+  rVal << "}\n";
+  return rVal.str();
 }
 
 /**
