@@ -1,0 +1,18 @@
+package game;
+
+// import "CORE/NET/serverdef.proto";
+
+message WindowSettings {
+  bool fullscreen = 1;
+  int32 width = 2;
+  int32 height = 3;
+  bool lock_cursor = 4;
+  bool hide_cursor = 5;
+}
+
+message Settings {
+  WindowSettings window_settings = 1;
+  // core.net.ServerDef login_server = 2;
+  // core.net.ServerDef game_server = 3;
+  string data_dir = 4;
+}

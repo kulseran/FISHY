@@ -21,6 +21,11 @@ using core::util::ReplaceStr;
 
 core::config::Flag< std::string >
     g_inputFile("infile", "Path to input proto file", "");
+core::config::Flag< std::string > g_outputFile(
+    "outfileprefix",
+    "The prefix of the output file, if not supplied auto-generated based on "
+    "the input file name.",
+    "");
 
 static Status openFile(std::string &out, const std::string &fileName);
 static std::vector< std::string >::const_iterator
@@ -49,17 +54,30 @@ static bool verifyImportsAndFixFields(ProtoDef &def);
  *  --infile
  */
 int main(int argc, const char **argv) {
+  core::logging::RegisterSink(std::shared_ptr< core::logging::iLogSink >(
+                                  new core::logging::LoggingStdioSink(
+                                      core::types::BitSet< LL >() | LL::Error
+                                      | LL::Warning | LL::Info)))
+      .ignoreErrors();
+
   if (!core::config::ParseFlags(argc, argv)) {
     return 1;
   }
-  core::logging::RegisterSink(std::shared_ptr< core::logging::iLogSink >(
-      new core::logging::LoggingStdioSink(
-          core::types::BitSet< LL >() | LL::Error | LL::Warning | LL::Info)));
 
   g_inputFile.checkSet();
 
   const std::string &filename = g_inputFile.get();
-  const std::string outFileName = ReplaceStr(g_inputFile.get(), ".proto", "");
+  std::string::size_type extensionPos = filename.find(".proto");
+  if (extensionPos != filename.size() - 6) {
+    Log(LL::Error) << "Input file name must end in extension .proto";
+    return 1;
+  }
+  std::string outFileName;
+  if (g_outputFile.wasSet()) {
+    outFileName = g_outputFile.get();
+  } else {
+    outFileName = ReplaceStr(g_inputFile.get(), ".proto", ".pb");
+  }
 
   std::string str;
   if (!openFile(str, filename)) {

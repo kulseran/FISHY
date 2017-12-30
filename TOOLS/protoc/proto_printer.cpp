@@ -62,10 +62,10 @@ static void printISerializer(
  *
  */
 bool print(const ProtoDef &def, const std::string &fileNameRoot) {
-  if (!printHeader(def, fileNameRoot + ".pb.h")) {
+  if (!printHeader(def, fileNameRoot + ".h")) {
     return false;
   }
-  if (!printCpp(def, fileNameRoot + ".pb.h", fileNameRoot + ".pb.cpp")) {
+  if (!printCpp(def, fileNameRoot + ".h", fileNameRoot + ".cpp")) {
     return false;
   }
   return true;
