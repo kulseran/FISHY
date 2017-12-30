@@ -77,7 +77,7 @@ void ifstream::close() {
     return;
   }
 
-  CHECK_M(m_filterDepth == 0, "vfs: Filters still attached to file!");
+  CHECK_M(m_filterDepth == 0, "Filters still attached to file!");
 
   filters::streamfilter *handle =
       dynamic_cast< filters::streamfilter * >(rdbuf());
@@ -227,7 +227,7 @@ void ofstream::close() {
     return;
   }
 
-  CHECK_M(m_filterDepth == 0, "vfs: Filters still attached to file!");
+  CHECK_M(m_filterDepth == 0, "Filters still attached to file!");
 
   filters::streamfilter *handle =
       dynamic_cast< filters::streamfilter * >(rdbuf());
