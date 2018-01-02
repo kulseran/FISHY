@@ -7,17 +7,14 @@
 #ifndef FISHY_PROTOBUF_H
 #define FISHY_PROTOBUF_H
 
+#include <CORE/BASE/serializer.h>
+#include <CORE/BASE/serializer_podtypes.h>
+#include <CORE/BASE/serializer_strings.h>
 #include <CORE/types.h>
 
 #include <map>
 #include <string>
 #include <vector>
-
-namespace core {
-namespace base {
-class iBinarySerializerSink;
-}
-} // namespace core
 
 namespace core {
 namespace types {
@@ -27,12 +24,12 @@ namespace types {
  */
 struct FieldDef {
   enum eFieldType {
-    FIELD_DOUBLE,
     FIELD_INT64,
     FIELD_UINT64,
     FIELD_SINT64,
     FIELD_FIXED64,
     FIELD_SFIXED64,
+    FIELD_DOUBLE,
     FIELD_FLOAT,
     FIELD_INT32,
     FIELD_UINT32,
@@ -41,9 +38,9 @@ struct FieldDef {
     FIELD_SFIXED32,
     FIELD_STRING,
     FIELD_BYTES,
+    FIELD_BOOL,
     FIELD_ENUM,
     FIELD_MSG,
-    FIELD_BOOL,
     FIELD_COUNT
   };
 
@@ -54,6 +51,7 @@ struct FieldDef {
   bool m_repeated;
 };
 typedef std::vector< FieldDef > tFieldList;
+
 /**
  * Defines an enumeration
  */
@@ -168,14 +166,14 @@ void RegisterWithProtoDb(const ProtoDescriptor *const pDescriptor);
  *
  * @param name the fully qualified proto name
  */
-const ProtoDescriptor *const FindProtoByName(const std::string &name);
+const ProtoDescriptor *FindProtoByName(const std::string &name);
 
 /**
  * Lookup any globally registered protobuffer enumeration
  *
  * @param name the fully qualified proto enum name
  */
-const EnumDef *const FindProtoEnumByName(const std::string &name);
+const EnumDef *FindProtoEnumByName(const std::string &name);
 
 /**
  * Lists all globally registered protobuffers.
@@ -191,9 +189,11 @@ class iProtoMessage {
 
   virtual const ProtoDescriptor &getDescriptor() const = 0;
 
-  size_t byte_size() const;
-  bool oserialize(core::base::iBinarySerializerSink &) const;
-  bool iserialize(core::base::iBinarySerializerSink &);
+  virtual size_t byte_size() const = 0;
+  virtual bool oserialize(core::base::iBinarySerializerSink &) const = 0;
+  virtual bool iserialize(core::base::iBinarySerializerSink &) = 0;
+  virtual const void *getField(const u32) const = 0;
+  virtual const void *getField(const u32, const size_t) const = 0;
 
   protected:
   iProtoMessage() {}
@@ -216,5 +216,95 @@ class DynamicProto : public iProtoMessage {
 
 } // namespace types
 } // namespace core
+
+OSERIALIZE(core::types::FieldDef) {
+  buff << obj.m_name;
+  buff << obj.m_msgType;
+  buff << (u32) obj.m_type;
+  buff << obj.m_fieldNum;
+  buff << obj.m_repeated;
+  return buff;
+}
+
+ISERIALIZE(core::types::FieldDef) {
+  buff >> obj.m_name;
+  buff >> obj.m_msgType;
+  u32 fieldType = 0;
+  buff >> fieldType;
+  obj.m_type = static_cast< core::types::FieldDef::eFieldType >(fieldType);
+  buff >> obj.m_fieldNum;
+  buff >> obj.m_repeated;
+  return buff;
+}
+
+OSERIALIZE(core::types::EnumDef) {
+  buff << obj.m_name;
+  buff << obj.m_values.size();
+  for (int i = 0; i < obj.m_values.size(); ++i) {
+    buff << obj.m_values[i];
+  }
+  return buff;
+}
+
+ISERIALIZE(core::types::EnumDef) {
+  buff >> obj.m_name;
+  size_t numValues = 0;
+  buff >> numValues;
+  obj.m_values.resize(numValues);
+  for (int i = 0; i < obj.m_values.size(); ++i) {
+    buff >> obj.m_values[i];
+  }
+  return buff;
+}
+
+OSERIALIZE(core::types::MessageDef) {
+  buff << obj.m_name;
+  buff << obj.m_package;
+
+  buff << obj.m_enums.size();
+  for (int i = 0; i < obj.m_enums.size(); ++i) {
+    buff << obj.m_enums[i];
+  }
+
+  buff << obj.m_fields.size();
+  for (int i = 0; i < obj.m_fields.size(); ++i) {
+    buff << obj.m_fields[i];
+  }
+
+  buff << obj.m_messages.size();
+  for (int i = 0; i < obj.m_messages.size(); ++i) {
+    buff << obj.m_messages[i];
+  }
+
+  return buff;
+}
+
+ISERIALIZE(core::types::MessageDef) {
+  buff >> obj.m_name;
+  buff >> obj.m_package;
+
+  size_t numEnums = 0;
+  buff >> numEnums;
+  obj.m_enums.resize(numEnums);
+  for (int i = 0; i < obj.m_enums.size(); ++i) {
+    buff >> obj.m_enums[i];
+  }
+
+  size_t numField = 0;
+  buff >> numField;
+  obj.m_fields.resize(numField);
+  for (int i = 0; i < obj.m_fields.size(); ++i) {
+    buff >> obj.m_fields[i];
+  }
+
+  size_t numMessages = 0;
+  buff >> numMessages;
+  obj.m_messages.resize(numMessages);
+  for (int i = 0; i < obj.m_messages.size(); ++i) {
+    buff >> obj.m_messages[i];
+  }
+
+  return buff;
+}
 
 #endif

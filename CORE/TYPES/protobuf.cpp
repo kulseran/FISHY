@@ -1,20 +1,19 @@
-#if 0
-#  include "protobuf.h"
+#include "protobuf.h"
 
-#  include <CORE/BASE/serializer_podtypes.h>
-#  include <CORE/UTIL/FILES/proto_text.h>
-#  include <CORE/UTIL/lexical_cast.h>
+#include <CORE/BASE/serializer_podtypes.h>
+#include <CORE/UTIL/FILES/proto_text.h>
+#include <CORE/UTIL/lexical_cast.h>
 
 namespace core {
-namespace util {
+namespace types {
 
-typedef std::vector<const ProtoDescriptor *> tDescriptorList;
+typedef std::vector< const ProtoDescriptor * > tDescriptorList;
 
 /**
  *
  */
 tDescriptorList &GetGlobalDb() {
-  static std::vector<const ProtoDescriptor *> g_globalDb;
+  static std::vector< const ProtoDescriptor * > g_globalDb;
   return g_globalDb;
 }
 
@@ -22,11 +21,14 @@ tDescriptorList &GetGlobalDb() {
  *
  */
 bool DebugNoDoubleRegister(const ProtoDescriptor *pDescriptor) {
-  for (tDescriptorList::const_iterator itr = GetGlobalDb().begin(); itr != GetGlobalDb().end(); ++itr) {
+  for (tDescriptorList::const_iterator itr = GetGlobalDb().begin();
+       itr != GetGlobalDb().end();
+       ++itr) {
     if (pDescriptor == *itr) {
       return false;
     }
-    if ((pDescriptor->getDef().m_name == (*itr)->getDef().m_name && pDescriptor->getDef().m_package == (*itr)->getDef().m_package)) {
+    if ((pDescriptor->getDef().m_name == (*itr)->getDef().m_name
+         && pDescriptor->getDef().m_package == (*itr)->getDef().m_package)) {
       CHECK_UNREACHABLE();
     }
   }
@@ -47,9 +49,12 @@ void RegisterWithProtoDb(const ProtoDescriptor *pDescriptor) {
  */
 std::vector< std::string > ListAllProtoNames() {
   std::vector< std::string > rVal;
-  for (tDescriptorList::const_iterator itr = GetGlobalDb().begin(); itr != GetGlobalDb().end(); ++itr) {
+  for (tDescriptorList::const_iterator itr = GetGlobalDb().begin();
+       itr != GetGlobalDb().end();
+       ++itr) {
     const ProtoDescriptor *pDescriptor = *itr;
-    rVal.push_back(pDescriptor->getDef().m_package + pDescriptor->getDef().m_name);
+    rVal.push_back(
+        pDescriptor->getDef().m_package + pDescriptor->getDef().m_name);
   }
   return rVal;
 }
@@ -58,9 +63,12 @@ std::vector< std::string > ListAllProtoNames() {
  *
  */
 const ProtoDescriptor *FindProtoByName(const std::string &name) {
-  for (tDescriptorList::const_iterator itr = GetGlobalDb().begin(); itr != GetGlobalDb().end(); ++itr) {
+  for (tDescriptorList::const_iterator itr = GetGlobalDb().begin();
+       itr != GetGlobalDb().end();
+       ++itr) {
     const ProtoDescriptor *pDescriptor = *itr;
-    if ((pDescriptor->getDef().m_package + pDescriptor->getDef().m_name) == name) {
+    if ((pDescriptor->getDef().m_package + "::" + pDescriptor->getDef().m_name)
+        == name) {
       return pDescriptor;
     }
   }
@@ -84,26 +92,27 @@ const EnumDef *FindProtoEnumByName(const std::string &name) {
   return pDescriptor->findEnumByName(enumName);
 }
 
-
 /**
  *
  */
-std::vector<const ProtoDescriptor *> g_emptyChildList;
+std::vector< const ProtoDescriptor * > g_emptyChildList;
 ProtoDescriptor::ProtoDescriptor(const MessageDef &self)
-  : m_self(self),
-    m_children(g_emptyChildList) {
+    : m_self(self), m_children(g_emptyChildList) {
 }
-ProtoDescriptor::ProtoDescriptor(const MessageDef &self, const std::vector<const ProtoDescriptor *> &childen)
-  : m_self(self),
-    m_children(childen) {
+ProtoDescriptor::ProtoDescriptor(
+    const MessageDef &self,
+    const std::vector< const ProtoDescriptor * > &childen)
+    : m_self(self), m_children(childen) {
 }
-
 
 /**
  *
  */
-const FieldDef *ProtoDescriptor::findFieldByName(const std::string &name) const {
-  for (std::vector< FieldDef >::const_iterator field = m_self.m_fields.begin(); field != m_self.m_fields.end(); ++field) {
+const FieldDef *
+ProtoDescriptor::findFieldByName(const std::string &name) const {
+  for (std::vector< FieldDef >::const_iterator field = m_self.m_fields.begin();
+       field != m_self.m_fields.end();
+       ++field) {
     if (field->m_name == name) {
       return &(*field);
     }
@@ -115,7 +124,9 @@ const FieldDef *ProtoDescriptor::findFieldByName(const std::string &name) const 
  *
  */
 const FieldDef *ProtoDescriptor::findFieldByNum(const u32 num) const {
-  for (std::vector< FieldDef >::const_iterator field = m_self.m_fields.begin(); field != m_self.m_fields.end(); ++field) {
+  for (std::vector< FieldDef >::const_iterator field = m_self.m_fields.begin();
+       field != m_self.m_fields.end();
+       ++field) {
     if (field->m_fieldNum == num) {
       return &(*field);
     }
@@ -126,8 +137,12 @@ const FieldDef *ProtoDescriptor::findFieldByNum(const u32 num) const {
 /**
  *
  */
-const ProtoDescriptor *ProtoDescriptor::findMessageByName(const std::string &name) const {
-  for (std::vector< const ProtoDescriptor * >::const_iterator itr = m_children.begin(); itr != m_children.end(); ++itr) {
+const ProtoDescriptor *
+ProtoDescriptor::findMessageByName(const std::string &name) const {
+  for (std::vector< const ProtoDescriptor * >::const_iterator itr =
+           m_children.begin();
+       itr != m_children.end();
+       ++itr) {
     if (((*itr)->m_self.m_package + (*itr)->m_self.m_name) == name) {
       return *itr;
     }
@@ -139,7 +154,9 @@ const ProtoDescriptor *ProtoDescriptor::findMessageByName(const std::string &nam
  *
  */
 const EnumDef *ProtoDescriptor::findEnumByName(const std::string &name) const {
-  for (std::vector< EnumDef >::const_iterator field = m_self.m_enums.begin(); field != m_self.m_enums.end(); ++field) {
+  for (std::vector< EnumDef >::const_iterator field = m_self.m_enums.begin();
+       field != m_self.m_enums.end();
+       ++field) {
     if (field->m_name == name) {
       return &(*field);
     }
@@ -156,21 +173,21 @@ const MessageDef &ProtoDescriptor::getDef() const {
 
 /**
  *
- */
+ *
 DynamicProto::DynamicProto(const core::util::ProtoDescriptor &descriptor)
-  : m_descriptor(descriptor) {
+    : m_descriptor(descriptor) {
 }
 
 /**
  *
- */
+ *
 const core::util::ProtoDescriptor &DynamicProto::getDescriptor() const {
   return m_descriptor;
 }
 
 /**
  *
- */
+ *
 bool DynamicProto::getField(const u32 fieldNum, std::string &value) const {
   tFieldMap::const_iterator itr = m_fields.find(fieldNum);
   if (itr == m_fields.end()) {
@@ -183,8 +200,9 @@ bool DynamicProto::getField(const u32 fieldNum, std::string &value) const {
 
 /**
  *
- */
-bool DynamicProto::getField(const u32 fieldNum, const u32 index, std::string &value) const {
+ *
+bool DynamicProto::getField(
+    const u32 fieldNum, const u32 index, std::string &value) const {
   tFieldMap::const_iterator itr = m_fields.find(fieldNum);
   if (itr == m_fields.end()) {
     return false;
@@ -197,24 +215,28 @@ bool DynamicProto::getField(const u32 fieldNum, const u32 index, std::string &va
 
 /**
  *
- */
+ *
 size_t DynamicProto::byte_size() const {
   return m_buffer.size();
 }
 
 /**
  *
- */
+ *
 bool DynamicProto::oserialize(core::base::iBinarySerializerSink &sink) const {
-  return m_buffer.size() == sink.write(core::memory::ConstBlob(&m_buffer[0], m_buffer.size()));
+  return m_buffer.size()
+         == sink.write(core::memory::ConstBlob(&m_buffer[0], m_buffer.size()));
 }
 
-typedef std::map<int, std::vector<std::string>> tFieldMap;
+typedef std::map< int, std::vector< std::string > > tFieldMap;
 /**
  *
- */
-template< typename tType >
-static bool CastFromSink(core::base::iBinarySerializerSink &sink, const u32 fieldNum, tFieldMap &out) {
+ *
+template < typename tType >
+static bool CastFromSink(
+    core::base::iBinarySerializerSink &sink,
+    const u32 fieldNum,
+    tFieldMap &out) {
   tType temp;
   sink >> temp;
   std::string tempStr;
@@ -227,9 +249,12 @@ static bool CastFromSink(core::base::iBinarySerializerSink &sink, const u32 fiel
 
 /**
  *
- */
-template<>
-static bool CastFromSink<VarInt>(core::base::iBinarySerializerSink &sink, const u32 fieldNum, tFieldMap &out) {
+ *
+template <>
+static bool CastFromSink< VarInt >(
+    core::base::iBinarySerializerSink &sink,
+    const u32 fieldNum,
+    tFieldMap &out) {
   VarInt temp;
   sink >> temp;
   std::string tempStr;
@@ -242,9 +267,12 @@ static bool CastFromSink<VarInt>(core::base::iBinarySerializerSink &sink, const 
 
 /**
  *
- */
-template<>
-static bool CastFromSink<VarUInt>(core::base::iBinarySerializerSink &sink, const u32 fieldNum, tFieldMap &out) {
+ *
+template <>
+static bool CastFromSink< VarUInt >(
+    core::base::iBinarySerializerSink &sink,
+    const u32 fieldNum,
+    tFieldMap &out) {
   VarUInt temp;
   sink >> temp;
   std::string tempStr;
@@ -257,11 +285,12 @@ static bool CastFromSink<VarUInt>(core::base::iBinarySerializerSink &sink, const
 
 /**
  *
- */
+ *
 bool DynamicProto::iserialize(core::base::iBinarySerializerSink &fileSink) {
   m_buffer.resize(fileSink.avail());
   fileSink.read(core::memory::Blob(&m_buffer[0], m_buffer.size()));
-  core::base::ConstBlobSink sink(core::memory::ConstBlob(&m_buffer[0], m_buffer.size()));
+  core::base::ConstBlobSink sink(
+      core::memory::ConstBlob(&m_buffer[0], m_buffer.size()));
 
   while (sink.avail() && !sink.fail()) {
     VarUInt tag;
@@ -269,46 +298,70 @@ bool DynamicProto::iserialize(core::base::iBinarySerializerSink &fileSink) {
     const u32 fieldNum = ((u32) tag.get()) >> 3;
     switch (m_descriptor.findFieldByNum(fieldNum)->m_type) {
       case FieldDef::FIELD_FLOAT:
-        RET_M(CastFromSink<float>(sink, fieldNum, m_fields), "cast error to float");
+        RET_M(
+            CastFromSink< float >(sink, fieldNum, m_fields),
+            "cast error to float");
         break;
       case FieldDef::FIELD_FIXED32:
-        RET_M(CastFromSink<u32>(sink, fieldNum, m_fields), "cast error to u32");
+        RET_M(
+            CastFromSink< u32 >(sink, fieldNum, m_fields), "cast error to u32");
         break;
       case FieldDef::FIELD_SFIXED32:
-        RET_M(CastFromSink<s32>(sink, fieldNum, m_fields), "cast error to s32");
+        RET_M(
+            CastFromSink< s32 >(sink, fieldNum, m_fields), "cast error to s32");
         break;
       case FieldDef::FIELD_FIXED64:
-        RET_M(CastFromSink<u64>(sink, fieldNum, m_fields), "cast error to u64");
+        RET_M(
+            CastFromSink< u64 >(sink, fieldNum, m_fields), "cast error to u64");
         break;
       case FieldDef::FIELD_SFIXED64:
-        RET_M(CastFromSink<s64>(sink, fieldNum, m_fields), "cast error to s64");
+        RET_M(
+            CastFromSink< s64 >(sink, fieldNum, m_fields), "cast error to s64");
         break;
       case FieldDef::FIELD_DOUBLE:
-        RET_M(CastFromSink<double>(sink, fieldNum, m_fields), "cast error to double");
+        RET_M(
+            CastFromSink< double >(sink, fieldNum, m_fields),
+            "cast error to double");
         break;
       case FieldDef::FIELD_INT32:
-        RET_M(CastFromSink<VarInt>(sink, fieldNum, m_fields), "cast error to VarInt");
+        RET_M(
+            CastFromSink< VarInt >(sink, fieldNum, m_fields),
+            "cast error to VarInt");
         break;
       case FieldDef::FIELD_INT64:
-        RET_M(CastFromSink<VarInt>(sink, fieldNum, m_fields), "cast error to VarInt");
+        RET_M(
+            CastFromSink< VarInt >(sink, fieldNum, m_fields),
+            "cast error to VarInt");
         break;
       case FieldDef::FIELD_UINT32:
-        RET_M(CastFromSink<VarUInt>(sink, fieldNum, m_fields), "cast error to VarUInt");
+        RET_M(
+            CastFromSink< VarUInt >(sink, fieldNum, m_fields),
+            "cast error to VarUInt");
         break;
       case FieldDef::FIELD_UINT64:
-        RET_M(CastFromSink<VarUInt>(sink, fieldNum, m_fields), "cast error to VarUInt");
+        RET_M(
+            CastFromSink< VarUInt >(sink, fieldNum, m_fields),
+            "cast error to VarUInt");
         break;
       case FieldDef::FIELD_SINT32:
-        RET_M(CastFromSink<VarInt>(sink, fieldNum, m_fields), "cast error to VarInt");
+        RET_M(
+            CastFromSink< VarInt >(sink, fieldNum, m_fields),
+            "cast error to VarInt");
         break;
       case FieldDef::FIELD_SINT64:
-        RET_M(CastFromSink<VarInt>(sink, fieldNum, m_fields), "cast error to VarInt");
+        RET_M(
+            CastFromSink< VarInt >(sink, fieldNum, m_fields),
+            "cast error to VarInt");
         break;
       case FieldDef::FIELD_ENUM:
-        RET_M(CastFromSink<VarUInt>(sink, fieldNum, m_fields), "cast error to VarUInt");
+        RET_M(
+            CastFromSink< VarUInt >(sink, fieldNum, m_fields),
+            "cast error to VarUInt");
         break;
       case FieldDef::FIELD_BOOL:
-        RET_M(CastFromSink<VarUInt>(sink, fieldNum, m_fields), "cast error to VarUInt");
+        RET_M(
+            CastFromSink< VarUInt >(sink, fieldNum, m_fields),
+            "cast error to VarUInt");
         break;
 
       case FieldDef::FIELD_STRING:
@@ -324,16 +377,24 @@ bool DynamicProto::iserialize(core::base::iBinarySerializerSink &fileSink) {
       case FieldDef::FIELD_MSG: {
         VarUInt len;
         sink >> len;
-        std::vector<u8> buffer;
+        std::vector< u8 > buffer;
         buffer.resize((u32) len.get());
         sink.read(core::memory::Blob(&buffer[0], (u32) len.get()));
-        core::base::ConstBlobSink subSink(core::memory::ConstBlob(&buffer[0], buffer.size()));
-        const ProtoDescriptor *pDescriptor = FindProtoByName(m_descriptor.findFieldByNum(fieldNum)->m_msgType);
-        RET_M(pDescriptor != nullptr, "unable to find submessage: " << m_descriptor.findFieldByNum(fieldNum)->m_msgType);
+        core::base::ConstBlobSink subSink(
+            core::memory::ConstBlob(&buffer[0], buffer.size()));
+        const ProtoDescriptor *pDescriptor =
+            FindProtoByName(m_descriptor.findFieldByNum(fieldNum)->m_msgType);
+        RET_M(
+            pDescriptor != nullptr,
+            "unable to find submessage: "
+                << m_descriptor.findFieldByNum(fieldNum)->m_msgType);
         DynamicProto subMessage(*pDescriptor);
-        RET_M(subMessage.iserialize(subSink), "parse error on internal message");
+        RET_M(
+            subMessage.iserialize(subSink), "parse error on internal message");
         std::string msg;
-        RET_M(core::util::files::TextFormat::format(msg, subMessage), "unable to format internal message");
+        RET_M(
+            core::util::files::TextFormat::format(msg, subMessage),
+            "unable to format internal message");
         m_fields[fieldNum].push_back(msg);
         break;
       }
@@ -341,8 +402,7 @@ bool DynamicProto::iserialize(core::base::iBinarySerializerSink &fileSink) {
   }
   return true;
 }
+*/
 
-} // namespace util
+} // namespace types
 } // namespace core
-
-#endif

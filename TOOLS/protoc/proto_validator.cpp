@@ -32,6 +32,8 @@ bool verifyService(const ServiceDef &def) {
  *
  */
 bool verifyMessage(const MessageDef &def) {
+  // Package is non-empty
+  RET_M(!def.m_package.empty(), "Package must be set.");
 
   // Verify:
   // * field numbers are valid
