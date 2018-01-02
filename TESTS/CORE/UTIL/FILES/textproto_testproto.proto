@@ -1,4 +1,4 @@
-package test.appshared;
+package test.core.util.files.textproto;
 
 message TestProtoEmbeded {
   string a_string = 1;
@@ -6,6 +6,6 @@ message TestProtoEmbeded {
 
 message TestProto {
   int32 a_int = 1;
-  string a_string = 2;
+  string a_string[] = 2;
   TestProtoEmbeded a_message = 3;
 }
