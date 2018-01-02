@@ -1,6 +1,4 @@
 /**
- * net_server.h
- *
  * Network server
  */
 #ifndef FISHY_NET_SERVER_H

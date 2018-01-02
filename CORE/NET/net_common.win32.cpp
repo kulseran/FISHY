@@ -1,60 +1,56 @@
-/**
- * net_common.cpp (win32)
- */
 #include "net_common.h"
 
 #if defined(PLAT_WIN32)
 
-#include <CORE/ARCH/platform.h>
-#include <CORE/BASE/logging.h>
-#include <CORE/UTIL/noncopyable.h>
+#  include <CORE/ARCH/platform.h>
+#  include <CORE/BASE/logging.h>
+#  include <CORE/UTIL/noncopyable.h>
 
 namespace core {
 namespace net {
 
-#include <WinSock2.h>
-#include <WS2tcpip.h>
-#pragma comment (lib, "Ws2_32.lib")
+#  include <WS2tcpip.h>
+#  include <WinSock2.h>
+#  pragma comment(lib, "Ws2_32.lib")
 
 /**
  * Windows networking is based around the WSA lib that must be initialized.
  */
 class WSA : util::noncopyable {
   public:
-    WSA() : m_initialized(false) {
+  WSA() : m_initialized(false) {}
+
+  ~WSA() {
+    if (m_initialized) {
+      shutdown();
     }
+  }
 
-    ~WSA() {
-      if (m_initialized) {
-        shutdown();
-      }
+  void shutdown() {
+    if (!m_initialized) {
+      return;
     }
+    WSACleanup();
 
-    void shutdown() {
-      if (!m_initialized) {
-        return;
-      }
-      WSACleanup();
+    m_initialized = false;
+  }
 
-      m_initialized = false;
+  void initialize() {
+    if (m_initialized) {
+      return;
     }
+    Trace();
 
-    void initialize() {
-      if (m_initialized) {
-        return;
-      }
-      Trace();
+    WSADATA wsaData;
+    WSAStartup(MAKEWORD(2, 2), &wsaData);
 
-      WSADATA wsaData;
-      WSAStartup(MAKEWORD(2, 2), &wsaData);
+    m_initialized = true;
+  }
 
-      m_initialized = true;
-    }
-
-    bool isInitialized() const { return m_initialized; }
+  bool isInitialized() const { return m_initialized; }
 
   private:
-    bool m_initialized;
+  bool m_initialized;
 };
 WSA g_wsa;
 

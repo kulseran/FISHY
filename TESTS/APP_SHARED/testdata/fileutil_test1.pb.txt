@@ -1,0 +1,5 @@
+a_int: 10
+a_string: "hello world"
+a_message {
+  a_string: "hola mundo"
+}

@@ -13,6 +13,7 @@
 #include <CORE/NET/net_client.h>
 
 #include <deque>
+#include <vector>
 
 namespace testing {
 namespace core {
@@ -35,8 +36,8 @@ class MockNetClient : public ::core::net::iNetClient {
   /**
    * @see #simulateConnectFailure
    */
-  virtual bool start(const ::core::net::ClientDef &server) {
-    return m_connected;
+  virtual Status start(const ::core::net::ClientDef &server) {
+    return Status(m_connected);
   }
 
   /**
@@ -55,15 +56,16 @@ class MockNetClient : public ::core::net::iNetClient {
   /**
    * @see #simulateRecieve
    */
-  virtual void update(::core::net::iClientConnectionHandler &handler) {
+  virtual Status update(::core::net::iClientConnectionHandler &handler) {
     if (m_recieved.empty()) {
-      return;
+      return Status::OK;
     }
     const std::string msg = m_recieved.front();
     m_recieved.pop_front();
 
     handler.process(
         *this, ::core::memory::ConstBlob((u8 *) msg.c_str(), msg.length()));
+    return Status::OK;
   }
 
   /**
@@ -76,12 +78,12 @@ class MockNetClient : public ::core::net::iNetClient {
    * @see #getSent
    * @see #simulateSendFailure
    */
-  virtual bool send(const ::core::memory::ConstBlob &msg) {
+  virtual Status send(const ::core::memory::ConstBlob &msg) {
     m_sent.reserve(m_sent.size() + msg.size());
     std::copy(msg.data(), msg.data() + msg.size(), std::back_inserter(m_sent));
     bool wasSent = m_sendable;
     m_sendable = true;
-    return wasSent;
+    return Status(wasSent);
   }
 
   /**

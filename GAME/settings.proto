@@ -11,8 +11,14 @@ message WindowSettings {
 }
 
 message Settings {
+  message ServerDef {
+    string hostname = 1;
+    int32 hostport = 2;
+    int32 timeout_sec = 3;
+  }
+
   WindowSettings window_settings = 1;
-  // core.net.ServerDef login_server = 2;
-  // core.net.ServerDef game_server = 3;
+  ServerDef login_server = 2;
+  ServerDef game_server = 3;
   string data_dir = 4;
 }
