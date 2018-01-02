@@ -11,10 +11,7 @@
 class VarUInt {
   public:
   VarUInt() : m_value(0) {}
-  explicit VarUInt(const u8 value) : m_value(value) {}
-  explicit VarUInt(const u16 value) : m_value(value) {}
-  explicit VarUInt(const u32 value) : m_value(value) {}
-  explicit VarUInt(const u64 value) : m_value(value) {}
+  VarUInt(const u64 value) : m_value(value) {}
 
   u64 get() const { return m_value; }
 
@@ -33,10 +30,7 @@ class VarUInt {
 class VarInt {
   public:
   VarInt() : m_value(0) {}
-  explicit VarInt(const s8 value) : m_value(value) {}
-  explicit VarInt(const s16 value) : m_value(value) {}
-  explicit VarInt(const s32 value) : m_value(value) {}
-  explicit VarInt(const s64 value) : m_value(value) {}
+  VarInt(const s64 value) : m_value(value) {}
 
   s64 get() const { return m_value; }
 

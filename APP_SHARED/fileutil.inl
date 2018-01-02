@@ -1,6 +1,7 @@
 #ifndef FISHY_FILEUTIL_INL
 #define FISHY_FILEUTIL_INL
 
+#include <CORE/BASE/serializer.h>
 #include <CORE/BASE/serializer_streamsink.h>
 #include <CORE/UTIL/FILES/proto_text.h>
 #include <CORE/VFS/vfs_file.h>
@@ -47,7 +48,7 @@ inline Status serializeProtoFromFile(const vfs::Path &path, tType &proto) {
   if (!ifile.is_open()) {
     return Status::NOT_FOUND;
   }
-  core::base::InFileSink isink(ifile);
+  core::base::InStreamSink isink(ifile);
   return Status(proto.iserialize(isink));
 }
 
@@ -60,7 +61,7 @@ inline Status serializeProtoToFile(const vfs::Path &path, const tType &proto) {
   if (!ofile.is_open()) {
     return Status::NOT_FOUND;
   }
-  core::base::OutFileSink osink(ofile);
+  core::base::OutStreamSink osink(ofile);
   return Status(proto.oserialize(osink));
 }
 

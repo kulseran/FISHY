@@ -342,8 +342,8 @@ Status TextFormat::parse(
 
   std::string byteBuffer;
   byteBuffer.resize(textProto.size(), '\0');
-  core::base::BlobSink tempSink(
-      Blob(reinterpret_cast< u8 * >(&byteBuffer[0]), byteBuffer.size()));
+  Blob blobBuffer(byteBuffer);
+  core::base::BlobSink tempSink(blobBuffer);
   if (!parseMessageToByteString(
           tempSink, descriptor, begin, textProto.end(), errorOnUnknown)) {
     Log(LL::Error) << "Parse failed near line: "

@@ -217,7 +217,7 @@ std::string StateMachine::getDotFile() const {
  *
  */
 StateID GetUniquestateId() {
-  static std::atomic< StateID > s_id = STATE_INVALID + 1;
+  static std::atomic< StateID > s_id(STATE_INVALID + 1);
   return s_id++;
 }
 

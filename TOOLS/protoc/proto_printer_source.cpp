@@ -196,7 +196,7 @@ static void printCppVirtuals(
       ofile << "}\n";
     }
   }
-  ofile << "return false;\n";
+  ofile << "return nullptr;\n";
   ofile << "}\n";
 
   ofile << "const void *" << package << msgDef.m_name

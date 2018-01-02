@@ -1,8 +1,9 @@
 #include "net_common.h"
 
+#include <CORE/ARCH/platform.h>
+
 #if defined(PLAT_WIN32)
 
-#  include <CORE/ARCH/platform.h>
 #  include <CORE/BASE/logging.h>
 #  include <CORE/UTIL/noncopyable.h>
 
