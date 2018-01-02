@@ -11,7 +11,14 @@ file(GLOB_RECURSE tests_src
 )
 assign_source_group(${tests_src})
 
-add_executable(tests ${tests_src})
+file(GLOB_RECURSE test_protos
+	"*.proto"
+)
+message(STATUS ${test_protos})
+proto_generate(test_proto_src ${test_protos})
+assign_source_group(${test_proto_src})
+
+add_executable(tests ${tests_src} ${test_proto_src})
 
 target_compile_definitions(tests PRIVATE TESTING=1)
 set_target_properties(tests PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
