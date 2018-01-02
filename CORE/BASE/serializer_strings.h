@@ -26,12 +26,13 @@ ISERIALIZE(std::string) {
   if (buff.fail() || sz.get() >= std::numeric_limits< u32 >::max()) {
     return buff;
   }
-  char *tmpStr = new char[(u32) sz.get()];
+  char *tmpStr = new char[(u32) sz.get() + 1];
   core::memory::Blob tmp((u8 *) tmpStr, (u32) sz.get());
   if (buff.read(tmp) != sz.get()) {
     buff.set_fail();
   }
-  obj = tmpStr;
+  tmpStr[sz.get()] = 0;
+  obj = std::string(tmpStr, sz.get());
   delete tmpStr;
   return buff;
 }

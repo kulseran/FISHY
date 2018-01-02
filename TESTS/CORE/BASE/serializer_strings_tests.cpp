@@ -17,6 +17,6 @@ REGISTER_TEST_CASE(testString) {
   sink << expected;
   sink.reset();
   sink >> actual;
-  TEST(testing::assertEquals(
-      memcmp(actual.data(), expected.data(), expected.size()), 0));
+  TEST(testing::assertEquals(actual.size(), expected.size()));
+  TEST(testing::assertEquals(actual, expected));
 }
