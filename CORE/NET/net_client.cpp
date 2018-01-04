@@ -50,7 +50,7 @@ static int NetGetLastError() {
 /**
  * Cross platform wrap closing a socket.
  */
-static void closesocket(SCOKET &fd) {
+static void closesocket(SOCKET &fd) {
   close(fd);
 }
 
