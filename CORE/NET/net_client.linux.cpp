@@ -1,19 +1,28 @@
 #include "net_client.h"
 
-#if defined(PLAT_WIN32)
+#if defined(PLAT_LINUX)
 
 #  include <CORE/ARCH/timer.h>
 #  include <CORE/BASE/checks.h>
 #  include <CORE/BASE/logging.h>
 #  include <CORE/UTIL/lexical_cast.h>
 
-#  include <WS2tcpip.h>
-#  include <WinSock2.h>
+#  include <unistd.h>
+#  include <cstdlib>
+#  include <sys/types.h>
+#  include <sys/socket.h>
+#  include <netinet/in.h>
+#  include <netdb.h>
 
 #  include <algorithm>
 
 using core::memory::Blob;
 using core::memory::ConstBlob;
+
+typedef int SOCKET;
+
+#define INVALID_SOCKET (-1)
+#define SOCKET_ERROR (-1)
 
 namespace core {
 namespace net {
@@ -38,7 +47,7 @@ class NetClient::Impl {
   start(NetClient *pThis, const std::string &remoteHost, const u32 port) {
     m_pThis = pThis;
     struct addrinfo hints;
-    ZeroMemory(&hints, sizeof(hints));
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_flags = AI_PASSIVE;
 
@@ -64,7 +73,7 @@ class NetClient::Impl {
     RET_SM(
         ret == 0,
         Status::BAD_ARGUMENT,
-        "Error <" << WSAGetLastError() << "> getting address info for client.");
+        "Error <" << errno << "> getting address info for client.");
 
     m_socket =
         socket(result->ai_family, result->ai_socktype, result->ai_protocol);
@@ -75,26 +84,25 @@ class NetClient::Impl {
 
     ret = connect(
         m_socket,
-        (SOCKADDR *) result->ai_addr,
+        result->ai_addr,
         static_cast< int >(result->ai_addrlen));
     if (ret == SOCKET_ERROR) {
       Log(LL::Error) << "Failed to connect to server at: " << remoteHost << ":"
                      << port;
-      closesocket(m_socket);
+      close(m_socket);
       m_socket = INVALID_SOCKET;
       return Status::GENERIC_ERROR;
     }
 
     std::string addrString = "<unknown>";
-    char host[INET6_ADDRSTRLEN];
-    memset(host, 0, INET6_ADDRSTRLEN);
+    char host[NI_MAXHOST];
+    memset(host, 0, NI_MAXHOST);
     struct sockaddr_storage addr;
     socklen_t addr_len = sizeof(addr);
     if (getpeername(m_socket, (struct sockaddr *) &addr, &addr_len)
         != SOCKET_ERROR) {
-      DWORD len = INET6_ADDRSTRLEN;
-      if (WSAAddressToString(
-          (struct sockaddr *) &addr, addr_len, nullptr, host, &len) == 0) {
+      if (getnameinfo(
+          (struct sockaddr *) &addr, addr_len, host, NI_MAXHOST, nullptr, 0, NI_NUMERICSERV) == 0) {
         addrString = host;
       }
     }
@@ -145,7 +153,6 @@ class NetClient::Impl {
     } else if (ret == SOCKET_ERROR) {
       return Status::GENERIC_ERROR;
     }
-
     return Status::OK;
   }
 
@@ -172,7 +179,7 @@ class NetClient::Impl {
    */
   void stop() {
     Log(LL::Info) << "Closing connection to server.";
-    closesocket(m_socket);
+    close(m_socket);
     m_socket = INVALID_SOCKET;
   }
 

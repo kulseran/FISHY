@@ -52,5 +52,5 @@ add_subdirectory(APP_SHARED)
 add_subdirectory(TESTS)
 add_subdirectory(TOOLS/bin2h)
 add_subdirectory(TOOLS/protoc)
-add_subdirectory(GAME)
+# add_subdirectory(GAME)
 
