@@ -1,20 +1,64 @@
 #include "net_server.h"
 
+#include <CORE/ARCH/timer.h>
+#include <CORE/BASE/checks.h>
+#include <CORE/BASE/logging.h>
+#include <CORE/UTIL/algorithm.h>
+#include <CORE/UTIL/lexical_cast.h>
+
 #if defined(PLAT_WIN32)
-
-#  include <CORE/ARCH/timer.h>
-#  include <CORE/BASE/checks.h>
-#  include <CORE/BASE/logging.h>
-#  include <CORE/UTIL/algorithm.h>
-#  include <CORE/UTIL/lexical_cast.h>
-
 #  include <WS2tcpip.h>
 #  include <WinSock2.h>
+#elif defined(PLAT_LINUX)
+#  include <cstdlib>
+#  include <netdb.h>
+#  include <netinet/in.h>
+#  include <sys/socket.h>
+#  include <sys/types.h>
+#  include <unistd.h>
+#else
+#  error "networking not supported on this platform"
+#endif
 
-#  include <map>
+#include <map>
 
 using core::memory::Blob;
 using core::memory::ConstBlob;
+
+#if defined(PLAT_WIN32)
+#  define MAX_HOST_NAMELEN (INET6_ADDRSTRLEN)
+#  define SOCKET_WOULD_BLOCK (WSAEWOULDBLOCK)
+
+/**
+ * Cross platform wrap error handling.
+ */
+static int NetGetLastError() {
+  return WSAGetLastError();
+}
+#elif defined(PLAT_LINUX)
+#  define MAX_HOST_NAMELEN (NI_MAXHOST)
+#  define INVALID_SOCKET (-1)
+#  define SOCKET_ERROR (-1)
+#  define SOCKET_WOULD_BLOCK (EWOULDBLOCK)
+
+typedef int SOCKET;
+
+/**
+ * Cross platform wrap error handling.
+ */
+static int NetGetLastError() {
+  return errno;
+}
+
+/**
+ * Cross platform wrap closing a socket.
+ */
+static void closesocket(SOCKET &fd) {
+  close(fd);
+}
+#else
+#  error "networking not supported on this platform"
+#endif
 
 namespace core {
 namespace net {
@@ -83,7 +127,7 @@ class NetServer::Impl {
     m_timeoutSec = timeoutSec;
 
     struct addrinfo hints;
-    ZeroMemory(&hints, sizeof(hints));
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_flags = AI_PASSIVE;
 
@@ -110,7 +154,7 @@ class NetServer::Impl {
     RET_SM(
         ret == 0,
         Status::GENERIC_ERROR,
-        "Error <" << WSAGetLastError() << "> getting address info for server.");
+        "Error <" << NetGetLastError() << "> getting address info for server.");
 
     m_socket =
         socket(result->ai_family, result->ai_socktype, result->ai_protocol);
@@ -121,7 +165,7 @@ class NetServer::Impl {
 
     ret = bind(m_socket, result->ai_addr, (int) result->ai_addrlen);
     if (ret != 0) {
-      Log(LL::Error) << "Error <" << WSAGetLastError() << "> binding socket.";
+      Log(LL::Error) << "Error <" << NetGetLastError() << "> binding socket.";
       closesocket(m_socket);
       m_socket = INVALID_SOCKET;
       return Status::GENERIC_ERROR;
@@ -129,7 +173,7 @@ class NetServer::Impl {
 
     if (port == 0) {
       struct sockaddr_in adr_inet;
-      int len_inet = sizeof adr_inet;
+      socklen_t len_inet = sizeof adr_inet;
       if (getsockname(m_socket, (struct sockaddr *) &adr_inet, &len_inet)
           == 0) {
         m_port = ntohs(adr_inet.sin_port);
@@ -142,7 +186,7 @@ class NetServer::Impl {
         || m_mode == eConnectionMode::TCP_BLOCKING) {
       ret = listen(m_socket, MAX_PENDING_CONNECTIONS);
       if (ret != 0) {
-        Log(LL::Error) << "Error <" << WSAGetLastError()
+        Log(LL::Error) << "Error <" << NetGetLastError()
                        << "> listening on socket.";
         closesocket(m_socket);
         m_socket = INVALID_SOCKET;
@@ -181,8 +225,8 @@ class NetServer::Impl {
     if (ret == 1) {
       SOCKET clientSocket = accept(m_socket, NULL, NULL);
       if (clientSocket == INVALID_SOCKET) {
-        const int errorcode = WSAGetLastError();
-        if (errorcode == WSAEWOULDBLOCK) {
+        const int errorcode = NetGetLastError();
+        if (errorcode == SOCKET_WOULD_BLOCK) {
           return Status::OK;
         } else {
           return Status::GENERIC_ERROR;
@@ -236,7 +280,7 @@ class NetServer::Impl {
         Blob data(buffer, MAX_PACKET_SIZE);
 
         sockaddr_storage addr;
-        int addrlen = sizeof(addr);
+        socklen_t addrlen = sizeof(addr);
         int ret = ::recvfrom(
             *itr,
             (char *) data.data(),
@@ -458,15 +502,32 @@ class NetServer::Impl {
   }
 
   bool getHostName(std::string &out, const sockaddr_storage &host) {
-    char hostName[INET6_ADDRSTRLEN];
-    memset(hostName, 0, INET6_ADDRSTRLEN);
-    DWORD len = INET6_ADDRSTRLEN;
+    char hostName[MAX_HOST_NAMELEN];
+    memset(hostName, 0, MAX_HOST_NAMELEN);
+#if defined(PLAT_WIN32)
+    DWORD len = MAX_HOST_NAMELEN;
     if (WSAAddressToString(
             (sockaddr *) &host, sizeof(host), NULL, hostName, &len)
         != 0) {
       Log(LL::Trace) << "Could not resolve host name.";
       return false;
     }
+#elif defined(PLAT_LINUX)
+    if (getnameinfo(
+            (struct sockaddr *) &host,
+            sizeof(host),
+            hostName,
+            NI_MAXHOST,
+            nullptr,
+            0,
+            NI_NUMERICSERV)
+        != 0) {
+      Log(LL::Trace) << "Could not resolve host name.";
+      return false;
+    }
+#else
+#  error "networking not supported on this platform"
+#endif
     out = hostName;
     return true;
   }
@@ -566,5 +627,3 @@ eConnectionMode::type NetServer::getConnectionMode() const {
 
 } // namespace net
 } // namespace core
-
-#endif

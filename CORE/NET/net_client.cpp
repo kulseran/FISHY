@@ -1,19 +1,62 @@
 #include "net_client.h"
 
+#include <CORE/ARCH/timer.h>
+#include <CORE/BASE/checks.h>
+#include <CORE/BASE/logging.h>
+#include <CORE/UTIL/lexical_cast.h>
+
 #if defined(PLAT_WIN32)
-
-#  include <CORE/ARCH/timer.h>
-#  include <CORE/BASE/checks.h>
-#  include <CORE/BASE/logging.h>
-#  include <CORE/UTIL/lexical_cast.h>
-
 #  include <WS2tcpip.h>
 #  include <WinSock2.h>
-
-#  include <algorithm>
+#elif defined(PLAT_LINUX)
+#  include <cstdlib>
+#  include <netdb.h>
+#  include <netinet/in.h>
+#  include <sys/socket.h>
+#  include <sys/types.h>
+#  include <unistd.h>
+#else
+#  error "networking not supported on this platform"
+#endif
+#include <algorithm>
 
 using core::memory::Blob;
 using core::memory::ConstBlob;
+
+#if defined(PLAT_WIN32)
+#  define MAX_HOST_NAMELEN (INET6_ADDRSTRLEN)
+
+/**
+ * Cross platform wrap error handling.
+ */
+static int NetGetLastError() {
+  return WSAGetLastError();
+}
+
+#elif defined(PLAT_LINUX)
+typedef int SOCKET;
+
+#  define MAX_HOST_NAMELEN (NI_MAXHOST)
+#  define INVALID_SOCKET (-1)
+#  define SOCKET_ERROR (-1)
+
+/**
+ * Cross platform wrap error handling.
+ */
+static int NetGetLastError() {
+  return errno;
+}
+
+/**
+ * Cross platform wrap closing a socket.
+ */
+static void closesocket(SCOKET &fd) {
+  close(fd);
+}
+
+#else
+#  error "networking not supported on this platform"
+#endif
 
 namespace core {
 namespace net {
@@ -38,7 +81,7 @@ class NetClient::Impl {
   start(NetClient *pThis, const std::string &remoteHost, const u32 port) {
     m_pThis = pThis;
     struct addrinfo hints;
-    ZeroMemory(&hints, sizeof(hints));
+    memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_INET;
     hints.ai_flags = AI_PASSIVE;
 
@@ -64,7 +107,7 @@ class NetClient::Impl {
     RET_SM(
         ret == 0,
         Status::BAD_ARGUMENT,
-        "Error <" << WSAGetLastError() << "> getting address info for client.");
+        "Error <" << NetGetLastError() << "> getting address info for client.");
 
     m_socket =
         socket(result->ai_family, result->ai_socktype, result->ai_protocol);
@@ -74,9 +117,7 @@ class NetClient::Impl {
         "Failed to create socket for client.");
 
     ret = connect(
-        m_socket,
-        (SOCKADDR *) result->ai_addr,
-        static_cast< int >(result->ai_addrlen));
+        m_socket, result->ai_addr, static_cast< int >(result->ai_addrlen));
     if (ret == SOCKET_ERROR) {
       Log(LL::Error) << "Failed to connect to server at: " << remoteHost << ":"
                      << port;
@@ -86,17 +127,34 @@ class NetClient::Impl {
     }
 
     std::string addrString = "<unknown>";
-    char host[INET6_ADDRSTRLEN];
-    memset(host, 0, INET6_ADDRSTRLEN);
+    char host[MAX_HOST_NAMELEN];
+    memset(host, 0, MAX_HOST_NAMELEN);
     struct sockaddr_storage addr;
     socklen_t addr_len = sizeof(addr);
     if (getpeername(m_socket, (struct sockaddr *) &addr, &addr_len)
         != SOCKET_ERROR) {
-      DWORD len = INET6_ADDRSTRLEN;
+#if defined(PLAT_WIN32)
+      DWORD len = MAX_HOST_NAMELEN;
       if (WSAAddressToString(
-          (struct sockaddr *) &addr, addr_len, nullptr, host, &len) == 0) {
+              (struct sockaddr *) &addr, addr_len, nullptr, host, &len)
+          == 0) {
         addrString = host;
       }
+#elif defined(PLAT_LINUX)
+      if (getnameinfo(
+              (struct sockaddr *) &addr,
+              addr_len,
+              host,
+              MAX_HOST_NAMELEN,
+              nullptr,
+              0,
+              NI_NUMERICSERV)
+          == 0) {
+        addrString = host;
+      }
+#else
+#  error "networking not supported on this platform"
+#endif
     }
 
     m_pThis->m_stats.m_activeConnections = 1;
@@ -145,7 +203,6 @@ class NetClient::Impl {
     } else if (ret == SOCKET_ERROR) {
       return Status::GENERIC_ERROR;
     }
-
     return Status::OK;
   }
 
@@ -265,5 +322,3 @@ eConnectionMode::type NetClient::getConnectionMode() const {
 
 } // namespace net
 } // namespace core
-
-#endif
