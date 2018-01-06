@@ -1,5 +1,6 @@
 cmake_minimum_required (VERSION 2.6)
 include (CMake/util.cmake)
+include (CMake/proto.cmake)
 project (Fishy)
 
 # Output locations
@@ -36,11 +37,13 @@ include_directories("${PROJECT_SOURCE_DIR}")
 # add the generated folder, so that files mirroring the main
 # repo structure within generated can be included without a
 # prefix
-include_directories("${PROJECT_SOURCE_DIR}/.generated/")
+set(FISHY_GENERATED_ROOT "${PROJECT_SOURCE_DIR}/.generated")
+include_directories(${FISHY_GENERATED_ROOT})
 
 # Squelch visual studio warnings
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
+set(FISHY_SOURCE_DIR "${PROJECT_SOURCE_DIR}")
 ################
 # All Buildables
 ################
@@ -49,4 +52,5 @@ add_subdirectory(APP_SHARED)
 add_subdirectory(TESTS)
 add_subdirectory(TOOLS/bin2h)
 add_subdirectory(TOOLS/protoc)
+# add_subdirectory(GAME)
 

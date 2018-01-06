@@ -13,6 +13,7 @@ using core::types::MessageDef;
 using core::types::ProtoDef;
 using core::types::RpcFunctionDef;
 using core::types::ServiceDef;
+using core::util::ReplaceStr;
 using core::util::parser::RegExPattern;
 
 using core::util::TrimQuotes;
@@ -35,21 +36,21 @@ struct eTokenTypes {
     REPEATED,
 
     // The order of the following must match FieldDef::eFieldType
+    INT64,
+    UINT64,
+    SINT64,
+    FIXED64,
+    SFIXED64,
     DOUBLE,
     FLOAT,
     INT32,
-    INT64,
     UINT32,
-    UINT64,
     SINT32,
-    SINT64,
     FIXED32,
-    FIXED64,
     SFIXED32,
-    SFIXED64,
-    BOOL,
     STRING,
     BYTES,
+    BOOL,
 
     IDENT,
     STR,
@@ -70,13 +71,16 @@ struct eTokenTypes {
 };
 
 const char *eTokenTypes::names[eTokenTypes::COUNT] = {
-    "PACKAGE",    "IMPORT",      "MESSAGE",    "SERVICE",    "ENUM",
-    "RPC",        "RETURNS",     "REPEATED",   "DOUBLE",     "FLOAT",
-    "INT32",      "INT64",       "UINT32",     "UINT64",     "SINT32",
-    "SINT64",     "FIXED32",     "FIXED64",    "SFIXED32",   "SFIXED64",
-    "BOOL",       "STRING",      "BYTES",      "IDENT",      "STR",
-    "WS",         "NUM",         "EOL",        "EQUALS",     "COMMENT",
-    "OPEN_BRACE", "CLOSE_BRACE", "OPEN_PEREN", "CLOSE_PEREN"};
+    "PACKAGE",    "IMPORT",   "MESSAGE",    "SERVICE",     "ENUM",
+    "RPC",        "RETURNS",  "REPEATED",
+
+    "INT64",      "UINT64",   "SINT64",     "FIXED64",     "SFIXED64",
+    "DOUBLE",     "FLOAT",    "INT32",      "UINT32",      "SINT32",
+    "FIXED32",    "SFIXED32", "STRING",     "BYTES",       "BOOL",
+
+    "IDENT",      "STR",      "WS",         "NUM",         "EOL",
+    "EQUALS",     "COMMENT",  "OPEN_BRACE", "CLOSE_BRACE", "OPEN_PEREN",
+    "CLOSE_PEREN"};
 
 typedef core::util::parser::Tokenizer< eTokenTypes > tTokenizer;
 typedef std::vector< typename tTokenizer::Token > tTokenList;
@@ -149,6 +153,18 @@ class ProtoDefBuilder {
   /**
    *
    */
+  static void fixPackage(MessageDef &def, const std::string &package) {
+    def.m_package = "::" + package;
+    for (core::types::tMessageList::iterator itr = def.m_messages.begin();
+         itr != def.m_messages.end();
+         ++itr) {
+      fixPackage(*itr, package + "::" + def.m_name);
+    }
+  }
+
+  /**
+   *
+   */
   bool addMessage(
       tParser::iNode *&unused,
       const tParser::tTokenOrNodeList::const_iterator &begin,
@@ -158,6 +174,7 @@ class ProtoDefBuilder {
     tParser::tTokenOrNodeList::const_iterator itr = begin + 1;
     tParser::tNode< MessageDef > *pMessage =
         reinterpret_cast< tParser::tNode< MessageDef > * >(itr->m_pNode);
+    fixPackage(pMessage->m_data, ReplaceStr(m_target.m_package, ".", "::"));
     m_target.m_messages.push_back(std::move(pMessage->m_data));
     delete pMessage;
 
@@ -313,7 +330,7 @@ bool genField(
     pDef->m_data.m_msgType = itr->m_token.getToken();
   } else {
     pDef->m_data.m_type =
-        FieldDef::eFieldType(itr->m_token.getId() - eTokenTypes::DOUBLE);
+        FieldDef::eFieldType(itr->m_token.getId() - eTokenTypes::INT64);
   }
   ++itr;
   pDef->m_data.m_name = itr->m_token.getToken();
@@ -524,13 +541,13 @@ bool parse(ProtoDef &def, const std::string &fileData) {
       & eTokenTypes::IMPORT & eTokenTypes::STR & eTokenTypes::EOL;
 
   tRule &fieldRule = parser.addRule("field");
-  for (u32 fieldType = eTokenTypes::DOUBLE; fieldType <= eTokenTypes::BYTES;
+  for (u32 fieldType = eTokenTypes::INT64; fieldType <= eTokenTypes::BOOL;
        ++fieldType) {
     fieldRule |= tCRule(tCRule::tProc::from_function< genField >())
                  & eTokenTypes::type(fieldType) & eTokenTypes::IDENT
                  & eTokenTypes::EQUALS & eTokenTypes::NUM & eTokenTypes::EOL;
   }
-  for (u32 fieldType = eTokenTypes::DOUBLE; fieldType <= eTokenTypes::BYTES;
+  for (u32 fieldType = eTokenTypes::INT64; fieldType <= eTokenTypes::BOOL;
        ++fieldType) {
     fieldRule |= tCRule(tCRule::tProc::from_function< genField >())
                  & eTokenTypes::type(fieldType) & eTokenTypes::IDENT

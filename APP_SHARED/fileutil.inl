@@ -1,15 +1,16 @@
 #ifndef FISHY_FILEUTIL_INL
 #define FISHY_FILEUTIL_INL
 
+#include <CORE/BASE/serializer.h>
 #include <CORE/BASE/serializer_streamsink.h>
-// #include <CORE/UTIL/FILES/proto_text.h>
+#include <CORE/UTIL/FILES/proto_text.h>
 #include <CORE/VFS/vfs_file.h>
 
 namespace appshared {
 
 /**
  *
- *
+ */
 template < typename tType >
 inline Status parseProtoFromFile(const vfs::Path &path, tType &proto) {
   std::string content;
@@ -19,25 +20,10 @@ inline Status parseProtoFromFile(const vfs::Path &path, tType &proto) {
   }
   return Status(core::util::files::TextFormat::parse(proto, content));
 }
-*/
 
 /**
  *
- *
-template < typename tType >
-inline Status serializeProtoFromFile(const vfs::Path &path, tType &proto) {
-  vfs::ifstream ifile(path);
-  if (!ifile.is_open()) {
-    return Status::NOT_FOUND;
-  }
-  core::base::InFileSink isink(ifile);
-  return Status(proto.iserialize(isink));
-}
-*/
-
-/**
- *
- *
+ */
 template < typename tType >
 inline Status printProtoToFile(const vfs::Path &path, const tType &proto) {
   vfs::ofstream ofile(path);
@@ -52,21 +38,32 @@ inline Status printProtoToFile(const vfs::Path &path, const tType &proto) {
   ofile.write(content.data(), content.size());
   return Status(!ofile.fail());
 }
-*/
 
 /**
  *
+ */
+template < typename tType >
+inline Status serializeProtoFromFile(const vfs::Path &path, tType &proto) {
+  vfs::ifstream ifile(path);
+  if (!ifile.is_open()) {
+    return Status::NOT_FOUND;
+  }
+  core::base::InStreamSink isink(ifile);
+  return Status(proto.iserialize(isink));
+}
+
+/**
  *
+ */
 template < typename tType >
 inline Status serializeProtoToFile(const vfs::Path &path, const tType &proto) {
   vfs::ofstream ofile(path);
   if (!ofile.is_open()) {
     return Status::NOT_FOUND;
   }
-  core::base::OutFileSink osink(ofile);
+  core::base::OutStreamSink osink(ofile);
   return Status(proto.oserialize(osink));
 }
-*/
 
 /**
  *

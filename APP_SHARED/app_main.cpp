@@ -3,6 +3,7 @@
 #include <CORE/BASE/appstats.h>
 #include <CORE/BASE/config.h>
 #include <CORE/BASE/logging.h>
+#include <CORE/NET/net_common.h>
 #include <CORE/VFS/vfs.h>
 
 #include <.generated/version.h>
@@ -44,7 +45,7 @@ int main(const int argc, const char **argv) {
                  << BUILD_VERSION_HASH << " on " << BUILD_TIMESTAMP;
 
   // Setup Networking
-  // core::net::Initialize();
+  core::net::Initialize();
 
   // Setup VFS
   vfs::Mount("./", "./");
@@ -62,7 +63,7 @@ int main(const int argc, const char **argv) {
   vfs::UnmountAll();
 
   // Shutdown Networking
-  // core::net::Shutdown();
+  core::net::Shutdown();
 
   // Finish
   Log(LL::Trace) << "App Terminated with status: " << rVal;

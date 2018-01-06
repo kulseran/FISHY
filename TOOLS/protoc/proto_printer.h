@@ -4,7 +4,7 @@
 #ifndef FISHY_PROTO_PRINTER_H
 #define FISHY_PROTO_PRINTER_H
 
-#include "proto_parser.h"
+#include <CORE/TYPES/protobuf.h>
 
 /**
  * Print a {@link ProtoDef} to the given output file root.
