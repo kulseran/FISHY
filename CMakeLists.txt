@@ -34,6 +34,7 @@ configure_file (
 # add the binary tree to the search path for include files
 # so that we will find TutorialConfig.h
 include_directories("${PROJECT_SOURCE_DIR}")
+include_directories("${PROJECT_SOURCE_DIR}/EXTERN_LIB")
 # add the generated folder, so that files mirroring the main
 # repo structure within generated can be included without a
 # prefix
@@ -47,6 +48,7 @@ set(FISHY_SOURCE_DIR "${PROJECT_SOURCE_DIR}")
 ################
 # All Buildables
 ################
+add_subdirectory(EXTERN_LIB/gl)
 add_subdirectory(CORE)
 add_subdirectory(APP_SHARED)
 add_subdirectory(TESTS)

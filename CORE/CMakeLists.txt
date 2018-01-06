@@ -12,6 +12,6 @@ file(GLOB_RECURSE core_src
 
 add_library(core STATIC ${core_src})
 set_target_properties(core PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(core Threads::Threads)
+target_link_libraries(core Threads::Threads glew)
 
 assign_source_group(${core_src})
