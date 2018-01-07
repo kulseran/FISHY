@@ -60,23 +60,6 @@ class Status {
   }
 
   /**
-   * Construct a Status with failure type {@code GENERIC_ERROR} and the
-   * specified error message.
-   */
-  inline Status(const std::string &msg) : m_status(GENERIC_ERROR), m_msg(msg) {
-    IF_ASSERTS(m_consumed = false);
-  }
-
-  /**
-   * Construct a Status with the specified failure mode and error message
-   */
-  inline Status(const eError status, const std::string &msg)
-      : m_status(status), m_msg(msg) {
-    ASSERT(status != OK);
-    IF_ASSERTS(m_consumed = false);
-  }
-
-  /**
    *
    */
   inline Status(const Status &other) : m_status(other.m_status) {
@@ -98,7 +81,7 @@ class Status {
    * Return a clone of this status, which itself will now
    * require a call to {@link #getStatus}.
    */
-  inline Status clone() { return Status(m_status, m_msg); }
+  inline Status clone() { return Status(m_status); }
 
   /**
    * Static {@code OK} status.
@@ -127,11 +110,6 @@ class Status {
   }
 
   /**
-   * Retrieve an error message associated with the status, if any.
-   */
-  inline const std::string &getMessage() const { return m_msg; }
-
-  /**
    * Consume the status object without checking it.
    */
   inline Status &ignoreErrors() {
@@ -142,7 +120,6 @@ class Status {
   private:
   eError m_status;
   IF_ASSERTS(mutable bool m_consumed);
-  std::string m_msg;
 
   inline void consume() const { IF_ASSERTS(m_consumed = true); }
 };
