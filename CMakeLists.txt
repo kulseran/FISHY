@@ -48,11 +48,14 @@ set(FISHY_SOURCE_DIR "${PROJECT_SOURCE_DIR}")
 ################
 # All Buildables
 ################
-add_subdirectory(EXTERN_LIB/gl)
+add_subdirectory(EXTERN_LIB/GL)
 add_subdirectory(CORE)
 add_subdirectory(APP_SHARED)
+add_subdirectory(WRAPPERS)
+
 add_subdirectory(TESTS)
+
 add_subdirectory(TOOLS/bin2h)
 add_subdirectory(TOOLS/protoc)
-# add_subdirectory(GAME)
+# add_subdirectory(GAME/client)
 
