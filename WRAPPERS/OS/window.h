@@ -4,13 +4,15 @@
 #ifndef FISHY_WINDOW_H
 #define FISHY_WINDOW_H
 
+#include "raw_input.h"
+
 #include <CORE/BASE/status.h>
 #include <CORE/UTIL/noncopyable.h>
 
 #include <string>
 
-namespace core {
-namespace window {
+namespace wrappers {
+namespace os {
 
 /**
  * System possible resolutions.
@@ -47,6 +49,9 @@ struct DisplayCaps {
 class Window;
 class iWindowCallback : core::util::noncopyable {
   public:
+  iWindowCallback(InputManager *inputManager) : m_inputManager(inputManager) {
+    ASSERT(m_inputManager);
+  }
   void setOwner(Window *pOwner) { m_pOwner = pOwner; }
 
   virtual void onInit(void) = 0;
@@ -57,14 +62,25 @@ class iWindowCallback : core::util::noncopyable {
   virtual void onReshape(void) = 0;
   virtual void onReset(void) = 0;
 
+  virtual void
+  onButtonInput(eDeviceId::type device, eKeyMap::type ident, const bool down) {
+    m_inputManager->updateKey(device, ident, down);
+  }
+
+  virtual void
+  onAxisInput(eDeviceId::type device, eAxisMap::type axis, const int value) {
+    m_inputManager->updateAxis(device, axis, value);
+  }
+
   protected:
   Window *m_pOwner;
+  InputManager *m_inputManager;
 };
 
 /**
  * Window
  */
-class Window : util::noncopyable {
+class Window : ::core::util::noncopyable {
   public:
   class Impl;
 
@@ -79,6 +95,9 @@ class Window : util::noncopyable {
   Status reset();
 
   Impl *getImpl() { return m_pImpl; };
+  const Impl *getImpl() const { return m_pImpl; };
+  RawInputMetadata &getRawInput() { return m_rawInput; }
+  const RawInputMetadata &getRawInput() const { return m_rawInput; }
   iWindowCallback *getCallbackInterface() { return m_cbs; }
   DisplayCaps getSettings() const { return m_settings; }
 
@@ -88,13 +107,14 @@ class Window : util::noncopyable {
 
   private:
   Impl *m_pImpl;
+  RawInputMetadata m_rawInput;
 
   DisplayCaps m_settings;
   iWindowCallback *m_cbs;
   const char *m_title;
 };
 
-} // namespace window
-} // namespace core
+} // namespace os
+} // namespace wrappers
 
 #endif

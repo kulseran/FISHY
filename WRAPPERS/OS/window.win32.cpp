@@ -1,5 +1,6 @@
 #include "window.h"
 
+#include "raw_input.h"
 #include <CORE/ARCH/platform.h>
 #include <CORE/BASE/checks.h>
 #include <CORE/BASE/logging.h>
@@ -8,7 +9,9 @@
 
 #  include <windows.h>
 
-// #  include <WindowsX.h>
+#  include <WindowsX.h>
+
+  // #  include <WindowsX.h>
 #  define GLEW_STATIC (1)
 #  include <gl/glew.h>
 #  include <gl/wglew.h>
@@ -17,8 +20,10 @@
 
 #  include <iostream>
 
-namespace core {
-namespace window {
+static const char *WINDOW_CLASS_NAME = "FishyWindow";
+
+namespace wrappers {
+namespace os {
 
 class Window::Impl {
   public:
@@ -34,15 +39,16 @@ class Window::Impl {
   Impl() : m_hWnd(nullptr), m_hDC(nullptr), m_hGLRC(nullptr), m_focus(false) {}
   ~Impl() {
     if (m_hGLRC) {
-      CHECK(wglMakeCurrent(NULL, NULL));
-      CHECK(wglDeleteContext(m_hGLRC));
+      wglMakeCurrent(NULL, NULL);
+      wglDeleteContext(m_hGLRC);
     }
     if (m_hDC) {
-      CHECK(ReleaseDC(m_hWnd, m_hDC) == 1);
+      ReleaseDC(m_hWnd, m_hDC);
     }
     if (m_hWnd) {
-      CHECK(DestroyWindow(m_hWnd));
+      DestroyWindow(m_hWnd);
     }
+    ShowCursor(true);
   }
 };
 
@@ -59,6 +65,9 @@ Window::Window(
       m_title(pTitle) {
   if (pTitle == nullptr) {
     pTitle = "<unnamed app>";
+  }
+  if (m_cbs) {
+    m_cbs->setOwner(this);
   }
 }
 
@@ -89,36 +98,70 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
   switch (message) {
     case WM_CREATE: {
       pParent = (Window *) (((LPCREATESTRUCT) lParam)->lpCreateParams);
+      if (!pParent) {
+        break;
+      }
       SetWindowLongPtr(hWnd, GWLP_USERDATA, (LONG_PTR) pParent);
 
       if (pParent->getCallbackInterface()) {
         pParent->getCallbackInterface()->onInit();
       }
+
+      InitRawInput(hWnd, pParent).ignoreErrors();
       break;
     }
 
     case WM_DESTROY: {
+      if (!pParent) {
+        break;
+      }
       if (pParent->getCallbackInterface()) {
         pParent->getCallbackInterface()->onDest();
       }
+
+      ShutdownRawInput(hWnd).ignoreErrors();
       break;
     }
 
     case WM_SETFOCUS: {
-      pParent->getImpl()->m_focus = true;
-      pParent->getCallbackInterface()->onShow();
+      if (!pParent) {
+        break;
+      }
+      if (pParent->getImpl()) {
+        pParent->getImpl()->m_focus = true;
+      }
+      if (pParent->getCallbackInterface()) {
+        pParent->getCallbackInterface()->onShow();
+      }
       ShowCursor(!pParent->getSettings().m_hideCursor);
       break;
     }
 
     case WM_KILLFOCUS: {
-      pParent->getImpl()->m_focus = false;
-      pParent->getCallbackInterface()->onHide();
+      if (!pParent) {
+        break;
+      }
+      if (pParent->getImpl()) {
+        pParent->getImpl()->m_focus = false;
+      }
+      if (pParent->getCallbackInterface()) {
+        pParent->getCallbackInterface()->onHide();
+        // All keys get a 'release' message on loss of focus
+        for (int i = 0; i < 255; ++i) {
+          for (int j = 0; j < eDeviceId::DEVICE_COUNT; ++j) {
+            pParent->getCallbackInterface()->onButtonInput(
+                eDeviceId::type(j), eKeyMap::type(i), false);
+          }
+        }
+      }
       ShowCursor(true);
       break;
     }
 
     case WM_SIZE: {
+      if (!pParent) {
+        break;
+      }
       DisplayCaps settings = pParent->getSettings();
       settings.m_height = HIWORD(lParam);
       settings.m_width = LOWORD(lParam);
@@ -131,18 +174,51 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
     }
 
     case WM_SYSCOMMAND: {
+      if (!pParent) {
+        break;
+      }
       // ignore 'alt' menu
       if (wParam == SC_KEYMENU && (lParam >> 16) <= 0) {
         return 0;
       }
       break;
     }
+
+    case WM_INPUT: {
+      ParseRawInput((HRAWINPUT) lParam, pParent);
+      break;
+    }
+
+    case WM_MOUSEMOVE: {
+      if (pParent->getCallbackInterface()) {
+        LONG xPos = GET_X_LPARAM(lParam);
+        LONG yPos = GET_Y_LPARAM(lParam);
+        pParent->getCallbackInterface()->onAxisInput(
+            eDeviceId::DEVICE_DEFAULT, eAxisMap::AXIS_MOUSE_X, xPos);
+        pParent->getCallbackInterface()->onAxisInput(
+            eDeviceId::DEVICE_DEFAULT, eAxisMap::AXIS_MOUSE_Y, yPos);
+      }
+      break;
+    }
+
+    case WM_MOUSEWHEEL: {
+      if (pParent->getCallbackInterface()) {
+        LONG zPos = GET_WHEEL_DELTA_WPARAM(wParam);
+        static LONG zTotalPos = 0;
+        zTotalPos += zPos;
+        pParent->getCallbackInterface()->onAxisInput(
+            eDeviceId::DEVICE_DEFAULT, eAxisMap::AXIS_MOUSE_Z, zTotalPos);
+      }
+    }
   }
   return DefWindowProc(hWnd, message, wParam, lParam);
 }
 
-ATOM RegisterWindowClass(HINSTANCE hInstance, const char *pTitle) {
+ATOM RegisterWindowClass(HINSTANCE hInstance) {
   WNDCLASSEX windowClass;
+  memset(&windowClass, 0, sizeof(WNDCLASSEX));
+  windowClass.cbSize = sizeof(WNDCLASSEX);
+
   windowClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
   windowClass.lpfnWndProc = (WNDPROC) WndProc;
   windowClass.cbClsExtra = 0;
@@ -152,7 +228,7 @@ ATOM RegisterWindowClass(HINSTANCE hInstance, const char *pTitle) {
   windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
   windowClass.hbrBackground = NULL;
   windowClass.lpszMenuName = NULL;
-  windowClass.lpszClassName = pTitle;
+  windowClass.lpszClassName = WINDOW_CLASS_NAME;
   return RegisterClassEx(&windowClass);
 }
 
@@ -250,7 +326,7 @@ Status Window::create() {
   std::unique_ptr< Impl > pImpl = std::make_unique< Impl >();
 
   pImpl->m_hInstance = GetModuleHandle(NULL);
-  ATOM windowClass = RegisterWindowClass(pImpl->m_hInstance, m_title);
+  ATOM windowClass = RegisterWindowClass(pImpl->m_hInstance);
   RET_SM(
       MAKEINTATOM(windowClass) != 0,
       Status::GENERIC_ERROR,
@@ -306,7 +382,7 @@ Status Window::create() {
 
     pImpl->m_hWnd = CreateWindowEx(
         dwExStyle,
-        m_title,
+        MAKEINTATOM(windowClass),
         m_title,
         style,
         CW_USEDEFAULT,
@@ -366,13 +442,30 @@ Status Window::create() {
       "wglMakeCurrent() failed.");
 
   // Init GLEW
-  glewInit();
+  GLenum error = glewInit();
+  RET_SM(error == GLEW_OK, Status::GENERIC_ERROR, "Failed to init GLEW");
+
+  Log(LL::Info) << "OpenGL mode "
+                << (m_settings.m_fullScreen ? "fullscreen" : "windowed");
+
+  int majorRev, minorRev;
+  glGetIntegerv(GL_MAJOR_VERSION, &majorRev);
+  glGetIntegerv(GL_MINOR_VERSION, &minorRev);
+  Log(LL::Info) << "OpenGL version " << majorRev << "." << minorRev;
+  Log(LL::Info) << "OpenGL GLEW Support GL_VERSION_1_2: "
+                << (glewIsSupported("GL_VERSION_1_2") ? "true" : "false");
+  Log(LL::Info) << "OpenGL GLEW Support GL_VERSION_2_0: "
+                << (glewIsSupported("GL_VERSION_2_0") ? "true" : "false");
+  Log(LL::Info) << "OpenGL GLEW Support GL_VERSION_3_0: "
+                << (glewIsSupported("GL_VERSION_3_0") ? "true" : "false");
 
   // Finalize
-  ShowWindow(pImpl->m_hWnd, SW_SHOW);
-  UpdateWindow(pImpl->m_hWnd);
-
   m_pImpl = pImpl.release();
+  ShowWindow(m_pImpl->m_hWnd, SW_SHOW);
+  SetFocus(m_pImpl->m_hWnd);
+  UpdateWindow(m_pImpl->m_hWnd);
+  ShowCursor(!m_settings.m_hideCursor);
+
   return Status::OK;
 }
 
@@ -390,12 +483,23 @@ void Window::framestep() {
     TranslateMessage(&msg);
     DispatchMessage(&msg);
   }
+
+  UpdateKeyStates(this);
+
+  SwapBuffers(m_pImpl->m_hDC);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
   if (m_cbs) {
     m_cbs->onUpdate();
   }
+  if (m_settings.m_lockCursor && m_pImpl->m_focus) {
+    RECT r;
+    GetWindowRect(m_pImpl->m_hWnd, &r);
+    ClipCursor(&r);
+  }
 }
 
-} // namespace window
-} // namespace core
+} // namespace os
+} // namespace wrappers
 
 #endif
