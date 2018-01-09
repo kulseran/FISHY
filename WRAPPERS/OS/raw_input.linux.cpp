@@ -13,8 +13,8 @@
 #ifdef linux
 #include <X11/keysym.h>
 
-namespace core {
-namespace input {
+namespace wrappers {
+namespace os {
 // Returns the axis code for the os 'ident'
 eAxisMap::type Platform_RemapAxisIdent(int ident) {
   switch (ident) {
@@ -254,7 +254,7 @@ eKeyMap::type Platform_RemapKeycode(int ident) {
     }
   }
 }
-} // namespace input
-} // namespace core
+} // namespace os
+} // namespace wrappers
 
 #endif

@@ -75,6 +75,7 @@ typedef srutil::delegate< void(long, long, long, int, long) >
 void SetBadAxisMapHandler(tBadMappingHandler &);
 void SetBadButtonMapHandler(tBadMappingHandler &);
 
+#if defined(PLAT_WIN32)
 class Window;
 Status InitRawInput(const HWND hWnd, Window *pParent);
 Status ShutdownRawInput(const HWND hWnd);
@@ -88,6 +89,11 @@ void UpdateKeyStates(Window *pParent);
 struct RawInputMetadata {
   HANDLE m_inputDevices[eDeviceId::DEVICE_COUNT];
 };
+#elif defined(PLAT_LINUX)
+#else
+#error "raw input not supported on this platform."
+#endif
+
 
 } // namespace os
 } // namespace wrappers
