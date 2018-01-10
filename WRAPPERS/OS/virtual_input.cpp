@@ -26,6 +26,8 @@ void InputManager::resetAll(void) {
   for (u32 i = 0; i < eDeviceId::DEVICE_COUNT; ++i) {
     std::fill(m_keysdown[i], m_keysdown[i] + eKeyMap::type_COUNT, false);
     std::fill(m_keyspressed[i], m_keyspressed[i] + eKeyMap::type_COUNT, false);
+    std::fill(
+        m_keysreleased[i], m_keysreleased[i] + eKeyMap::type_COUNT, false);
     std::fill(m_axispos[i], m_axispos[i] + eAxisMap::type_COUNT, 0);
   }
   m_lastPressedKey = eKeyMap::type_COUNT;
