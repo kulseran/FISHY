@@ -1,0 +1,13 @@
+window_settings {
+  width: 1024
+  height: 768
+  fullscreen: false
+  lock_cursor: false
+  hide_cursor: false
+}
+game_server {
+  hostname: "localhost"
+  hostport: 9001
+  timeout_sec: 5
+}
+data_dir: "./data/"

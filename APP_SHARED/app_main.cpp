@@ -67,10 +67,11 @@ int main(const int argc, const char **argv) {
 
   // Finish
   Log(LL::Trace) << "App Terminated with status: " << rVal;
+  core::logging::FlushLogger();
 
 #if FISHY_DEBUG
   if (g_debugHalt.get() && rVal != 0) {
-    Log(LL::Error) << "Press Enter to Continue...";
+    std::cerr << "Press Enter to Continue..." << std::endl;
     std::cin.get();
   }
   ASSERT(rVal == 0);

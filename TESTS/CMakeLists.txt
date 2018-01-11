@@ -21,6 +21,5 @@ assign_source_group(${test_proto_src})
 add_executable(tests ${tests_src} ${test_proto_src})
 
 target_compile_definitions(tests PRIVATE TESTING=1)
-set_target_properties(tests PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 
 target_link_libraries(tests core wrappers protoclib)

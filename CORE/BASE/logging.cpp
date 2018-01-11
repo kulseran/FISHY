@@ -19,6 +19,7 @@ class LogManager : core::util::noncopyable {
 
   Status write(const LogMessage &);
   Status registerSink(std::shared_ptr< iLogSink >);
+  void flush();
 
   private:
   std::vector< std::shared_ptr< iLogSink > > m_sinks;
@@ -37,8 +38,18 @@ LogManager &GetDefaultLogger() {
   return s_manager;
 }
 
+/**
+ *
+ */
 Status RegisterSink(std::shared_ptr< iLogSink > pSink) {
   return GetDefaultLogger().registerSink(pSink);
+}
+
+/**
+ *
+ */
+void FlushLogger() {
+  GetDefaultLogger().flush();
 }
 
 /**
@@ -49,6 +60,9 @@ LogManager::LogManager()
       m_loggerThread(std::bind(&LogManager::logFn, this)) {
 }
 
+/**
+ *
+ */
 static void FlushSink(std::shared_ptr< iLogSink > &pSink) {
   pSink->flush().ignoreErrors();
 }
@@ -60,6 +74,14 @@ LogManager::~LogManager() {
   m_messages.waitEmpty();
   m_messages.close();
   m_loggerThread.join();
+  std::for_each(m_sinks.begin(), m_sinks.end(), FlushSink);
+}
+
+/**
+ *
+ */
+void LogManager::flush() {
+  m_messages.waitEmpty();
   std::for_each(m_sinks.begin(), m_sinks.end(), FlushSink);
 }
 

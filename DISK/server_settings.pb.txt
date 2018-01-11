@@ -1,0 +1,9 @@
+game_server {
+  hostport: 9001
+  max_connections: 50
+}
+status_server {
+  hostport: 8001
+  max_connections: 5
+}
+data_dir: "./data/"

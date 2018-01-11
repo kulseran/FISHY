@@ -54,8 +54,13 @@ add_subdirectory(APP_SHARED)
 add_subdirectory(WRAPPERS)
 
 add_subdirectory(TESTS)
+set_target_properties(tests PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
 
 add_subdirectory(TOOLS/bin2h)
 add_subdirectory(TOOLS/protoc)
-# add_subdirectory(GAME/client)
-
+add_subdirectory(GAME/client)
+add_subdirectory(GAME/server)
+set_target_properties(bin2h PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+set_target_properties(protoc PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+set_target_properties(game_client PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+set_target_properties(game_server PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
