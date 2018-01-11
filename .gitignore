@@ -3,3 +3,4 @@
 *.swp
 LastCoverageResults.log
 CoverageReport*/
+data/

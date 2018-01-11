@@ -151,6 +151,11 @@ class iLogSink : core::util::noncopyable {
  */
 Status RegisterSink(std::shared_ptr< iLogSink >);
 
+/**
+ * Flush all pending log messages.
+ */
+void FlushLogger();
+
 } // namespace logging
 } // namespace core
 

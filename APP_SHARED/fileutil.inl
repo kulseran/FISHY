@@ -16,7 +16,7 @@ inline Status parseProtoFromFile(const vfs::Path &path, tType &proto) {
   std::string content;
   Status readStatus = parseFileToString(path, content);
   if (!readStatus) {
-    return readStatus;
+    return readStatus.clone();
   }
   return Status(core::util::files::TextFormat::parse(proto, content));
 }
