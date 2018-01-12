@@ -25,7 +25,7 @@ static const char *WINDOW_CLASS_NAME = "FishyWindow";
 namespace wrappers {
 namespace os {
 
-class Window::Impl {
+class Window::Impl : public core::util::noncopyable {
   public:
   HINSTANCE m_hInstance;
 
@@ -323,6 +323,7 @@ Status SetCorePixelFormat(const HDC hDC) {
 
 Status Window::create() {
   Trace();
+  ASSERT(!m_pImpl);
   std::unique_ptr< Impl > pImpl = std::make_unique< Impl >();
 
   pImpl->m_hInstance = GetModuleHandle(NULL);

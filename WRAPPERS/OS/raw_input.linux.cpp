@@ -1,8 +1,3 @@
-/**
- * raw_input.linux.cpp
- *
- * linux implementation of raw_input.h
- */
 #include "raw_input.h"
 
 #include <CORE/types.h>
@@ -19,238 +14,238 @@ namespace os {
 eAxisMap::type Platform_RemapAxisIdent(int ident) {
   switch (ident) {
     case 0:
-      return AXIS_MOUSE_X;
+      return eAxisMap::AXIS_MOUSE_X;
     case 1:
-      return AXIS_MOUSE_Y;
+      return eAxisMap::AXIS_MOUSE_Y;
     case 2:
-      return AXIS_MOUSE_Z;
+      return eAxisMap::AXIS_MOUSE_Z;
   }
 
-  return AXIS_COUNT;
+  return eAxisMap::type_COUNT;
 }
 
 // Returns the key code for the os 'ident'
 eKeyMap::type Platform_RemapKeycode(int ident) {
   switch (ident) {
     case 0xFFFF0001:
-      return KEY_MOUSE_1;
+      return eKeyMap::KEY_MOUSE_1;
     case 0xFFFF0002:
-      return KEY_MOUSE_3;
+      return eKeyMap::KEY_MOUSE_3;
     case 0xFFFF0003:
-      return KEY_MOUSE_2;
+      return eKeyMap::KEY_MOUSE_2;
 
     case XK_Escape:
-      return KEY_ESC;
+      return eKeyMap::KEY_ESC;
     case XK_BackSpace:
-      return KEY_BACKSPACE;
+      return eKeyMap::KEY_BACKSPACE;
     case XK_Tab:
-      return KEY_TAB;
+      return eKeyMap::KEY_TAB;
     case XK_Pause:
-      return KEY_PAUSE;
+      return eKeyMap::KEY_PAUSE;
     case XK_Sys_Req:
-      return KEY_PRINTSCREEN;
+      return eKeyMap::KEY_PRINTSCREEN;
     case XK_space:
-      return KEY_SPACE;
+      return eKeyMap::KEY_SPACE;
 
     case XK_A:
-      return KEY_A;
+      return eKeyMap::KEY_A;
     case XK_B:
-      return KEY_B;
+      return eKeyMap::KEY_B;
     case XK_C:
-      return KEY_C;
+      return eKeyMap::KEY_C;
     case XK_D:
-      return KEY_D;
+      return eKeyMap::KEY_D;
     case XK_E:
-      return KEY_E;
+      return eKeyMap::KEY_E;
     case XK_F:
-      return KEY_F;
+      return eKeyMap::KEY_F;
     case XK_G:
-      return KEY_G;
+      return eKeyMap::KEY_G;
     case XK_H:
-      return KEY_H;
+      return eKeyMap::KEY_H;
     case XK_I:
-      return KEY_I;
+      return eKeyMap::KEY_I;
     case XK_J:
-      return KEY_J;
+      return eKeyMap::KEY_J;
     case XK_K:
-      return KEY_K;
+      return eKeyMap::KEY_K;
     case XK_L:
-      return KEY_L;
+      return eKeyMap::KEY_L;
     case XK_M:
-      return KEY_M;
+      return eKeyMap::KEY_M;
     case XK_N:
-      return KEY_N;
+      return eKeyMap::KEY_N;
     case XK_O:
-      return KEY_O;
+      return eKeyMap::KEY_O;
     case XK_P:
-      return KEY_P;
+      return eKeyMap::KEY_P;
     case XK_Q:
-      return KEY_Q;
+      return eKeyMap::KEY_Q;
     case XK_R:
-      return KEY_R;
+      return eKeyMap::KEY_R;
     case XK_S:
-      return KEY_S;
+      return eKeyMap::KEY_S;
     case XK_T:
-      return KEY_T;
+      return eKeyMap::KEY_T;
     case XK_U:
-      return KEY_U;
+      return eKeyMap::KEY_U;
     case XK_V:
-      return KEY_V;
+      return eKeyMap::KEY_V;
     case XK_W:
-      return KEY_W;
+      return eKeyMap::KEY_W;
     case XK_X:
-      return KEY_X;
+      return eKeyMap::KEY_X;
     case XK_Y:
-      return KEY_Y;
+      return eKeyMap::KEY_Y;
     case XK_Z:
-      return KEY_Z;
+      return eKeyMap::KEY_Z;
 
     case XK_a:
-      return KEY_a;
+      return eKeyMap::KEY_a;
     case XK_b:
-      return KEY_b;
+      return eKeyMap::KEY_b;
     case XK_c:
-      return KEY_c;
+      return eKeyMap::KEY_c;
     case XK_d:
-      return KEY_d;
+      return eKeyMap::KEY_d;
     case XK_e:
-      return KEY_e;
+      return eKeyMap::KEY_e;
     case XK_f:
-      return KEY_f;
+      return eKeyMap::KEY_f;
     case XK_g:
-      return KEY_g;
+      return eKeyMap::KEY_g;
     case XK_h:
-      return KEY_h;
+      return eKeyMap::KEY_h;
     case XK_i:
-      return KEY_i;
+      return eKeyMap::KEY_i;
     case XK_j:
-      return KEY_j;
+      return eKeyMap::KEY_j;
     case XK_k:
-      return KEY_k;
+      return eKeyMap::KEY_k;
     case XK_l:
-      return KEY_l;
+      return eKeyMap::KEY_l;
     case XK_m:
-      return KEY_m;
+      return eKeyMap::KEY_m;
     case XK_n:
-      return KEY_n;
+      return eKeyMap::KEY_n;
     case XK_o:
-      return KEY_o;
+      return eKeyMap::KEY_o;
     case XK_p:
-      return KEY_p;
+      return eKeyMap::KEY_p;
     case XK_q:
-      return KEY_q;
+      return eKeyMap::KEY_q;
     case XK_r:
-      return KEY_r;
+      return eKeyMap::KEY_r;
     case XK_s:
-      return KEY_s;
+      return eKeyMap::KEY_s;
     case XK_t:
-      return KEY_t;
+      return eKeyMap::KEY_t;
     case XK_u:
-      return KEY_u;
+      return eKeyMap::KEY_u;
     case XK_v:
-      return KEY_v;
+      return eKeyMap::KEY_v;
     case XK_w:
-      return KEY_w;
+      return eKeyMap::KEY_w;
     case XK_x:
-      return KEY_x;
+      return eKeyMap::KEY_x;
     case XK_y:
-      return KEY_y;
+      return eKeyMap::KEY_y;
     case XK_z:
-      return KEY_z;
+      return eKeyMap::KEY_z;
 
     //TODO(kulseran): Finish key mappings
     /*
-    KEY_0,
-    KEY_1,
-    KEY_2,
-    KEY_3,
-    KEY_4,
-    KEY_5,
-    KEY_6,
-    KEY_7,
-    KEY_8,
-    KEY_9,
+    eKeyMap::KEY_0,
+    eKeyMap::KEY_1,
+    eKeyMap::KEY_2,
+    eKeyMap::KEY_3,
+    eKeyMap::KEY_4,
+    eKeyMap::KEY_5,
+    eKeyMap::KEY_6,
+    eKeyMap::KEY_7,
+    eKeyMap::KEY_8,
+    eKeyMap::KEY_9,
 
-    KEY_NUM_0,
-    KEY_NUM_1,
-    KEY_NUM_2,
-    KEY_NUM_3,
-    KEY_NUM_4,
-    KEY_NUM_5,
-    KEY_NUM_6,
-    KEY_NUM_7,
-    KEY_NUM_8,
-    KEY_NUM_9,
-    KEY_NUM_MUL,
-    KEY_NUM_ADD,
-    KEY_NUM_SUB,
-    KEY_NUM_PERIOD,
-    KEY_NUM_DIV,
+    eKeyMap::KEY_NUM_0,
+    eKeyMap::KEY_NUM_1,
+    eKeyMap::KEY_NUM_2,
+    eKeyMap::KEY_NUM_3,
+    eKeyMap::KEY_NUM_4,
+    eKeyMap::KEY_NUM_5,
+    eKeyMap::KEY_NUM_6,
+    eKeyMap::KEY_NUM_7,
+    eKeyMap::KEY_NUM_8,
+    eKeyMap::KEY_NUM_9,
+    eKeyMap::KEY_NUM_MUL,
+    eKeyMap::KEY_NUM_ADD,
+    eKeyMap::KEY_NUM_SUB,
+    eKeyMap::KEY_NUM_PERIOD,
+    eKeyMap::KEY_NUM_DIV,
 
-    KEY_PLUS,
-    KEY_MINUS,
-    KEY_LBRACKET,
-    KEY_RBRACKET,
-    KEY_PIPE,
-    KEY_COLON,
-    KEY_PERIOD,
-    KEY_COMMA,
-    KEY_QUOTE,
-    KEY_QUESTION,
+    eKeyMap::KEY_PLUS,
+    eKeyMap::KEY_MINUS,
+    eKeyMap::KEY_LBRACKET,
+    eKeyMap::KEY_RBRACKET,
+    eKeyMap::KEY_PIPE,
+    eKeyMap::KEY_COLON,
+    eKeyMap::KEY_PERIOD,
+    eKeyMap::KEY_COMMA,
+    eKeyMap::KEY_QUOTE,
+    eKeyMap::KEY_QUESTION,
 
-    KEY_TILDE,
+    eKeyMap::KEY_TILDE,
 
-    KEY_SPACE,
+    eKeyMap::KEY_SPACE,
 
-    KEY_HOME,
-    KEY_END,
-    KEY_LEFT,
-    KEY_RIGHT,
-    KEY_UP,
-    KEY_DOWN,
-    KEY_INSERT,
-    KEY_DELETE,
-    KEY_PAGEUP,
-    KEY_PAGEDOWN,
+    eKeyMap::KEY_HOME,
+    eKeyMap::KEY_END,
+    eKeyMap::KEY_LEFT,
+    eKeyMap::KEY_RIGHT,
+    eKeyMap::KEY_UP,
+    eKeyMap::KEY_DOWN,
+    eKeyMap::KEY_INSERT,
+    eKeyMap::KEY_DELETE,
+    eKeyMap::KEY_PAGEUP,
+    eKeyMap::KEY_PAGEDOWN,
 
-    KEY_F1,
-    KEY_F2,
-    KEY_F3,
-    KEY_F4,
-    KEY_F5,
-    KEY_F6,
-    KEY_F7,
-    KEY_F8,
-    KEY_F9,
-    KEY_F10,
-    KEY_F11,
-    KEY_F12,
-    KEY_F13,
-    KEY_F14,
-    KEY_F15,
-    KEY_F16,
-    KEY_F17,
-    KEY_F18,
-    KEY_F19,
-    KEY_F20,
-    KEY_F21,
-    KEY_F22,
-    KEY_F23,
-    KEY_F24,
+    eKeyMap::KEY_F1,
+    eKeyMap::KEY_F2,
+    eKeyMap::KEY_F3,
+    eKeyMap::KEY_F4,
+    eKeyMap::KEY_F5,
+    eKeyMap::KEY_F6,
+    eKeyMap::KEY_F7,
+    eKeyMap::KEY_F8,
+    eKeyMap::KEY_F9,
+    eKeyMap::KEY_F10,
+    eKeyMap::KEY_F11,
+    eKeyMap::KEY_F12,
+    eKeyMap::KEY_F13,
+    eKeyMap::KEY_F14,
+    eKeyMap::KEY_F15,
+    eKeyMap::KEY_F16,
+    eKeyMap::KEY_F17,
+    eKeyMap::KEY_F18,
+    eKeyMap::KEY_F19,
+    eKeyMap::KEY_F20,
+    eKeyMap::KEY_F21,
+    eKeyMap::KEY_F22,
+    eKeyMap::KEY_F23,
+    eKeyMap::KEY_F24,
 
-    KEY_SYS_WIN,
-    KEY_SYS_APP,
+    eKeyMap::KEY_SYS_WIN,
+    eKeyMap::KEY_SYS_APP,
 
-    KEY_LSHIFT,
-    KEY_RSHIFT,
-    KEY_LCTRL,
-    KEY_RCTRL,
-    KEY_LALT,
-    KEY_RALT,
+    eKeyMap::KEY_LSHIFT,
+    eKeyMap::KEY_RSHIFT,
+    eKeyMap::KEY_LCTRL,
+    eKeyMap::KEY_RCTRL,
+    eKeyMap::KEY_LALT,
+    eKeyMap::KEY_RALT,
     */
 
     default: {
-      return KEY_COUNT;
+      return eKeyMap::type_COUNT;
     }
   }
 }

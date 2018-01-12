@@ -90,6 +90,8 @@ struct RawInputMetadata {
   HANDLE m_inputDevices[eDeviceId::DEVICE_COUNT];
 };
 #elif defined(PLAT_LINUX)
+struct RawInputMetadata {
+};
 #else
 #error "raw input not supported on this platform."
 #endif

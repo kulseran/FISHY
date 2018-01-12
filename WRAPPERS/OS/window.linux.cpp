@@ -1,24 +1,22 @@
-/**
- * window.linux.cpp
- *
- * linux implementation of window.h
- */
 #include "window.h"
 
+#include <CORE/types.h>
 #include <CORE/ARCH/platform.h>
+#include <CORE/BASE/logging.h>
 
 #if defined(PLAT_LINUX)
-#include <CORE/fsdefs.h>
-#include <CORE/SYSTEM/logging.h>
-using logging::LL;
 
 #define GLEW_STATIC (1)
 #include <GL/glew.h>
 #include <GL/glx.h>
+
 #include <GL/gl.h>
 
 #include <X11/extensions/xf86vmode.h>
 #include <X11/keysym.h>
+
+// Remove 'Status' macro, as it's un-used below and breaks Status object from core::base
+#undef Status
 
 static bool ctxErrorOccurred = false;
 static int ctxErrorHandler(Display *dpy, XErrorEvent *ev) {
@@ -29,9 +27,14 @@ static int ctxErrorHandler(Display *dpy, XErrorEvent *ev) {
 }
 
 
-namespace fsengine {
+namespace wrappers {
+namespace os {
 
-struct WindowData {
+/**
+ *
+ */
+class Window::Impl : public core::util::noncopyable {
+  public:
   Display         *pDisplay;
   int           screen;
   ::Window        win;
@@ -40,42 +43,89 @@ struct WindowData {
   XF86VidModeModeInfo   deskMode;
   int           x, y;
   Colormap        cmap;
+  bool m_fullScreen;
+
+  Impl() :pDisplay(nullptr), screen(-1), ctx(0) { }
+  ~Impl() {
+		if (pDisplay) {
+      if (ctx) {
+				if (!glXMakeCurrent(pDisplay, None, NULL)) {
+					//printf("Error releasing drawing context : killGLWindow\n");
+				}
+				glXDestroyContext(pDisplay, ctx);
+				ctx = 0;
+			}
+
+			if (m_fullScreen) {
+				XF86VidModeSwitchToMode(pDisplay, screen, &deskMode);
+				XF86VidModeSetViewPort(pDisplay, screen, 0, 0);
+			}
+			XDestroyWindow(pDisplay, win);
+			XFreeColormap(pDisplay, cmap);
+			XCloseDisplay(pDisplay);
+    }
+  }
 };
 
-Window::Window() :
-  m_opaqueWindowData(new WindowData),
-  m_cbs(NULL) {
-  m_settings.m_width = 1024;
-  m_settings.m_height = 768;
-  m_settings.m_fullScreen = false;
-  m_settings.m_pixelDepth = 32;
-  m_title = "<untitled app>";
-
-  m_initalized = false;
-}
-
-Window::~Window() {
-  if (m_initalized) {
-    destroy();
+/**
+ *
+ */
+Window::Window(
+      const char *pTitle,
+      const DisplayCaps &displaySettings,
+      iWindowCallback *pCallbacks) :
+  m_pImpl(nullptr),
+  m_settings(displaySettings),
+  m_cbs(pCallbacks),
+  m_title(pTitle) {
+  if (pTitle == nullptr) {
+    m_title = "<untitled app>";
+  }
+  if (m_cbs) {
+    m_cbs->setOwner(this);
   }
 }
 
-bool Window::create() {
-  ASSERT(!m_initalized);
+/**
+ *
+ */
+Window::~Window() {
+  destroy();
+}
+
+/**
+ *
+ */
+::core::base::Status Window::reset() {
+	destroy();
+	if (!create()) {
+		return ::core::base::Status::GENERIC_ERROR;
+	}
+  return ::core::base::Status::OK;
+}
+
+
+/**
+ *
+ */
+::core::base::Status Window::create() {
+  Trace();
+  ASSERT(!m_pImpl);
+  std::unique_ptr< Impl > pImpl = std::make_unique< Impl >();
 
   // Open the X Display
-  m_opaqueWindowData->pDisplay = XOpenDisplay(0);
-  if (!m_opaqueWindowData->pDisplay) {
-    Log(LL::Error) << "XOpenDisplay(0) failed!" << std::endl;
-    return false;
+  pImpl->pDisplay = XOpenDisplay(0);
+  if (!pImpl->pDisplay) {
+    Log(LL::Error) << "XOpenDisplay(0) failed!";
+    return Status::GENERIC_ERROR;
   }
-  m_opaqueWindowData->screen = DefaultScreen(m_opaqueWindowData->pDisplay);
+  pImpl->screen = DefaultScreen(pImpl->pDisplay);
 
   // Check the supported version (must be atleast 1.3)
   int glx_major, glx_minor;
-  if (!glXQueryVersion(m_opaqueWindowData->pDisplay, &glx_major, &glx_minor) || ((glx_major == 1) && (glx_minor < 3)) || (glx_major < 1)) {
-    Log(LL::Error) << "Invalid GLX version" << std::endl;
-    return false;
+  if (!glXQueryVersion(pImpl->pDisplay, &glx_major, &glx_minor) || ((glx_major == 1) && (glx_minor < 3)) || (glx_major < 1)) {
+    Log(LL::Error) << "Invalid GLX version";
+    return Status::GENERIC_ERROR;
   }
 
   // Get a matching FB config
@@ -97,20 +147,20 @@ bool Window::create() {
   };
 
   int fbcount;
-  GLXFBConfig *fbc = glXChooseFBConfig(m_opaqueWindowData->pDisplay, m_opaqueWindowData->screen, visual_attribs, &fbcount);
+  GLXFBConfig *fbc = glXChooseFBConfig(pImpl->pDisplay, pImpl->screen, visual_attribs, &fbcount);
   if (!fbc) {
-    Log(LL::Error) << "Failed to retrieve a framebuffer config" << std::endl;
-    return false;
+    Log(LL::Error) << "Failed to retrieve a framebuffer config";
+    return Status::GENERIC_ERROR;
   }
 
   // Pick the FB config/visual with the most samples per pixel
   int best_fbc = -1, worst_fbc = -1, best_num_samp = -1, worst_num_samp = 999;
   for (int i = 0; i < fbcount; i++) {
-    XVisualInfo *vi = glXGetVisualFromFBConfig(m_opaqueWindowData->pDisplay, fbc[i]);
+    XVisualInfo *vi = glXGetVisualFromFBConfig(pImpl->pDisplay, fbc[i]);
     if (vi) {
       int samp_buf, samples;
-      glXGetFBConfigAttrib(m_opaqueWindowData->pDisplay, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf);
-      glXGetFBConfigAttrib(m_opaqueWindowData->pDisplay, fbc[i], GLX_SAMPLES       , &samples);
+      glXGetFBConfigAttrib(pImpl->pDisplay, fbc[i], GLX_SAMPLE_BUFFERS, &samp_buf);
+      glXGetFBConfigAttrib(pImpl->pDisplay, fbc[i], GLX_SAMPLES       , &samples);
 
       if ((best_fbc < 0) || (samp_buf && samples > best_num_samp)) {
         best_fbc = i, best_num_samp = samples;
@@ -125,25 +175,26 @@ bool Window::create() {
   XFree(fbc);
 
   // Get a visual
-  XVisualInfo *vi = glXGetVisualFromFBConfig(m_opaqueWindowData->pDisplay, bestFbc);
+  XVisualInfo *vi = glXGetVisualFromFBConfig(pImpl->pDisplay, bestFbc);
   if (!vi) {
-    Log(LL::Error) << "glXChooseVisual Failed" << std::endl;
+    Log(LL::Error) << "glXChooseVisual Failed";
   }
 
   // Create a color map
-  m_opaqueWindowData->cmap = XCreateColormap(m_opaqueWindowData->pDisplay, RootWindow(m_opaqueWindowData->pDisplay, vi->screen), vi->visual, AllocNone);
-  m_opaqueWindowData->attr.colormap = m_opaqueWindowData->cmap;
-  m_opaqueWindowData->attr.border_pixel = 0;
-  m_opaqueWindowData->attr.background_pixmap = None;
-  m_opaqueWindowData->attr.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask | PointerMotionMask;
+  pImpl->cmap = XCreateColormap(pImpl->pDisplay, RootWindow(pImpl->pDisplay, vi->screen), vi->visual, AllocNone);
+  pImpl->attr.colormap = pImpl->cmap;
+  pImpl->attr.border_pixel = 0;
+  pImpl->attr.background_pixmap = None;
+  pImpl->attr.event_mask = ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask | PointerMotionMask;
 
   // Set the display mode
   unsigned long window_valuemask = 0;
+  pImpl->m_fullScreen = m_settings.m_fullScreen;
   if (m_settings.m_fullScreen) {
     int modeCount = 0;
     XF86VidModeModeInfo **modes;
-    XF86VidModeGetAllModeLines(m_opaqueWindowData->pDisplay, m_opaqueWindowData->screen, &modeCount, &modes);
-    m_opaqueWindowData->deskMode = *modes[0];
+    XF86VidModeGetAllModeLines(pImpl->pDisplay, pImpl->screen, &modeCount, &modes);
+    pImpl->deskMode = *modes[0];
 
     int bestMode = 0;
     for (int i = 0; i < modeCount; i++) {
@@ -152,13 +203,13 @@ bool Window::create() {
       }
     }
 
-    XF86VidModeSwitchToMode(m_opaqueWindowData->pDisplay, m_opaqueWindowData->screen, modes[bestMode]);
-    XF86VidModeSetViewPort(m_opaqueWindowData->pDisplay, m_opaqueWindowData->screen, 0, 0);
+    XF86VidModeSwitchToMode(pImpl->pDisplay, pImpl->screen, modes[bestMode]);
+    XF86VidModeSetViewPort(pImpl->pDisplay, pImpl->screen, 0, 0);
     m_settings.m_width = modes[bestMode]->hdisplay;
     m_settings.m_height = modes[bestMode]->vdisplay;
     XFree(modes);
 
-    m_opaqueWindowData->attr.override_redirect = True;
+    pImpl->attr.override_redirect = True;
 
 
     window_valuemask = CWBorderPixel | CWColormap | CWEventMask | CWOverrideRedirect;
@@ -167,25 +218,25 @@ bool Window::create() {
   }
 
   // Create the window
-  m_opaqueWindowData->win = XCreateWindow(m_opaqueWindowData->pDisplay, RootWindow(m_opaqueWindowData->pDisplay, vi->screen), 0, 0, m_settings.m_width, m_settings.m_height, 0, vi->depth, InputOutput, vi->visual, window_valuemask, &m_opaqueWindowData->attr);
-  if (!m_opaqueWindowData->win) {
-    Log(LL::Error) << "XCreateWindow() failed!" << std::endl;
-    return false;
+  pImpl->win = XCreateWindow(pImpl->pDisplay, RootWindow(pImpl->pDisplay, vi->screen), 0, 0, m_settings.m_width, m_settings.m_height, 0, vi->depth, InputOutput, vi->visual, window_valuemask, &pImpl->attr);
+  if (!pImpl->win) {
+    Log(LL::Error) << "XCreateWindow() failed!";
+    return Status::GENERIC_ERROR;
   }
 
-  XMapWindow(m_opaqueWindowData->pDisplay, m_opaqueWindowData->win);
+  XMapWindow(pImpl->pDisplay, pImpl->win);
 
   // Setup Mode data for the window
   if (m_settings.m_fullScreen) {
-    XWarpPointer(m_opaqueWindowData->pDisplay, None, m_opaqueWindowData->win, 0, 0, 0, 0, 0, 0);
-    XMapRaised(m_opaqueWindowData->pDisplay, m_opaqueWindowData->win);
-    XGrabKeyboard(m_opaqueWindowData->pDisplay, m_opaqueWindowData->win, True, GrabModeAsync, GrabModeAsync, CurrentTime);
-    XGrabPointer(m_opaqueWindowData->pDisplay, m_opaqueWindowData->win, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, m_opaqueWindowData->win, None, CurrentTime);
+    XWarpPointer(pImpl->pDisplay, None, pImpl->win, 0, 0, 0, 0, 0, 0);
+    XMapRaised(pImpl->pDisplay, pImpl->win);
+    XGrabKeyboard(pImpl->pDisplay, pImpl->win, True, GrabModeAsync, GrabModeAsync, CurrentTime);
+    XGrabPointer(pImpl->pDisplay, pImpl->win, True, ButtonPressMask, GrabModeAsync, GrabModeAsync, pImpl->win, None, CurrentTime);
   } else {
-    Atom wmDelete = XInternAtom(m_opaqueWindowData->pDisplay, "WM_DELETE_WINDOW", True);
-    XSetWMProtocols(m_opaqueWindowData->pDisplay, m_opaqueWindowData->win, &wmDelete, 1);
-    XSetStandardProperties(m_opaqueWindowData->pDisplay, m_opaqueWindowData->win, m_title, m_title, None, NULL, 0, NULL);
-    XMapRaised(m_opaqueWindowData->pDisplay, m_opaqueWindowData->win);
+    Atom wmDelete = XInternAtom(pImpl->pDisplay, "WM_DELETE_WINDOW", True);
+    XSetWMProtocols(pImpl->pDisplay, pImpl->win, &wmDelete, 1);
+    XSetStandardProperties(pImpl->pDisplay, pImpl->win, m_title, m_title, None, NULL, 0, NULL);
+    XMapRaised(pImpl->pDisplay, pImpl->win);
   }
 
   ::Window winDummy;
@@ -196,87 +247,57 @@ bool Window::create() {
   ctxErrorOccurred = false;
   int (*oldHandler)(Display *, XErrorEvent *) = XSetErrorHandler(&ctxErrorHandler);
 
-  m_opaqueWindowData->ctx = glXCreateContext(m_opaqueWindowData->pDisplay, vi, 0, GL_TRUE);
-  XSync(m_opaqueWindowData->pDisplay, False);
+  pImpl->ctx = glXCreateContext(pImpl->pDisplay, vi, 0, GL_TRUE);
+  XSync(pImpl->pDisplay, False);
   XSetErrorHandler(oldHandler);
 
-  if (ctxErrorOccurred || !m_opaqueWindowData->ctx) {
-    Log(LL::Error) << "Failed to create OpenGL Context" << std::endl;
-    return false;
+  if (ctxErrorOccurred || !pImpl->ctx) {
+    Log(LL::Error) << "Failed to create OpenGL Context";
+    return Status::GENERIC_ERROR;
   }
   XFree(vi);
 
   // Make the context current
-  glXMakeCurrent(m_opaqueWindowData->pDisplay, m_opaqueWindowData->win, m_opaqueWindowData->ctx);
+  glXMakeCurrent(pImpl->pDisplay, pImpl->win, pImpl->ctx);
   GLenum error = glewInit();
   if (error != GLEW_OK) {
-    Log(LL::Error) << "Failed to init GLEW" << std::endl;
-    return false;
+    Log(LL::Error) << "Failed to init GLEW";
+    return Status::GENERIC_ERROR;
   }
 
   // Get all the info about our setup
-  XGetGeometry(m_opaqueWindowData->pDisplay, m_opaqueWindowData->win, &winDummy, &m_opaqueWindowData->x, &m_opaqueWindowData->y, &m_settings.m_width, &m_settings.m_height, &borderDummy, &m_settings.m_pixelDepth);
+  XGetGeometry(pImpl->pDisplay, pImpl->win, &winDummy, &pImpl->x, &pImpl->y, &m_settings.m_width, &m_settings.m_height, &borderDummy, &m_settings.m_pixelDepth);
 
-  Log(LL::Info) << "OpenGL " << (glXIsDirect(m_opaqueWindowData->pDisplay, m_opaqueWindowData->ctx) ? "is" : "is not") << " Direct Rendering" << std::endl;
-  Log(LL::Info) << "OpenGL mode " << (m_settings.m_fullScreen ? "fullscreen" : "windowed") << std::endl;
+  Log(LL::Info) << "OpenGL " << (glXIsDirect(pImpl->pDisplay, pImpl->ctx) ? "is" : "is not") << " Direct Rendering";
+  Log(LL::Info) << "OpenGL mode " << (m_settings.m_fullScreen ? "fullscreen" : "windowed");
 
   int majorRev, minorRev;
   glGetIntegerv(GL_MAJOR_VERSION, &majorRev);
   glGetIntegerv(GL_MINOR_VERSION, &minorRev);
-  Log(LL::Info) << "OpenGL version " << majorRev << "." << minorRev << std::endl;
-  Log(LL::Info) << "OpenGL GLEW Support GL_VERSION_1_2: " << (glewIsSupported("GL_VERSION_1_2") ? "true" : "false") << std::endl;
-  Log(LL::Info) << "OpenGL GLEW Support GL_VERSION_2_0: " << (glewIsSupported("GL_VERSION_2_0") ? "true" : "false") << std::endl;
-  Log(LL::Info) << "OpenGL GLEW Support GL_VERSION_3_0: " << (glewIsSupported("GL_VERSION_3_0") ? "true" : "false") << std::endl;
+  Log(LL::Info) << "OpenGL version " << majorRev << "." << minorRev;
+  Log(LL::Info) << "OpenGL GLEW Support GL_VERSION_1_2: " << (glewIsSupported("GL_VERSION_1_2") ? "true" : "false");
+  Log(LL::Info) << "OpenGL GLEW Support GL_VERSION_2_0: " << (glewIsSupported("GL_VERSION_2_0") ? "true" : "false");
+  Log(LL::Info) << "OpenGL GLEW Support GL_VERSION_3_0: " << (glewIsSupported("GL_VERSION_3_0") ? "true" : "false");
 
-
-  m_initalized = true;
+  m_pImpl = pImpl.release();
 
   if (m_cbs) {
-    m_cbs->on_init();
+    m_cbs->onInit();
   }
 
-  return true;
+  return ::core::base::Status::OK;
 }
 
-bool Window::destroy() {
-  ASSERT(m_initalized);
-  if (m_opaqueWindowData->ctx) {
-    if (!glXMakeCurrent(m_opaqueWindowData->pDisplay, None, NULL)) {
-      //printf("Error releasing drawing context : killGLWindow\n");
-    }
-    glXDestroyContext(m_opaqueWindowData->pDisplay, m_opaqueWindowData->ctx);
-    m_opaqueWindowData->ctx = NULL;
-  }
-
-  if (m_settings.m_fullScreen) {
-    XF86VidModeSwitchToMode(m_opaqueWindowData->pDisplay, m_opaqueWindowData->screen, &m_opaqueWindowData->deskMode);
-    XF86VidModeSetViewPort(m_opaqueWindowData->pDisplay, m_opaqueWindowData->screen, 0, 0);
-  }
-  XDestroyWindow(m_opaqueWindowData->pDisplay, m_opaqueWindowData->win);
-  XFreeColormap(m_opaqueWindowData->pDisplay, m_opaqueWindowData->cmap);
-  XCloseDisplay(m_opaqueWindowData->pDisplay);
-
-  m_initalized = false;
-  return true;
-}
-
-bool Window::reset() {
-  if (m_initalized) {
-    if (!destroy()) {
-      return false;
-    }
-
-    if (!create()) {
-      return false;
-    }
-  }
-  return true;
+void Window::destroy() {
+  Trace();
+  delete m_pImpl;
+  m_pImpl = nullptr;
 }
 
 void Window::framestep() {
   XEvent event;
-  while (XPending(m_opaqueWindowData->pDisplay) > 0) {
-    XNextEvent(m_opaqueWindowData->pDisplay, &event);
+  while (XPending(m_pImpl->pDisplay) > 0) {
+    XNextEvent(m_pImpl->pDisplay, &event);
     switch (event.type) {
       case Expose: {
         if (event.xexpose.count != 0) {
@@ -291,51 +312,51 @@ void Window::framestep() {
           m_settings.m_width = event.xconfigure.width;
           m_settings.m_height = event.xconfigure.height;
           glViewport(0, 0, m_settings.m_width, m_settings.m_height);
-          if (m_cbs) { m_cbs->on_reshape(); }
+          if (m_cbs) { m_cbs->onReshape(); }
         }
         break;
       }
 
       case ButtonPress: {
         if (m_cbs) {
-          m_cbs->on_buttoninput(0xFFFF0000 + event.xbutton.button, true);
+          m_cbs->onButtonInput(eDeviceId::DEVICE_DEFAULT, Platform_RemapKeycode(0xFFFF0000 + event.xbutton.button), true);
         }
         break;
       }
 
       case ButtonRelease: {
         if (m_cbs) {
-          m_cbs->on_buttoninput(0xFFFF0000 + event.xbutton.button, false);
+          m_cbs->onButtonInput(eDeviceId::DEVICE_DEFAULT, Platform_RemapKeycode(0xFFFF0000 + event.xbutton.button), false);
         }
         break;
       }
 
       case MotionNotify: {
         if (m_cbs) {
-          m_cbs->on_axisinput(0, event.xmotion.x);
-          m_cbs->on_axisinput(1, event.xmotion.y);
+          m_cbs->onAxisInput(eDeviceId::DEVICE_DEFAULT, eAxisMap::AXIS_MOUSE_X, event.xmotion.x);
+          m_cbs->onAxisInput(eDeviceId::DEVICE_DEFAULT, eAxisMap::AXIS_MOUSE_Y, event.xmotion.y);
         }
         break;
       }
 
       case KeyPress: {
         if (m_cbs) {
-          m_cbs->on_buttoninput(XLookupKeysym(&event.xkey, 0), true);
+          m_cbs->onButtonInput(eDeviceId::DEVICE_DEFAULT, Platform_RemapKeycode(XLookupKeysym(&event.xkey, 0)), true);
         }
         break;
       }
 
       case KeyRelease: {
         if (m_cbs) {
-          m_cbs->on_buttoninput(XLookupKeysym(&event.xkey, 0), false);
+          m_cbs->onButtonInput(eDeviceId::DEVICE_DEFAULT, Platform_RemapKeycode(XLookupKeysym(&event.xkey, 0)), false);
         }
         break;
       }
 
       case ClientMessage: {
-        if (*XGetAtomName(m_opaqueWindowData->pDisplay, event.xclient.message_type) == *"WM_PROTOCOLS") {
+        if (*XGetAtomName(m_pImpl->pDisplay, event.xclient.message_type) == *"WM_PROTOCOLS") {
           if (m_cbs) {
-            m_cbs->on_dest();
+            m_cbs->onDest();
           }
         }
         break;
@@ -347,10 +368,11 @@ void Window::framestep() {
     }
   }
 
-  glXSwapBuffers(m_opaqueWindowData->pDisplay, m_opaqueWindowData->win);
+  glXSwapBuffers(m_pImpl->pDisplay, m_pImpl->win);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-} // namespace fsengine
+} // namespace os
+} // namespace wrappers
 
 #endif

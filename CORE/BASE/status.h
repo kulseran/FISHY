@@ -8,6 +8,9 @@
 
 #include <string>
 
+namespace core {
+namespace base {
+
 /**
  * Checked error status return value.
  */
@@ -163,6 +166,10 @@ class StatusOr {
   Status m_status;
   tType m_returnValue;
 };
+
+} // namespace base
+} // namespace core
+using core::base::Status;
 
 /**
  * RET_S(expression, status); Will 'return status' from a function if the
