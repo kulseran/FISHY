@@ -6,9 +6,9 @@ file(GLOB_RECURSE engine_src
 	"*.inl"
 	"*.cpp"
 )
+assign_source_group(${engine_src})
 
 add_library(engine STATIC ${engine_src})
 set_target_properties(engine PROPERTIES LINKER_LANGUAGE CXX)
 target_link_libraries(engine core)
 
-assign_source_group(${engine_src})

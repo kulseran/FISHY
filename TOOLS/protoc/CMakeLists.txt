@@ -7,7 +7,6 @@ file(GLOB_RECURSE protoc_src
 	"*.cpp"
 )
 assign_source_group(${protoc_src})
-
 filter_items(protoc_src ".*main.cpp")
 
 add_library(protoclib ${protoc_src})
