@@ -1,0 +1,12 @@
+package game;
+
+message Settings {
+  message ServerDef {
+    int32 hostport = 1;
+    int32 max_connections = 2;
+  }
+
+  ServerDef game_server = 1;
+  ServerDef status_server = 2;
+  string data_dir = 3;
+}

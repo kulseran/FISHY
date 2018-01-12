@@ -87,8 +87,7 @@ Status ProcessFile() {
       ret,
       ret,
       "Unable to read input file " << g_inputFileName.get() << " error "
-                                   << ret.getStatus() << ":"
-                                   << ret.getMessage());
+                                   << ret.getStatus());
 
   std::string datanameCaps(g_outDataName.get());
   std::transform(
@@ -127,7 +126,7 @@ Status ProcessFile() {
     if (size % 16 == 0) {
       ofile << "\n  ";
     }
-    ofile << "'\\x" << hex(*itr) << "'";
+    ofile << "0x" << hex(*itr);
     ++size;
   }
 

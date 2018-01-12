@@ -34,6 +34,7 @@ configure_file (
 # add the binary tree to the search path for include files
 # so that we will find TutorialConfig.h
 include_directories("${PROJECT_SOURCE_DIR}")
+include_directories("${PROJECT_SOURCE_DIR}/EXTERN_LIB")
 # add the generated folder, so that files mirroring the main
 # repo structure within generated can be included without a
 # prefix
@@ -47,10 +48,19 @@ set(FISHY_SOURCE_DIR "${PROJECT_SOURCE_DIR}")
 ################
 # All Buildables
 ################
+add_subdirectory(EXTERN_LIB/GL)
 add_subdirectory(CORE)
 add_subdirectory(APP_SHARED)
+add_subdirectory(WRAPPERS)
+
 add_subdirectory(TESTS)
+set_target_properties(tests PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+
 add_subdirectory(TOOLS/bin2h)
 add_subdirectory(TOOLS/protoc)
-# add_subdirectory(GAME)
-
+add_subdirectory(GAME/client)
+add_subdirectory(GAME/server)
+set_target_properties(bin2h PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+set_target_properties(protoc PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+set_target_properties(game_client PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+set_target_properties(game_server PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
