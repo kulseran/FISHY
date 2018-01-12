@@ -47,11 +47,11 @@ void printCppDescriptorGen(
   {
     char hex[3];
     snprintf(hex, 3, "%02x", buffer[0]);
-    ofile << "'\\x" << hex << "'";
+    ofile << "0x" << hex;
     for (size_t i = 1; i < sizer.size(); ++i) {
       char hex[3];
       snprintf(hex, 3, "%02x", buffer[i]);
-      ofile << ", '\\x" << hex << "'";
+      ofile << ", 0x" << hex;
     }
   }
   ofile << "};\n";
