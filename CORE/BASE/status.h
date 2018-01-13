@@ -38,7 +38,10 @@ class Status {
     BAD_INPUT = 7,
     // The requested operation could not be completed, because of an internal
     // consistency error in the state of the object.
-    BAD_STATE = 8
+    BAD_STATE = 8,
+    // The requested operation is unsupported, or unsupported for the given
+    // input.
+    UNSUPPORTED = 9
   };
 
   /**
