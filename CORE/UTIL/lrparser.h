@@ -29,10 +29,14 @@ class LRParser {
     public:
     virtual ~iNode() {}
   };
+
   template < typename tType >
   class tNode : public iNode {
     public:
     tType m_data;
+
+    tNode() {}
+    tNode(const tType &data) : m_data(data) {}
   };
 
   /**

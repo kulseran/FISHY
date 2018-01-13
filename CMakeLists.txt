@@ -52,6 +52,7 @@ add_subdirectory(EXTERN_LIB/GL)
 add_subdirectory(CORE)
 add_subdirectory(APP_SHARED)
 add_subdirectory(WRAPPERS)
+add_subdirectory(ENGINE)
 
 add_subdirectory(TESTS)
 set_target_properties(tests PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")

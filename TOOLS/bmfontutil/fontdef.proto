@@ -1,0 +1,60 @@
+package bmfont;
+
+message FontDef {
+  message FontInfo {
+    string font_name = 1;
+    float font_size = 2;
+    uint32 char_set = 3;
+    uint32 stretch_h = 4;
+    bool aa = 5;
+    bool unicode = 6;
+    bool bold = 7;
+    bool italic = 8;
+    uint32 padding_up = 9;
+    uint32 padding_right = 10;
+    uint32 padding_down = 11;
+    uint32 padding_left = 12;
+    uint32 spacing_horiz = 13;
+    uint32 spacing_vert = 14;
+    uint32 outline = 15;
+  }
+
+  message FontCommonData {
+    uint32 line_height = 1;
+    uint32 base = 2;
+    uint32 scale_w = 3;
+    uint32 scale_h = 4;
+    uint32 bits = 5;
+    uint32 alpha_chnl = 6;
+    uint32 red_chnl = 7;
+    uint32 green_chnl = 8;
+    uint32 blue_chnl = 9;
+    bool alpha_blend = 10;
+    bool alpha_test = 11;
+  }
+
+  message FontCharInfo {
+    int32 id = 1;
+    float x = 2;
+    float y = 3;
+    float width = 4;
+    float height = 5;
+    float xoffset = 6;
+    float yoffset = 7;
+    float xadvance = 8;
+    uint32 page = 9;
+    uint32 chnl = 10;
+  }
+
+  message FontTexture {
+    string filename = 1;
+    bytes image_data = 2;
+    bool is_distancefield = 3;
+  }
+
+  FontInfo info = 1;
+  FontCommonData common = 2;
+  FontTexture texture[] = 3;
+  FontCharInfo char_info[] = 4;
+}
+
