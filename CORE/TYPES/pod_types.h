@@ -32,5 +32,6 @@ COMPILE_TIME_ASSERT(sizeof(f32) == 4);
 COMPILE_TIME_ASSERT(sizeof(f64) == 8);
 
 typedef u32 Signature;
+typedef u64 Signature64;
 
 #endif

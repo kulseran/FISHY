@@ -4,8 +4,6 @@
 #include <CORE/UTIL/tokenizer.h>
 #include <CORE/types.h>
 
-#include <exception>
-
 using namespace core::util::parser;
 
 REGISTER_TEST_CASE(testSuccessfulParse) {
