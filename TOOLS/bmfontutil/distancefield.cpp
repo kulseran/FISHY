@@ -1,6 +1,7 @@
 #include "distancefield.h"
 
 #include <CORE/MATH/math_limit.h>
+#include <cmath>
 
 /**
  *
