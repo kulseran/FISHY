@@ -11,7 +11,6 @@ assign_source_group(${game_server_src})
 file(GLOB_RECURSE game_server_protos
 	"*.proto"
 )
-message(STATUS ${game_server_protos})
 proto_generate(game_server_proto_src ${game_server_protos})
 assign_source_group(${game_server_proto_src})
 
