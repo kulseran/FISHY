@@ -60,6 +60,7 @@ set_target_properties(tests PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SO
 add_subdirectory(TOOLS/bin2h)
 add_subdirectory(TOOLS/bmfontutil)
 add_subdirectory(TOOLS/protoc)
+add_subdirectory(TOOLS/templategen)
 add_subdirectory(GAME/client)
 add_subdirectory(GAME/server)
 set_target_properties(bin2h PROPERTIES VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
