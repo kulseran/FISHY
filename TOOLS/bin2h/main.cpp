@@ -40,7 +40,7 @@ void Bin2H::init(const char *arg0) {
  *
  */
 void Bin2H::printHelp() {
-  std::cout << "Process a file inot an array in an include header."
+  std::cout << "Process a file into an array in an include header."
             << std::endl;
   std::cout << "Usage:" << std::endl;
   std::cout << "    bin2h <input> <output> <dataname>" << std::endl;
